@@ -1,0 +1,30 @@
+name: Production Deployment
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub Deployment
+        uses: chrnorm/deployment-action@v2
+        id: deployment
+        with:
+          token: ${{ github.token }}
+          environment: production # This MUST match the name in your screenshot
+          initial-status: in_progress
+
+      - name: Trigger Render Deploy
+        run: |
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+          
+      - name: Update Deployment Status (Success)
+        if: success()
+        uses: chrnorm/deployment-action@v2
+        with:
+          token: ${{ github.token }}
+          environment: production
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          state: success
+          environment-url: https://shelf-space.onrender.com
