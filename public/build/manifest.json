@@ -1,0 +1,70 @@
+{
+  "_wayfinder-CuYjkauf.js": {
+    "file": "assets/wayfinder-CuYjkauf.js",
+    "name": "wayfinder"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-CPMC4Pze.css",
+    "name": "app",
+    "names": [
+      "app.css"
+    ],
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.tsx": {
+    "file": "assets/app-DW1iybr3.js",
+    "name": "app",
+    "src": "resources/js/app.tsx",
+    "isEntry": true,
+    "imports": [
+      "_wayfinder-CuYjkauf.js"
+    ],
+    "dynamicImports": [
+      "resources/js/pages/dashboard.tsx",
+      "resources/js/pages/settings/appearance.tsx",
+      "resources/js/pages/settings/profile.tsx",
+      "resources/js/pages/welcome.tsx"
+    ]
+  },
+  "resources/js/pages/dashboard.tsx": {
+    "file": "assets/dashboard-BL94jxXP.js",
+    "name": "dashboard",
+    "src": "resources/js/pages/dashboard.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_wayfinder-CuYjkauf.js",
+      "resources/js/app.tsx"
+    ]
+  },
+  "resources/js/pages/settings/appearance.tsx": {
+    "file": "assets/appearance-C-TpvkSG.js",
+    "name": "appearance",
+    "src": "resources/js/pages/settings/appearance.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_wayfinder-CuYjkauf.js",
+      "resources/js/app.tsx"
+    ]
+  },
+  "resources/js/pages/settings/profile.tsx": {
+    "file": "assets/profile-DEw5ddNK.js",
+    "name": "profile",
+    "src": "resources/js/pages/settings/profile.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_wayfinder-CuYjkauf.js",
+      "resources/js/app.tsx"
+    ]
+  },
+  "resources/js/pages/welcome.tsx": {
+    "file": "assets/welcome-CyjgihZG.js",
+    "name": "welcome",
+    "src": "resources/js/pages/welcome.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_wayfinder-CuYjkauf.js",
+      "resources/js/app.tsx"
+    ]
+  }
+}
