@@ -1,20 +1,26 @@
 FROM serversideup/php:8.4-fpm-nginx
 
-# Set document root
+# Environment variables for Render
 ENV AUTOCONF_PHPFPM_ROOT=/var/www/html/public
+ENV AUTORUN_LARAVEL_MIGRATION=true
+ENV AUTORUN_LARAVEL_STORAGE_LINK=true
+ENV AUTORUN_LARAVEL_OPTIMIZE=true
+
+# 1. SWITCH TO ROOT to handle system-level permissions
+USER root
 
 WORKDIR /var/www/html
 
-# 1. Copy your code
-COPY . .
+# 2. Copy code and assign ownership directly to the web user
+COPY --chown=www-data:www-data . .
 
-# 2. Fix permissions BEFORE running composer
-# We create the folders and set permissions so 'package:discover' can write to them
+# 3. Create missing folders and set permissions as root
 RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache storage/logs bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
-# 3. Now run composer (it won't crash now)
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# 4. SWITCH BACK TO WWW-DATA for security
+USER www-data
 
-# No need for chmod here anymore, it's already done
+# 5. Run Composer safely (ignoring scripts to save RAM)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
