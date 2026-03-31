@@ -1,16 +1,20 @@
-# Use the high-performance 2026 PHP 8.4 image
 FROM serversideup/php:8.4-fpm-nginx
 
-# Set the document root to Laravel's public folder
+# Set document root
 ENV AUTOCONF_PHPFPM_ROOT=/var/www/html/public
 
 WORKDIR /var/www/html
 
-# Copy your code into the container
-COPY --chmod=755 . .
+# 1. Copy your code
+COPY . .
 
-# Install dependencies (without dev tools to save that 512MB RAM)
-RUN composer install --no-dev --optimize-autoloader
+# 2. Fix permissions BEFORE running composer
+# We create the folders and set permissions so 'package:discover' can write to them
+RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache storage/logs bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
 
-# Give the server permission to write to storage
-RUN chmod -R 775 storage bootstrap/cache
+# 3. Now run composer (it won't crash now)
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# No need for chmod here anymore, it's already done
