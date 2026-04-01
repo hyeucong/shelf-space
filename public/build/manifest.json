@@ -8,7 +8,7 @@
     "name": "wayfinder"
   },
   "resources/css/app.css": {
-    "file": "assets/app-BIjxQ5o-.css",
+    "file": "assets/app-Brcamjxy.css",
     "name": "app",
     "names": [
       "app.css"
@@ -17,7 +17,7 @@
     "isEntry": true
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-Df-4GsQU.js",
+    "file": "assets/app-CPEtoy3k.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,
@@ -34,16 +34,17 @@
     ]
   },
   "resources/js/pages/assets/index.tsx": {
-    "file": "assets/assets-CsgToJAa.js",
+    "file": "assets/assets-T3_YogSU.js",
     "name": "assets",
     "src": "resources/js/pages/assets/index.tsx",
     "isDynamicEntry": true,
     "imports": [
-      "_jsx-runtime-BdQhOApg.js"
+      "_jsx-runtime-BdQhOApg.js",
+      "resources/js/app.tsx"
     ]
   },
   "resources/js/pages/dashboard.tsx": {
-    "file": "assets/dashboard-Bv8qmEKM.js",
+    "file": "assets/dashboard-N2kxT1MK.js",
     "name": "dashboard",
     "src": "resources/js/pages/dashboard.tsx",
     "isDynamicEntry": true,
@@ -53,7 +54,7 @@
     ]
   },
   "resources/js/pages/settings/appearance.tsx": {
-    "file": "assets/appearance-CTag0agR.js",
+    "file": "assets/appearance-J8ciVCJX.js",
     "name": "appearance",
     "src": "resources/js/pages/settings/appearance.tsx",
     "isDynamicEntry": true,
@@ -63,7 +64,7 @@
     ]
   },
   "resources/js/pages/settings/profile.tsx": {
-    "file": "assets/profile-CIrc_BYJ.js",
+    "file": "assets/profile-DUZTIf_2.js",
     "name": "profile",
     "src": "resources/js/pages/settings/profile.tsx",
     "isDynamicEntry": true,
@@ -74,7 +75,7 @@
     ]
   },
   "resources/js/pages/welcome.tsx": {
-    "file": "assets/welcome-nfPtesD4.js",
+    "file": "assets/welcome-B4n2i3Um.js",
     "name": "welcome",
     "src": "resources/js/pages/welcome.tsx",
     "isDynamicEntry": true,
