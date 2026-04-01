@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AssetController;
 use Illuminate\Support\Facades\Route;
 use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
 
@@ -10,6 +11,8 @@ Route::middleware([
     ValidateSessionWithWorkOS::class,
 ])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
+
+    Route::resource('assets', AssetController::class);
 });
 
 require __DIR__.'/settings.php';
