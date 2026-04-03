@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import {
     Table,
     TableBody,
@@ -8,6 +8,8 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { Button } from '@/components/ui/button';
+import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 
 export default function Assets() {
     return (
@@ -38,11 +40,18 @@ export default function Assets() {
     );
 }
 
-Assets.layout = {
-    breadcrumbs: [
-        {
-            title: 'Assets',
-            href: '/assets',
-        },
-    ],
-};
+Assets.layout = (page: React.ReactNode) => (
+    <AppSidebarLayout
+        children={page}
+        breadcrumbs={[
+            { title: 'Assets', href: '/assets' }
+        ]}
+        headerAction={
+            <Button asChild>
+                <Link href="/assets/create">
+                    New asset
+                </Link>
+            </Button>
+        }
+    />
+);
