@@ -13,7 +13,7 @@ class AssetController extends Controller
      */
     public function index()
     {
-        $assets = Asset::all();
+        $assets = Asset::paginate(10);
 
         return Inertia::render('assets/index', [
             'assets' => $assets,

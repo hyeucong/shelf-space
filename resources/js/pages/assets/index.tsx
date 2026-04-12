@@ -47,10 +47,10 @@ export default function Assets({ assets }: PageProps) {
         if (!assetToDelete) return;
 
         const id = assetToDelete.id;
-        
+
         // 1. Optimistic Update: Remove from list immediately
         setLocalAssets(prev => prev.filter(a => a.id !== id));
-        
+
         // 2. Clear state and close modal immediately
         setAssetToDelete(null);
 
@@ -121,9 +121,9 @@ export default function Assets({ assets }: PageProps) {
                                                         <span className="sr-only">Edit</span>
                                                     </Link>
                                                 </Button>
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon" 
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
                                                     className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 border"
                                                     onClick={() => setAssetToDelete(asset)}
                                                 >
