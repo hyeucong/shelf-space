@@ -11,12 +11,19 @@ class AssetController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $assets = Asset::paginate(10);
+        $assets = Asset::query()
+            ->when($request->input('search'), function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('asset_id', 'like', "%{$search}%");
+            })
+            ->paginate($request->input('per_page', 10))
+            ->withQueryString();
 
         return Inertia::render('assets/index', [
             'assets' => $assets,
+            'filters' => $request->only(['search', 'per_page']),
         ]);
     }
 

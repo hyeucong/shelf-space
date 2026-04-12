@@ -70,7 +70,7 @@ function SelectContent({
         position={position}
         side={side}
         sideOffset={sideOffset}
-        avoidCollisions={false}
+        avoidCollisions={true}
         align={align}
         {...props}
       >

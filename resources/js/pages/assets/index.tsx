@@ -6,8 +6,18 @@ import {
     PaginationLink,
     PaginationNext,
     PaginationPrevious,
+    PaginationFirst,
+    PaginationLast,
     PaginationEllipsis,
+    PaginationPageIndicator,
 } from "@/components/ui/pagination";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import {
     Table,
     TableBody,
@@ -18,8 +28,9 @@ import {
 } from "@/components/ui/table"
 import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Filter, ArrowUpDown, List as ListIcon, Calendar, Bookmark, LayoutGrid } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { SearchInput } from '@/components/search-input';
 import {
     Dialog,
     DialogContent,
@@ -48,6 +59,9 @@ interface PaginatedData<T> {
     links: PaginationLinkType[];
     current_page: number;
     last_page: number;
+    per_page: number;
+    first_page_url: string;
+    last_page_url: string;
     from: number;
     to: number;
     total: number;
@@ -55,9 +69,13 @@ interface PaginatedData<T> {
 
 interface PageProps {
     assets: PaginatedData<Asset>;
+    filters: {
+        search?: string;
+        per_page?: string | number;
+    };
 }
 
-export default function Assets({ assets }: PageProps) {
+export default function Assets({ assets, filters }: PageProps) {
     // Local state for optimistic updates
     const [localAssets, setLocalAssets] = useState<Asset[]>(assets?.data || []);
     const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null);
@@ -91,6 +109,17 @@ export default function Assets({ assets }: PageProps) {
         });
     };
 
+    const handlePerPageChange = (value: string) => {
+        router.get('/assets', {
+            ...filters,
+            per_page: value,
+            page: 1 // Reset to first page when changing per page
+        }, {
+            preserveState: true,
+            replace: true
+        });
+    };
+
     return (
         <>
             <Head title="Assets" />
@@ -98,6 +127,41 @@ export default function Assets({ assets }: PageProps) {
             <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
                 {/* Scrollable Table Area */}
                 <div className="flex-1 overflow-y-auto p-4">
+                    {/* Filter Options Toolbar */}
+                    <div className="mb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 rounded border bg-background p-2 shadow-sm min-h-12">
+                        <div className="flex flex-1 flex-row flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
+                            <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
+                                <Filter size={16} /> Filter
+                            </Button>
+                            <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
+                                <ArrowUpDown size={16} /> Sort
+                            </Button>
+                            <div className="flex">
+                                <SearchInput
+                                    url="/assets"
+                                    placeholder="Search assets..."
+                                    initialValue={filters?.search}
+                                />
+                            </div>
+                            <div className="flex items-center gap-1 ml-1 shrink-0">
+                                <Button variant="outline" size="icon" className="h-9 w-9 shadow-none text-muted-foreground">
+                                    <ListIcon size={16} />
+                                </Button>
+                                <Button variant="outline" size="icon" className="h-9 w-9 shadow-none text-muted-foreground">
+                                    <Calendar size={16} />
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0">
+                            <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
+                                <Bookmark size={16} /> Saved Filters
+                            </Button>
+                            <Button variant="outline" size="icon" className="h-9 w-9 shadow-none text-muted-foreground shrink-0">
+                                <LayoutGrid size={16} />
+                            </Button>
+                        </div>
+                    </div>
+
                     <div className="rounded border shadow-none bg-background">
                         <div className="flex items-center justify-between p-4 border-b border-border/50">
                             <div>
@@ -173,60 +237,63 @@ export default function Assets({ assets }: PageProps) {
                 </div>
 
                 {/* Fixed Pagination Bar at Bottom */}
-                {assets.links && assets.links.length > 3 && (
+                {assets.links && assets.links.length > 0 && (
                     <div className="shrink-0 border-t bg-background/95 p-4 backdrop-blur supports-backdrop-filter:bg-background/60">
-                        <Pagination>
+                        <Pagination className="justify-start">
                             <PaginationContent>
-                                {assets.links.map((link, i) => {
-                                    if (i === 0) {
-                                        return (
-                                            <PaginationItem key={i}>
-                                                {link.url ? (
-                                                    <PaginationPrevious href={link.url} preserveScroll />
-                                                ) : (
-                                                    <span className="opacity-50 pointer-events-none">
-                                                        <PaginationPrevious href="#" preserveScroll />
-                                                    </span>
-                                                )}
-                                            </PaginationItem>
-                                        );
-                                    }
+                                <PaginationItem>
+                                    <PaginationFirst
+                                        href={assets.first_page_url}
+                                        className={assets.current_page === 1 ? "opacity-30 pointer-events-none" : ""}
+                                    />
+                                </PaginationItem>
 
-                                    if (i === assets.links.length - 1) {
-                                        return (
-                                            <PaginationItem key={i}>
-                                                {link.url ? (
-                                                    <PaginationNext href={link.url} preserveScroll />
-                                                ) : (
-                                                    <span className="opacity-50 pointer-events-none">
-                                                        <PaginationNext href="#" preserveScroll />
-                                                    </span>
-                                                )}
-                                            </PaginationItem>
-                                        );
-                                    }
+                                <PaginationItem>
+                                    <PaginationPrevious
+                                        href={assets.links[0].url || "#"}
+                                        className={!assets.links[0].url ? "opacity-30 pointer-events-none" : ""}
+                                    />
+                                </PaginationItem>
 
-                                    if (link.label === '...') {
-                                        return (
-                                            <PaginationItem key={i}>
-                                                <PaginationEllipsis />
-                                            </PaginationItem>
-                                        );
-                                    }
+                                <PaginationItem>
+                                    <PaginationPageIndicator
+                                        currentPage={assets.current_page}
+                                        lastPage={assets.last_page}
+                                    />
+                                </PaginationItem>
 
-                                    return (
-                                        <PaginationItem key={i}>
-                                            <PaginationLink
-                                                href={link.url || '#'}
-                                                isActive={link.active}
-                                                preserveScroll
-                                            >
-                                                {link.label}
-                                            </PaginationLink>
-                                        </PaginationItem>
-                                    );
-                                })}
+                                <PaginationItem>
+                                    <PaginationNext
+                                        href={assets.links[assets.links.length - 1].url || "#"}
+                                        className={!assets.links[assets.links.length - 1].url ? "opacity-30 pointer-events-none" : ""}
+                                    />
+                                </PaginationItem>
+
+                                <PaginationItem>
+                                    <PaginationLast
+                                        href={assets.last_page_url}
+                                        className={assets.current_page === assets.last_page ? "opacity-30 pointer-events-none" : ""}
+                                    />
+                                </PaginationItem>
                             </PaginationContent>
+
+                            <div className="flex items-center gap-2 ml-2">
+                                <Select
+                                    value={String(assets.per_page)}
+                                    onValueChange={handlePerPageChange}
+                                >
+                                    <SelectTrigger size="sm" className="h-9 w-[70px] rounded-md shadow-none">
+                                        <SelectValue placeholder={assets.per_page} />
+                                    </SelectTrigger>
+                                    <SelectContent side="top">
+                                        <SelectItem value="10">10</SelectItem>
+                                        <SelectItem value="20">20</SelectItem>
+                                        <SelectItem value="50">50</SelectItem>
+                                        <SelectItem value="100">100</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <span className="text-sm text-muted-foreground whitespace-nowrap">Assets per page</span>
+                            </div>
                         </Pagination>
                     </div>
                 )}
