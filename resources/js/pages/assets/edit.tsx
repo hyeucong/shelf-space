@@ -2,22 +2,31 @@ import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { Head, useForm } from '@inertiajs/react';
 import AssetForm from '@/components/asset-form';
 
-export default function Create() {
-    const { data, setData, post, processing, errors } = useForm({
-        name: '',
-        asset_id: '',
-        description: '',
-        value: '',
+interface Asset {
+    id: number;
+    asset_id: string;
+    name: string;
+    description: string | null;
+    value: number | string | null;
+    status: string;
+}
+
+export default function Edit({ asset }: { asset: Asset }) {
+    const { data, setData, patch, processing, errors } = useForm({
+        name: asset.name || '',
+        asset_id: asset.asset_id || '',
+        description: asset.description || '',
+        value: asset.value || '',
     });
 
     const submit = (e: React.SyntheticEvent) => {
         e.preventDefault();
-        post('/assets');
+        patch(`/assets/${asset.id}`);
     };
 
     return (
         <div className="w-full">
-            <Head title="New asset" />
+            <Head title={`Edit ${asset.name}`} />
 
             <div className="w-full border-b px-6 py-4 mb-6">
                 <h1 className="text-2xl font-bold tracking-tight">
@@ -31,17 +40,18 @@ export default function Create() {
                 errors={errors}
                 processing={processing}
                 submit={submit}
+                isEditing={true}
             />
         </div>
     );
 }
 
-Create.layout = (page: React.ReactNode) => (
+Edit.layout = (page: React.ReactNode) => (
     <AppSidebarLayout
         children={page}
         breadcrumbs={[
             { title: 'Assets', href: '/assets' },
-            { title: 'New asset', href: '' }
+            { title: 'Edit asset', href: '' }
         ]}
     />
 );

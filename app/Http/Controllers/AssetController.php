@@ -56,24 +56,37 @@ class AssetController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Asset $asset)
     {
-        //
+        return Inertia::render('assets/edit', [
+            'asset' => $asset,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Asset $asset)
     {
-        //
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'asset_id' => ['required', 'string', 'max:255', 'unique:assets,asset_id,'.$asset->id],
+            'value' => ['nullable', 'numeric', 'min:0'],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        $asset->update($validated);
+
+        return redirect()->route('assets.index');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Asset $asset)
     {
-        //
+        $asset->delete();
+
+        return redirect()->route('assets.index');
     }
 }
