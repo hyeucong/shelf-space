@@ -1,14 +1,34 @@
 {
-  "_jsx-runtime-BdQhOApg.js": {
-    "file": "assets/jsx-runtime-BdQhOApg.js",
-    "name": "jsx-runtime"
+  "_createLucideIcon-BvjhmdDJ.js": {
+    "file": "assets/createLucideIcon-BvjhmdDJ.js",
+    "name": "createLucideIcon",
+    "imports": [
+      "_wayfinder-a7N3yJh2.js"
+    ]
   },
-  "_wayfinder-D0IG8Qlk.js": {
-    "file": "assets/wayfinder-D0IG8Qlk.js",
+  "_label-DFMlZ5YO.js": {
+    "file": "assets/label-DFMlZ5YO.js",
+    "name": "label",
+    "imports": [
+      "_wayfinder-a7N3yJh2.js",
+      "_profile-Ak3qQilZ.js",
+      "_createLucideIcon-BvjhmdDJ.js"
+    ]
+  },
+  "_profile-Ak3qQilZ.js": {
+    "file": "assets/profile-Ak3qQilZ.js",
+    "name": "profile",
+    "imports": [
+      "_wayfinder-a7N3yJh2.js",
+      "_createLucideIcon-BvjhmdDJ.js"
+    ]
+  },
+  "_wayfinder-a7N3yJh2.js": {
+    "file": "assets/wayfinder-a7N3yJh2.js",
     "name": "wayfinder"
   },
   "resources/css/app.css": {
-    "file": "assets/app-Brcamjxy.css",
+    "file": "assets/app-KoG44XJV.css",
     "name": "app",
     "names": [
       "app.css"
@@ -17,15 +37,17 @@
     "isEntry": true
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-CPEtoy3k.js",
+    "file": "assets/app-Dk_kLVVY.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,
     "imports": [
-      "_jsx-runtime-BdQhOApg.js",
-      "_wayfinder-D0IG8Qlk.js"
+      "_wayfinder-a7N3yJh2.js",
+      "_profile-Ak3qQilZ.js",
+      "_createLucideIcon-BvjhmdDJ.js"
     ],
     "dynamicImports": [
+      "resources/js/pages/assets/create.tsx",
       "resources/js/pages/assets/index.tsx",
       "resources/js/pages/dashboard.tsx",
       "resources/js/pages/settings/appearance.tsx",
@@ -33,54 +55,72 @@
       "resources/js/pages/welcome.tsx"
     ]
   },
+  "resources/js/pages/assets/create.tsx": {
+    "file": "assets/create-CJKfqzaE.js",
+    "name": "create",
+    "src": "resources/js/pages/assets/create.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_wayfinder-a7N3yJh2.js",
+      "resources/js/app.tsx",
+      "_profile-Ak3qQilZ.js",
+      "_label-DFMlZ5YO.js",
+      "_createLucideIcon-BvjhmdDJ.js"
+    ]
+  },
   "resources/js/pages/assets/index.tsx": {
-    "file": "assets/assets-T3_YogSU.js",
+    "file": "assets/assets-Bv1npHLR.js",
     "name": "assets",
     "src": "resources/js/pages/assets/index.tsx",
     "isDynamicEntry": true,
     "imports": [
-      "_jsx-runtime-BdQhOApg.js",
-      "resources/js/app.tsx"
+      "_wayfinder-a7N3yJh2.js",
+      "resources/js/app.tsx",
+      "_profile-Ak3qQilZ.js",
+      "_createLucideIcon-BvjhmdDJ.js"
     ]
   },
   "resources/js/pages/dashboard.tsx": {
-    "file": "assets/dashboard-N2kxT1MK.js",
+    "file": "assets/dashboard-CIJzUULZ.js",
     "name": "dashboard",
     "src": "resources/js/pages/dashboard.tsx",
     "isDynamicEntry": true,
     "imports": [
-      "_jsx-runtime-BdQhOApg.js",
+      "_wayfinder-a7N3yJh2.js",
       "resources/js/app.tsx"
     ]
   },
   "resources/js/pages/settings/appearance.tsx": {
-    "file": "assets/appearance-J8ciVCJX.js",
+    "file": "assets/appearance-BKnNY3Re.js",
     "name": "appearance",
     "src": "resources/js/pages/settings/appearance.tsx",
     "isDynamicEntry": true,
     "imports": [
-      "_jsx-runtime-BdQhOApg.js",
-      "resources/js/app.tsx"
+      "_wayfinder-a7N3yJh2.js",
+      "resources/js/app.tsx",
+      "_createLucideIcon-BvjhmdDJ.js"
     ]
   },
   "resources/js/pages/settings/profile.tsx": {
-    "file": "assets/profile-DUZTIf_2.js",
+    "file": "assets/profile-REnf_Wux.js",
     "name": "profile",
     "src": "resources/js/pages/settings/profile.tsx",
     "isDynamicEntry": true,
     "imports": [
-      "_jsx-runtime-BdQhOApg.js",
+      "_wayfinder-a7N3yJh2.js",
       "resources/js/app.tsx",
-      "_wayfinder-D0IG8Qlk.js"
+      "_profile-Ak3qQilZ.js",
+      "_label-DFMlZ5YO.js",
+      "_createLucideIcon-BvjhmdDJ.js"
     ]
   },
   "resources/js/pages/welcome.tsx": {
-    "file": "assets/welcome-B4n2i3Um.js",
+    "file": "assets/welcome-RWAa68R-.js",
     "name": "welcome",
     "src": "resources/js/pages/welcome.tsx",
     "isDynamicEntry": true,
     "imports": [
-      "_jsx-runtime-BdQhOApg.js",
+      "_wayfinder-a7N3yJh2.js",
       "resources/js/app.tsx"
     ]
   }

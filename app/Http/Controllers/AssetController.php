@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Asset;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -12,7 +13,11 @@ class AssetController extends Controller
      */
     public function index()
     {
-        return Inertia::render('assets/index', []);
+        $assets = Asset::all();
+
+        return Inertia::render('assets/index', [
+            'assets' => $assets,
+        ]);
     }
 
     /**
@@ -20,7 +25,7 @@ class AssetController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('assets/create', []);
     }
 
     /**
@@ -28,7 +33,16 @@ class AssetController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'asset_id' => ['required', 'string', 'max:255', 'unique:assets,asset_id'],
+            'value' => ['nullable', 'numeric', 'min:0'],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        Asset::create($validated);
+
+        return redirect()->route('assets.index');
     }
 
     /**
