@@ -14,5 +14,5 @@ Route::middleware(['guest'])->group(function () {
     ));
 });
 
-Route::post('logout', fn (AuthKitLogoutRequest $request) => $request->logout())
+Route::post('logout', fn (AuthKitLogoutRequest $request) => $request->logout(config('app.url')))
     ->middleware(['auth'])->name('logout');
