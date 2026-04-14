@@ -8,23 +8,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export default function Create() {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
-        asset_id: '',
         description: '',
-        value: '',
     });
 
     const submit = (e: React.SyntheticEvent) => {
         e.preventDefault();
-        post('/assets');
+        post('/kits');
     };
 
     return (
         <div className="w-full">
-            <Head title="New asset" />
+            <Head title="New kit" />
 
             <div className="w-full border-b px-6 py-4 mb-6">
                 <h1 className="text-2xl font-bold tracking-tight">
-                    {data.name || 'Untitled Asset'}
+                    {data.name || 'Untitled Kit'}
                 </h1>
             </div>
 
@@ -34,7 +32,7 @@ export default function Create() {
                         <CardHeader>
                             <CardTitle className="text-lg">Basic fields</CardTitle>
                             <CardDescription>
-                                Basic information about your asset.
+                                Basic information about your kit.
                             </CardDescription>
                         </CardHeader>
 
@@ -72,48 +70,9 @@ export default function Create() {
                                 value={data.name}
                                 onChange={e => setData('name', e.target.value)}
                                 className="rounded"
-                                placeholder="e.g. MacBook Pro"
+                                placeholder="e.g. Photography Kit"
                             />
                             {errors.name && <span className="text-sm text-red-500">{errors.name}</span>}
-                        </div>
-
-                        {/* Asset ID Group */}
-                        <div className="grid gap-2">
-                            <Label htmlFor="asset_id">Asset ID</Label>
-                            <div className="flex -space-x-px">
-                                <div className="flex items-center rounded-l border border-input bg-muted px-3 text-sm text-muted-foreground">
-                                    SAM
-                                </div>
-                                <Input
-                                    id="asset_id"
-                                    value={data.asset_id}
-                                    onChange={e => setData('asset_id', e.target.value)}
-                                    className="rounded-l-none rounded-r focus-visible:z-10"
-                                    placeholder="0002"
-                                />
-                            </div>
-                            {errors.asset_id && <span className="text-sm text-red-500">{errors.asset_id}</span>}
-                            <p className="text-xs text-muted-foreground">
-                                This sequential ID will be assigned when the asset is created.
-                            </p>
-                        </div>
-
-                        {/* Value Input */}
-                        <div className="grid gap-2">
-                            <Label htmlFor="value">Value</Label>
-                            <div className="flex -space-x-px">
-                                <div className="flex items-center rounded-l border border-input bg-muted px-3 text-sm text-muted-foreground">
-                                    USD
-                                </div>
-                                <Input
-                                    id="value"
-                                    value={data.value}
-                                    onChange={e => setData('value', e.target.value)}
-                                    className="rounded-l-none rounded-r focus-visible:z-10"
-                                    placeholder="0.00"
-                                />
-                            </div>
-                            {errors.value && <span className="text-sm text-red-500">{errors.value}</span>}
                         </div>
 
                         {/* Description Input */}
@@ -139,8 +98,8 @@ Create.layout = (page: React.ReactNode) => (
     <AppSidebarLayout
         children={page}
         breadcrumbs={[
-            { title: 'Assets', href: '/assets' },
-            { title: 'New asset', href: '' }
+            { title: 'Kits', href: '/kits' },
+            { title: 'New Kit', href: '' }
         ]}
     />
 );

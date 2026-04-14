@@ -13,17 +13,31 @@ class AssetController extends Controller
      */
     public function index(Request $request)
     {
+        $sort = $request->input('sort', 'created_at');
+        $order = $request->input('order', 'desc');
+
+        $allowedSorts = ['name', 'asset_id', 'status', 'value', 'created_at'];
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'created_at';
+        }
+
+        $order = in_array(strtolower($order), ['asc', 'desc']) ? $order : 'desc';
+
         $assets = Asset::query()
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('asset_id', 'like', "%{$search}%");
             })
+            ->when($request->input('status'), function ($query, $status) {
+                $query->where('status', $status);
+            })
+            ->orderBy($sort, $order)
             ->paginate($request->input('per_page', 10))
             ->withQueryString();
 
         return Inertia::render('assets/index', [
             'assets' => $assets,
-            'filters' => $request->only(['search', 'per_page']),
+            'filters' => $request->only(['search', 'per_page', 'sort', 'order', 'status']),
         ]);
     }
 

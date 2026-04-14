@@ -26,6 +26,15 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { Pencil, Trash2, Filter, ArrowUpDown, List as ListIcon, Calendar, Bookmark, LayoutGrid } from 'lucide-react';
@@ -72,6 +81,9 @@ interface PageProps {
     filters: {
         search?: string;
         per_page?: string | number;
+        sort?: string;
+        order?: 'asc' | 'desc';
+        status?: string;
     };
 }
 
@@ -120,6 +132,30 @@ export default function Assets({ assets, filters }: PageProps) {
         });
     };
 
+    const handleSortChange = (value: string) => {
+        const [sort, order] = value.split(':');
+        router.get('/assets', {
+            ...filters,
+            sort,
+            order,
+            page: 1
+        }, {
+            preserveState: true,
+            replace: true
+        });
+    };
+
+    const handleFilterChange = (value: string) => {
+        router.get('/assets', {
+            ...filters,
+            status: value === 'all' ? undefined : value,
+            page: 1
+        }, {
+            preserveState: true,
+            replace: true
+        });
+    };
+
     return (
         <>
             <Head title="Assets" />
@@ -130,12 +166,52 @@ export default function Assets({ assets, filters }: PageProps) {
                     {/* Filter Options Toolbar */}
                     <div className="mb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 rounded border bg-background p-2 shadow-sm min-h-12">
                         <div className="flex flex-1 flex-row flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
-                            <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
-                                <Filter size={16} /> Filter
-                            </Button>
-                            <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
-                                <ArrowUpDown size={16} /> Sort
-                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
+                                        <Filter size={16} /> Filter
+                                        {filters?.status && (
+                                            <span className="ml-1 rounded-full bg-primary w-1.5 h-1.5" />
+                                        )}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start" className="w-48">
+                                    <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuRadioGroup 
+                                        value={filters?.status || 'all'} 
+                                        onValueChange={handleFilterChange}
+                                    >
+                                        <DropdownMenuRadioItem value="all">All Assets</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="available">Available</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="assigned">Assigned</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="maintenance">In Maintenance</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="retired">Retired</DropdownMenuRadioItem>
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
+                                        <ArrowUpDown size={16} /> Sort
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start" className="w-48">
+                                    <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuRadioGroup
+                                        value={`${filters?.sort || 'created_at'}:${filters?.order || 'desc'}`}
+                                        onValueChange={handleSortChange}
+                                    >
+                                        <DropdownMenuRadioItem value="created_at:desc">Newest</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="created_at:asc">Oldest</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="name:asc">Name (A-Z)</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="name:desc">Name (Z-A)</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="value:desc">Value (Highest)</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="value:asc">Value (Lowest)</DropdownMenuRadioItem>
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                             <div className="flex">
                                 <SearchInput
                                     url="/assets"
@@ -143,14 +219,7 @@ export default function Assets({ assets, filters }: PageProps) {
                                     initialValue={filters?.search}
                                 />
                             </div>
-                            <div className="flex items-center gap-1 ml-1 shrink-0">
-                                <Button variant="outline" size="icon" className="h-9 w-9 shadow-none text-muted-foreground">
-                                    <ListIcon size={16} />
-                                </Button>
-                                <Button variant="outline" size="icon" className="h-9 w-9 shadow-none text-muted-foreground">
-                                    <Calendar size={16} />
-                                </Button>
-                            </div>
+
                         </div>
                         <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0">
                             <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">

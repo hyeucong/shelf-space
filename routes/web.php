@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AssetController;
+use App\Http\Controllers\KitController;
 use Illuminate\Support\Facades\Route;
 use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
 
@@ -13,6 +14,7 @@ Route::middleware([
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 
     Route::resource('assets', AssetController::class);
+    Route::resource('kits', KitController::class);
 
     Route::inertia('categories', 'categories/index')->name('categories.index');
     Route::inertia('tags', 'tags/index')->name('tags.index');
