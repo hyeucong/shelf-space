@@ -18,19 +18,19 @@ export default function Welcome() {
                 <header className="w-full text-sm not-has-[nav]:hidden lg:max-w-4xl">
                     <nav className="flex items-center justify-end gap-2">
                         <Link href="">
-                            <Button size="sm">
+                            <Button>
                                 Demo
                             </Button>
                         </Link>
                         {auth.user ? (
                             <Link href={dashboard()}>
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline">
                                     Dashboard
                                 </Button>
                             </Link>
                         ) : (
                             <Link href={login()}>
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline">
                                     Log in
                                 </Button>
                             </Link>
