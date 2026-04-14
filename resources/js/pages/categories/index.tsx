@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -10,13 +10,31 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown, Pencil, Trash2 } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
+import { useEffect, useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+
+const CATEGORY_CREATE_EVENT = 'categories:create:open';
+
+function dispatchCategoryCreateEvent() {
+    window.dispatchEvent(new CustomEvent(CATEGORY_CREATE_EVENT));
+}
 
 interface Category {
     id: number;
     name: string;
-    description: string;
+    description: string | null;
+    hex_color?: string | null;
 }
 
 interface PaginationLinkType {
@@ -49,6 +67,40 @@ interface PageProps {
 }
 
 export default function Categories({ categories, filters }: PageProps) {
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+    const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
+
+    // Local optimistic state and delete modal
+    const [localCategories, setLocalCategories] = useState<Category[]>(categories?.data || []);
+    const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
+        name: '',
+        description: '',
+        hex_color: '#ab339f',
+    });
+
+    useEffect(() => {
+        const handleOpen = () => {
+            reset();
+            clearErrors();
+            setDialogMode('create');
+            setActiveCategoryId(null);
+            setIsDialogOpen(true);
+        };
+
+        window.addEventListener(CATEGORY_CREATE_EVENT, handleOpen);
+
+        return () => window.removeEventListener(CATEGORY_CREATE_EVENT, handleOpen);
+    }, [clearErrors, reset]);
+
+    // Keep local list in sync with server props
+    useEffect(() => {
+        setLocalCategories(categories?.data || []);
+    }, [categories]);
+
     const handleSortChange = (value: string) => {
         const [sort, order] = value.split(':');
         router.get('/categories', {
@@ -59,6 +111,70 @@ export default function Categories({ categories, filters }: PageProps) {
         }, {
             preserveState: true,
             replace: true
+        });
+    };
+
+    const closeCreateDialog = () => {
+        setIsDialogOpen(false);
+        setDialogMode('create');
+        setActiveCategoryId(null);
+        reset();
+        clearErrors();
+    };
+
+    const handleEditClick = (category: Category) => {
+        clearErrors();
+        setDialogMode('edit');
+        setActiveCategoryId(category.id);
+        setData({
+            name: category.name,
+            description: category.description ?? '',
+            hex_color: category.hex_color ?? '#ab339f',
+        });
+        setIsDialogOpen(true);
+    };
+
+    const submitDialog = (event: React.FormEvent) => {
+        event.preventDefault();
+
+        const onSuccess = () => {
+            setIsDialogOpen(false);
+            setDialogMode('create');
+            setActiveCategoryId(null);
+            reset();
+            clearErrors();
+        };
+
+        if (dialogMode === 'edit' && activeCategoryId !== null) {
+            put(`/categories/${activeCategoryId}`, {
+                preserveScroll: true,
+                onSuccess,
+            });
+
+            return;
+        }
+
+        post('/categories', {
+            preserveScroll: true,
+            onSuccess,
+        });
+    };
+
+    const closeDeleteDialog = () => setCategoryToDelete(null);
+
+    const handleDelete = () => {
+        if (!categoryToDelete || isDeleting) return;
+
+        const id = categoryToDelete.id;
+
+        router.delete(`/categories/${id}`, {
+            preserveScroll: true,
+            onBefore: () => setIsDeleting(true),
+            onSuccess: () => {
+                setLocalCategories((prev) => prev.filter((c) => c.id !== id));
+                setCategoryToDelete(null);
+            },
+            onFinish: () => setIsDeleting(false),
         });
     };
 
@@ -103,21 +219,140 @@ export default function Categories({ categories, filters }: PageProps) {
                     </div>
 
                     {/* Content Area */}
-                    <div className="flex flex-1 items-center justify-center rounded border border-dashed bg-background h-[300px]">
-                        <div className="flex flex-col items-center gap-1 text-center">
-                            <h3 className="text-2xl font-bold tracking-tight">
-                                No categories yet
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                                Categories help you organize your assets into groups like Electronics or Furniture.
-                            </p>
-                            <Button className="mt-4 rounded" asChild>
-                                <Link href="/categories/create">New category</Link>
-                            </Button>
+                    {localCategories.length > 0 ? (
+                        <div className="rounded border bg-background shadow-sm">
+                            <div className="divide-y">
+                                {localCategories.map((category) => (
+                                    <div key={category.id} className="flex items-start justify-between gap-4 p-4">
+                                        <div className="min-w-0 space-y-1">
+                                            <h3 className="font-medium text-foreground">{category.name}</h3>
+                                            <p className="text-sm text-muted-foreground">
+                                                {category.description || 'No description yet.'}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 border"
+                                                disabled={processing}
+                                                onClick={() => handleEditClick(category)}
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                                <span className="sr-only">Edit</span>
+                                            </Button>
+
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 border"
+                                                onClick={() => setCategoryToDelete(category)}
+                                                disabled={processing}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                                <span className="sr-only">Delete</span>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="flex flex-1 items-center justify-center rounded border border-dashed bg-background h-75">
+                            <div className="flex flex-col items-center gap-1 text-center">
+                                <h3 className="text-2xl font-bold tracking-tight">No categories yet</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    Categories help you organize your assets into groups like Electronics or Furniture.
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
+
+            {/* Create / Edit Dialog */}
+            <Dialog open={isDialogOpen} onOpenChange={(open) => !open ? closeCreateDialog() : setIsDialogOpen(true)}>
+                <DialogContent className="sm:max-w-180 rounded-lg" onPointerDownOutside={closeCreateDialog}>
+                    <DialogHeader>
+                        <DialogTitle>
+                            {dialogMode === 'edit' ? (data.name || 'Edit category') : (data.name || 'New category')}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {dialogMode === 'edit' ? 'Update the selected category.' : 'Basic information about your category.'}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={submitDialog} className="space-y-6">
+                        <div className="grid gap-2">
+                            <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
+                            <Input
+                                id="name"
+                                value={data.name}
+                                onChange={(event) => setData('name', event.target.value)}
+                                className="rounded"
+                                placeholder="e.g. Office Equipment"
+                            />
+                            {errors.name && <span className="text-sm text-red-500">{errors.name}</span>}
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="description">Description</Label>
+                            <Input
+                                id="description"
+                                value={data.description}
+                                onChange={(event) => setData('description', event.target.value)}
+                                className="rounded"
+                                placeholder="Items used for office work, such as computers, printers, scanners, or phones."
+                            />
+                            {errors.description && <span className="text-sm text-red-500">{errors.description}</span>}
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="hex_color">Hex Color</Label>
+                            <Input
+                                id="hex_color"
+                                type="text"
+                                value={data.hex_color}
+                                onChange={(event) => setData('hex_color', event.target.value)}
+                                className="rounded"
+                                placeholder="#ab339f"
+                            />
+                            {errors.hex_color && <span className="text-sm text-red-500">{errors.hex_color}</span>}
+                        </div>
+
+                        <DialogFooter className="gap-2 sm:gap-0">
+                            <Button type="button" variant="outline" onClick={closeCreateDialog} className="rounded">
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={processing} className="rounded bg-[#f0642d] hover:bg-[#d95627] text-white border-none">
+                                {processing ? (dialogMode === 'edit' ? 'Updating...' : 'Saving...') : (dialogMode === 'edit' ? 'Update' : 'Save')}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={!!categoryToDelete} onOpenChange={(open) => !open && closeDeleteDialog()}>
+                <DialogContent className="sm:max-w-106.25 rounded-lg" onPointerDownOutside={closeDeleteDialog}>
+                    <DialogHeader>
+                        <DialogTitle>Delete Category</DialogTitle>
+                        <DialogDescription>
+                            This will permanently remove <span className="font-semibold text-foreground">{categoryToDelete?.name}</span>. This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-muted-foreground">
+                        Delete this category only if you are sure it should no longer exist and won't break any asset associations.
+                    </div>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="outline" onClick={closeDeleteDialog} className="rounded">Cancel</Button>
+                        <Button variant="destructive" onClick={handleDelete} className="rounded" disabled={isDeleting}>
+                            {isDeleting ? 'Deleting...' : 'Delete category'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
@@ -129,10 +364,8 @@ Categories.layout = (page: React.ReactNode) => (
             { title: 'Categories', href: '/categories' }
         ]}
         headerAction={
-            <Button className="rounded border-none" asChild>
-                <Link href="/categories/create">
-                    New category
-                </Link>
+            <Button className="rounded border-none" onClick={() => dispatchCategoryCreateEvent()}>
+                New category
             </Button>
         }
     />

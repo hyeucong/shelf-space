@@ -98,26 +98,25 @@ export default function Assets({ assets, filters }: PageProps) {
         setLocalAssets(assets?.data || []);
     }, [assets]);
 
-    const handleDelete = () => {
-        if (!assetToDelete) return;
-
-        const id = assetToDelete.id;
-
-        // 1. Optimistic Update: Remove from list immediately
-        setLocalAssets(prev => prev.filter(a => a.id !== id));
-
-        // 2. Clear state and close modal immediately
+    const closeDeleteDialog = () => {
         setAssetToDelete(null);
+    };
 
-        // 3. Send server request in background
-        router.delete(`/assets/${id}`, {
+    const handleDelete = () => {
+        if (!assetToDelete || isDeleting) {
+            return;
+        }
+
+        const assetId = assetToDelete.id;
+
+        router.delete(`/assets/${assetId}`, {
+            preserveScroll: true,
             onBefore: () => setIsDeleting(true),
+            onSuccess: () => {
+                setLocalAssets((previousAssets) => previousAssets.filter((asset) => asset.id !== assetId));
+                setAssetToDelete(null);
+            },
             onFinish: () => setIsDeleting(false),
-            onError: () => {
-                // If it fails, add it back (Rollback)
-                setLocalAssets(assets?.data || []);
-                alert("Failed to delete asset. It has been restored.");
-            }
         });
     };
 
@@ -178,8 +177,8 @@ export default function Assets({ assets, filters }: PageProps) {
                                 <DropdownMenuContent align="start" className="w-48">
                                     <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuRadioGroup 
-                                        value={filters?.status || 'all'} 
+                                    <DropdownMenuRadioGroup
+                                        value={filters?.status || 'all'}
                                         onValueChange={handleFilterChange}
                                     >
                                         <DropdownMenuRadioItem value="all">All Assets</DropdownMenuRadioItem>
@@ -351,7 +350,7 @@ export default function Assets({ assets, filters }: PageProps) {
                                     value={String(assets.per_page)}
                                     onValueChange={handlePerPageChange}
                                 >
-                                    <SelectTrigger size="sm" className="h-9 w-[70px] rounded-md shadow-none">
+                                    <SelectTrigger size="sm" className="h-9 w-17.5 rounded-md shadow-none">
                                         <SelectValue placeholder={assets.per_page} />
                                     </SelectTrigger>
                                     <SelectContent side="top">
@@ -369,20 +368,27 @@ export default function Assets({ assets, filters }: PageProps) {
             </div>
 
             {/* Delete Confirmation Dialog */}
-            <Dialog open={!!assetToDelete} onOpenChange={(open) => !open && setAssetToDelete(null)}>
-                <DialogContent className="sm:max-w-[425px] rounded-lg">
+            <Dialog open={!!assetToDelete} onOpenChange={(open) => !open && closeDeleteDialog()}>
+                <DialogContent className="sm:max-w-106.25 rounded-lg" onPointerDownOutside={closeDeleteDialog}>
                     <DialogHeader>
                         <DialogTitle>Delete Asset</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete <span className="font-semibold text-foreground">{assetToDelete?.name}</span>? This action cannot be undone.
+                            This will permanently remove <span className="font-semibold text-foreground">{assetToDelete?.name}</span>
+                            {assetToDelete?.asset_id ? (
+                                <span className="text-muted-foreground"> ({assetToDelete.asset_id})</span>
+                            ) : null}.
+                            This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
+                    <div className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-muted-foreground">
+                        Delete this asset only if you are sure it should no longer exist in your inventory records.
+                    </div>
                     <DialogFooter className="gap-2 sm:gap-0">
-                        <Button variant="outline" onClick={() => setAssetToDelete(null)} className="rounded">
+                        <Button variant="outline" onClick={closeDeleteDialog} className="rounded">
                             Cancel
                         </Button>
                         <Button variant="destructive" onClick={handleDelete} className="rounded" disabled={isDeleting}>
-                            {isDeleting ? 'Deleting...' : 'Delete Asset'}
+                            {isDeleting ? 'Deleting asset...' : 'Delete asset'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

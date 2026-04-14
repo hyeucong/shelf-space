@@ -14,8 +14,14 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('slug')->nullable()->unique();
             $table->text('description')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->unsignedInteger('sort_order')->default(0);
+            $table->string('hex_color', 7)->nullable();
             $table->timestamps();
+
+            $table->index(['is_active', 'sort_order']);
         });
     }
 
