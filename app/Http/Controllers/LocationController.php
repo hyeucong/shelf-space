@@ -50,7 +50,22 @@ class LocationController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        $redirectTo = $request->string('redirect_to')->toString();
+        if ($redirectTo === '' || ! str_starts_with($redirectTo, '/')) {
+            $redirectTo = route('locations.index');
+        }
+
+        $location = Location::create($validated);
+
+        return redirect()->to($redirectTo)->with('createdLocation', [
+            'id' => $location->id,
+            'name' => $location->name,
+        ]);
     }
 
     /**

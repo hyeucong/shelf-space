@@ -3,12 +3,10 @@ import {
     Pagination,
     PaginationContent,
     PaginationItem,
-    PaginationLink,
     PaginationNext,
     PaginationPrevious,
     PaginationFirst,
     PaginationLast,
-    PaginationEllipsis,
     PaginationPageIndicator,
 } from "@/components/ui/pagination";
 import {

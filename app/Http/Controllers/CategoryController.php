@@ -57,6 +57,11 @@ class CategoryController extends Controller
             'hex_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);
 
+        $redirectTo = $request->string('redirect_to')->toString();
+        if ($redirectTo === '' || ! str_starts_with($redirectTo, '/')) {
+            $redirectTo = route('categories.index');
+        }
+
         $baseSlug = Str::slug($validated['name']);
         $slug = $baseSlug;
         $counter = 1;
@@ -66,9 +71,12 @@ class CategoryController extends Controller
 
         $validated['slug'] = $slug;
 
-        Category::create($validated);
+        $category = Category::create($validated);
 
-        return redirect()->route('categories.index');
+        return redirect()->to($redirectTo)->with('createdCategory', [
+            'id' => $category->id,
+            'name' => $category->name,
+        ]);
     }
 
     /**

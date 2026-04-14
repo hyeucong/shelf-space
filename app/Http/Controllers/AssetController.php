@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asset;
+use App\Models\Category;
+use App\Models\Tag;
+use App\Models\Location;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -46,7 +49,15 @@ class AssetController extends Controller
      */
     public function create()
     {
-        return Inertia::render('assets/create', []);
+        $categories = Category::orderBy('name')->get();
+        $tags = Tag::orderBy('name')->get();
+        $locations = Location::orderBy('name')->get();
+
+        return Inertia::render('assets/create', [
+            'categories' => $categories,
+            'tags' => $tags,
+            'locations' => $locations,
+        ]);
     }
 
     /**
@@ -58,10 +69,36 @@ class AssetController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'asset_id' => ['required', 'string', 'max:255', 'unique:assets,asset_id'],
             'value' => ['nullable', 'numeric', 'min:0'],
+            'category_id' => ['nullable', 'exists:categories,id'],
+            'location_id' => ['nullable', 'exists:locations,id'],
             'description' => ['nullable', 'string'],
+            'tags' => ['nullable', 'array'],
         ]);
 
-        Asset::create($validated);
+        $tags = $validated['tags'] ?? [];
+        unset($validated['tags']);
+
+        $asset = Asset::create($validated);
+
+        // Attach tags (accept tag ids or names)
+        $tagIds = [];
+        foreach ($tags as $t) {
+            if (is_numeric($t)) {
+                $tagIds[] = (int) $t;
+                continue;
+            }
+
+            if (!is_string($t) || trim($t) === '') {
+                continue;
+            }
+
+            $tag = Tag::firstOrCreate(['name' => trim($t)]);
+            $tagIds[] = $tag->id;
+        }
+
+        if (!empty($tagIds)) {
+            $asset->tags()->sync(array_values(array_unique($tagIds)));
+        }
 
         return redirect()->route('assets.index');
     }
