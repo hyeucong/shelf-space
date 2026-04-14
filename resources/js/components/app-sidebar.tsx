@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, Tags, Hash, MapPin, ClipboardList, Package } from 'lucide-react';
+import { BookOpen, FolderGit2, LayoutGrid, Tags, Hash, MapPin, ClipboardList, Package, Bell } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -55,6 +55,11 @@ const mainNavItems: NavItem[] = [
 ];
 
 const footerNavItems: NavItem[] = [
+    {
+        title: 'Reminder',
+        href: '/reminders',
+        icon: Bell,
+    },
     {
         title: 'Repository',
         href: 'https://github.com/laravel/react-starter-kit',

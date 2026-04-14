@@ -13,9 +13,11 @@ import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { ArrowUpDown } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 
-interface Tag {
+interface Reminder {
     id: number;
     name: string;
+    description: string;
+    status: string;
 }
 
 interface PaginationLinkType {
@@ -38,7 +40,7 @@ interface PaginatedData<T> {
 }
 
 interface PageProps {
-    tags: PaginatedData<Tag>;
+    reminders: PaginatedData<Reminder>;
     filters: {
         search?: string;
         per_page?: string | number;
@@ -47,10 +49,10 @@ interface PageProps {
     };
 }
 
-export default function Tags({ tags, filters }: PageProps) {
+export default function Reminders({ reminders, filters }: PageProps) {
     const handleSortChange = (value: string) => {
         const [sort, order] = value.split(':');
-        router.get('/tags', {
+        router.get('/reminders', {
             ...filters,
             sort,
             order,
@@ -63,7 +65,7 @@ export default function Tags({ tags, filters }: PageProps) {
 
     return (
         <>
-            <Head title="Tags" />
+            <Head title="Reminders" />
 
             <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
                 <div className="flex-1 overflow-y-auto p-4">
@@ -93,8 +95,8 @@ export default function Tags({ tags, filters }: PageProps) {
 
                             <div className="flex">
                                 <SearchInput
-                                    url="/tags"
-                                    placeholder="Search tags..."
+                                    url="/reminders"
+                                    placeholder="Search reminders..."
                                     initialValue={filters?.search}
                                 />
                             </div>
@@ -105,14 +107,11 @@ export default function Tags({ tags, filters }: PageProps) {
                     <div className="flex flex-1 items-center justify-center rounded border border-dashed bg-background h-[300px]">
                         <div className="flex flex-col items-center gap-1 text-center">
                             <h3 className="text-2xl font-bold tracking-tight">
-                                No tags yet
+                                No reminders yet
                             </h3>
                             <p className="text-sm text-muted-foreground">
-                                Tags allow you to add flexible labels to your assets.
+                                Reminders will appear here when assets are due for return or maintenance.
                             </p>
-                            <Button className="mt-4 rounded" asChild>
-                                <Link href="/tags/create">New tag</Link>
-                            </Button>
                         </div>
                     </div>
                 </div>
@@ -121,18 +120,11 @@ export default function Tags({ tags, filters }: PageProps) {
     );
 }
 
-Tags.layout = (page: React.ReactNode) => (
+Reminders.layout = (page: React.ReactNode) => (
     <AppSidebarLayout
         children={page}
         breadcrumbs={[
-            { title: 'Tags', href: '/tags' }
+            { title: 'Reminders', href: '/reminders' }
         ]}
-        headerAction={
-            <Button className="rounded border-none" asChild>
-                <Link href="/tags/create">
-                    New tag
-                </Link>
-            </Button>
-        }
     />
 );
