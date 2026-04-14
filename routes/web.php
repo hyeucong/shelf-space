@@ -4,7 +4,7 @@ use App\Http\Controllers\AssetController;
 use Illuminate\Support\Facades\Route;
 use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
 
-Route::inertia('/', 'welcome')->name('home');
+Route::inertia('/', 'landing/welcome')->name('home');
 
 Route::middleware([
     'auth',
