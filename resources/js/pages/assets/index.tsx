@@ -33,9 +33,10 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
-import { Pencil, Trash2, Filter, ArrowUpDown, List as ListIcon, Calendar, Bookmark, LayoutGrid } from 'lucide-react';
+import { Pencil, Trash2, Filter, ArrowUpDown, List as ListIcon, Bookmark, Rows3 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { SearchInput } from '@/components/search-input';
 import {
@@ -49,10 +50,27 @@ import {
 
 interface Asset {
     id: number;
+    category_id: number | null;
+    location_id: number | null;
     asset_id: string;
     name: string;
+    description: string | null;
     status: string;
     value: number | null;
+    created_at: string | null;
+    updated_at: string | null;
+    category?: {
+        id: number;
+        name: string;
+    } | null;
+    location?: {
+        id: number;
+        name: string;
+    } | null;
+    tags?: Array<{
+        id: number;
+        name: string;
+    }>;
 }
 
 interface PaginationLinkType {
@@ -90,6 +108,7 @@ export default function Assets({ assets, filters }: PageProps) {
     const [localAssets, setLocalAssets] = useState<Asset[]>(assets?.data || []);
     const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [tableMode, setTableMode] = useState<'simple' | 'all'>('simple');
 
     // Sync local state when props change (after server refresh)
     useEffect(() => {
@@ -153,6 +172,51 @@ export default function Assets({ assets, filters }: PageProps) {
         });
     };
 
+    const formatCurrency = (value: number | null) => {
+        if (value === null) {
+            return '-';
+        }
+
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+        }).format(Number(value));
+    };
+
+    const formatDate = (value: string | null) => {
+        if (!value) {
+            return '-';
+        }
+
+        return new Intl.DateTimeFormat('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        }).format(new Date(value));
+    };
+
+    const renderActionButtons = (asset: Asset) => (
+        <div className="flex gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8 border" asChild>
+                <Link href={`/assets/${asset.id}/edit`}>
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit</span>
+                </Link>
+            </Button>
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 border text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => setAssetToDelete(asset)}
+            >
+                <Trash2 className="h-4 w-4" />
+                <span className="sr-only">Delete</span>
+            </Button>
+        </div>
+    );
+
+    const isAllTable = tableMode === 'all';
+
     return (
         <>
             <Head title="Assets" />
@@ -209,6 +273,26 @@ export default function Assets({ assets, filters }: PageProps) {
                                     </DropdownMenuRadioGroup>
                                 </DropdownMenuContent>
                             </DropdownMenu>
+                            <div className="flex items-center rounded-md border bg-background p-1">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className={tableMode === 'simple' ? 'h-7 gap-1.5 px-2 shadow-none bg-muted text-foreground' : 'h-7 gap-1.5 px-2 shadow-none text-muted-foreground'}
+                                    onClick={() => setTableMode('simple')}
+                                >
+                                    <ListIcon size={15} /> Simple
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className={tableMode === 'all' ? 'h-7 gap-1.5 px-2 shadow-none bg-muted text-foreground' : 'h-7 gap-1.5 px-2 shadow-none text-muted-foreground'}
+                                    onClick={() => setTableMode('all')}
+                                >
+                                    <Rows3 size={15} /> All data
+                                </Button>
+                            </div>
                             <div className="flex">
                                 <SearchInput
                                     url="/assets"
@@ -221,9 +305,6 @@ export default function Assets({ assets, filters }: PageProps) {
                         <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0">
                             <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
                                 <Bookmark size={16} /> Saved Filters
-                            </Button>
-                            <Button variant="outline" size="icon" className="h-9 w-9 shadow-none text-muted-foreground shrink-0">
-                                <LayoutGrid size={16} />
                             </Button>
                         </div>
                     </div>
@@ -246,53 +327,94 @@ export default function Assets({ assets, filters }: PageProps) {
                             </div>
                         </div>
 
-                        <Table>
+                        <Table className={isAllTable ? 'min-w-330' : undefined}>
                             <TableHeader>
-                                <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Asset ID</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Value</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
+                                {isAllTable ? (
+                                    <TableRow>
+                                        <TableHead>ID</TableHead>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Asset ID</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Category</TableHead>
+                                        <TableHead>Location</TableHead>
+                                        <TableHead>Tags</TableHead>
+                                        <TableHead>Description</TableHead>
+                                        <TableHead>Value</TableHead>
+                                        <TableHead>Created</TableHead>
+                                        <TableHead>Updated</TableHead>
+                                        <TableHead>Actions</TableHead>
+                                    </TableRow>
+                                ) : (
+                                    <TableRow>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Asset ID</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Value</TableHead>
+                                        <TableHead>Actions</TableHead>
+                                    </TableRow>
+                                )}
                             </TableHeader>
                             <TableBody>
                                 {localAssets && localAssets.length > 0 ? (
                                     localAssets.map((asset) => (
-                                        <TableRow key={asset.id}>
-                                            <TableCell className="font-semibold">{asset.name}</TableCell>
-                                            <TableCell className="font-medium text-muted-foreground">{asset.asset_id}</TableCell>
-                                            <TableCell>
-                                                <span className="capitalize">{asset.status}</span>
-                                            </TableCell>
-                                            <TableCell>
-                                                {asset.value ? `$${Number(asset.value).toFixed(2)}` : '-'}
-                                            </TableCell>
-                                            {/* Row Actions */}
-                                            <TableCell>
-                                                <div className='flex gap-2'>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 border" asChild>
-                                                        <Link href={`/assets/${asset.id}/edit`}>
-                                                            <Pencil className="h-4 w-4" />
-                                                            <span className="sr-only">Edit</span>
-                                                        </Link>
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 border"
-                                                        onClick={() => setAssetToDelete(asset)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                        <span className="sr-only">Delete</span>
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
+                                        isAllTable ? (
+                                            <TableRow key={asset.id}>
+                                                <TableCell className="font-medium text-muted-foreground">#{asset.id}</TableCell>
+                                                <TableCell className="min-w-55 max-w-80 whitespace-normal font-semibold">{asset.name}</TableCell>
+                                                <TableCell className="font-medium text-muted-foreground">{asset.asset_id}</TableCell>
+                                                <TableCell>
+                                                    <Badge variant="outline" className="capitalize">{asset.status}</Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="min-w-35 whitespace-normal">
+                                                        <div>{asset.category?.name || '-'}</div>
+                                                        <div className="text-xs text-muted-foreground">
+                                                            {asset.category_id ? `ID ${asset.category_id}` : 'No category'}
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="min-w-35 whitespace-normal">
+                                                        <div>{asset.location?.name || '-'}</div>
+                                                        <div className="text-xs text-muted-foreground">
+                                                            {asset.location_id ? `ID ${asset.location_id}` : 'No location'}
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="min-w-45 whitespace-normal">
+                                                    {asset.tags && asset.tags.length > 0 ? (
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {asset.tags.map((tag) => (
+                                                                <Badge key={tag.id} variant="outline">{tag.name}</Badge>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-muted-foreground">-</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="min-w-60 max-w-80 whitespace-normal text-muted-foreground">
+                                                    {asset.description || '-'}
+                                                </TableCell>
+                                                <TableCell>{formatCurrency(asset.value)}</TableCell>
+                                                <TableCell>{formatDate(asset.created_at)}</TableCell>
+                                                <TableCell>{formatDate(asset.updated_at)}</TableCell>
+                                                <TableCell>{renderActionButtons(asset)}</TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            <TableRow key={asset.id}>
+                                                <TableCell className="font-semibold">{asset.name}</TableCell>
+                                                <TableCell className="font-medium text-muted-foreground">{asset.asset_id}</TableCell>
+                                                <TableCell>
+                                                    <span className="capitalize">{asset.status}</span>
+                                                </TableCell>
+                                                <TableCell>{formatCurrency(asset.value)}</TableCell>
+                                                <TableCell>{renderActionButtons(asset)}</TableCell>
+                                            </TableRow>
+                                        )
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                        <TableCell colSpan={isAllTable ? 12 : 5} className="h-24 text-center text-muted-foreground">
                                             No assets found.
                                         </TableCell>
                                     </TableRow>

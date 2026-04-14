@@ -9,10 +9,10 @@ interface SearchInputProps {
     initialValue?: string;
 }
 
-export function SearchInput({ 
-    url, 
-    placeholder = "Search...", 
-    initialValue = "" 
+export function SearchInput({
+    url,
+    placeholder = "Search...",
+    initialValue = ""
 }: SearchInputProps) {
     const [value, setValue] = useState(initialValue);
 
@@ -22,9 +22,9 @@ export function SearchInput({
         if (value === initialValue) return;
 
         const timer = setTimeout(() => {
-            router.get(url, { search: value }, { 
-                preserveState: true, 
-                replace: true 
+            router.get(url, { search: value }, {
+                preserveState: true,
+                replace: true
             });
         }, 500);
 

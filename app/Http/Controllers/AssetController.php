@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Asset;
 use App\Models\Category;
-use App\Models\Tag;
 use App\Models\Location;
+use App\Models\Tag;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -20,13 +20,18 @@ class AssetController extends Controller
         $order = $request->input('order', 'desc');
 
         $allowedSorts = ['name', 'asset_id', 'status', 'value', 'created_at'];
-        if (!in_array($sort, $allowedSorts)) {
+        if (! in_array($sort, $allowedSorts)) {
             $sort = 'created_at';
         }
 
         $order = in_array(strtolower($order), ['asc', 'desc']) ? $order : 'desc';
 
         $assets = Asset::query()
+            ->with([
+                'category:id,name',
+                'location:id,name',
+                'tags:id,name',
+            ])
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('asset_id', 'like', "%{$search}%");
@@ -85,10 +90,11 @@ class AssetController extends Controller
         foreach ($tags as $t) {
             if (is_numeric($t)) {
                 $tagIds[] = (int) $t;
+
                 continue;
             }
 
-            if (!is_string($t) || trim($t) === '') {
+            if (! is_string($t) || trim($t) === '') {
                 continue;
             }
 
@@ -96,7 +102,7 @@ class AssetController extends Controller
             $tagIds[] = $tag->id;
         }
 
-        if (!empty($tagIds)) {
+        if (! empty($tagIds)) {
             $asset->tags()->sync(array_values(array_unique($tagIds)));
         }
 
