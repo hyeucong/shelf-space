@@ -2,6 +2,27 @@ import type { InertiaLinkProps } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
 import { toUrl } from '@/lib/utils';
 
+function normalizePath(path: string): string {
+    if (path === '/') {
+        return path;
+    }
+
+    return path.endsWith('/') ? path.slice(0, -1) : path;
+}
+
+function resolvePath(url: string): string | null {
+    try {
+        const baseUrl =
+            typeof window !== 'undefined'
+                ? window.location.origin
+                : 'http://localhost';
+
+        return normalizePath(new URL(url, baseUrl).pathname);
+    } catch {
+        return null;
+    }
+}
+
 export type IsCurrentUrlFn = (
     urlToCheck: NonNullable<InertiaLinkProps['href']>,
     currentUrl?: string,
@@ -28,35 +49,32 @@ export type UseCurrentUrlReturn = {
 
 export function useCurrentUrl(): UseCurrentUrlReturn {
     const page = usePage();
-    const currentUrlPath = new URL(
-        page.url,
-        typeof window !== 'undefined'
-            ? window.location.origin
-            : 'http://localhost',
-    ).pathname;
+    const currentUrlPath = resolvePath(page.url) ?? '/';
 
     const isCurrentUrl: IsCurrentUrlFn = (
         urlToCheck: NonNullable<InertiaLinkProps['href']>,
         currentUrl?: string,
         startsWith: boolean = false,
     ) => {
-        const urlToCompare = currentUrl ?? currentUrlPath;
-        const urlString = toUrl(urlToCheck);
+        const urlToCompare = normalizePath(currentUrl ?? currentUrlPath);
+        const pathToCheck = resolvePath(toUrl(urlToCheck));
 
-        const comparePath = (path: string): boolean =>
-            startsWith ? urlToCompare.startsWith(path) : path === urlToCompare;
-
-        if (!urlString.startsWith('http')) {
-            return comparePath(urlString);
-        }
-
-        try {
-            const absoluteUrl = new URL(urlString);
-
-            return comparePath(absoluteUrl.pathname);
-        } catch {
+        if (pathToCheck === null) {
             return false;
         }
+
+        if (!startsWith) {
+            return pathToCheck === urlToCompare;
+        }
+
+        if (pathToCheck === '/') {
+            return urlToCompare === pathToCheck;
+        }
+
+        return (
+            pathToCheck === urlToCompare ||
+            urlToCompare.startsWith(`${pathToCheck}/`)
+        );
     };
 
     const isCurrentOrParentUrl: IsCurrentOrParentUrlFn = (
