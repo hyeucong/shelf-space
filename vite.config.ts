@@ -6,10 +6,27 @@ import laravel from 'laravel-vite-plugin';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+    server: {
+        watch: {
+            ignored: [
+                '**/bootstrap/cache/**',
+                '**/public/build/**',
+                '**/storage/**',
+                '**/vendor/**',
+            ],
+        },
+    },
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
-            refresh: true,
+            refresh: [
+                'app/Livewire/**',
+                'app/View/Components/**',
+                'lang/**',
+                'resources/lang/**',
+                'resources/views/**',
+                'routes/**',
+            ],
         }),
         inertia(),
         react({
