@@ -16,21 +16,28 @@ export function SearchInput({
 }: SearchInputProps) {
     const [value, setValue] = useState(initialValue);
 
+    // Debounce search
+    useEffect(() => {
+        // Skip if the value is the same as initial to avoid circular loops on load
+        if (value === initialValue) return;
+
+        const timer = setTimeout(() => {
+            router.get(url, { search: value }, { 
+                preserveState: true, 
+                replace: true 
+            });
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [value, url]);
+
     // Sync state when initialValue changes (e.g. browser back button)
     useEffect(() => {
         setValue(initialValue || '');
     }, [initialValue]);
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        router.get(url, { search: value }, { 
-            preserveState: true, 
-            replace: true 
-        });
-    };
-
     return (
-        <form onSubmit={handleSearch} className="relative w-full max-w-sm">
+        <div className="relative w-full max-w-sm">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
                 type="search"
@@ -39,6 +46,7 @@ export function SearchInput({
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
             />
-        </form>
+        </div>
     );
 }
+
