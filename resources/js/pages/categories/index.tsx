@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { ArrowUpDown, Pipette, Pencil, Trash2 } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -71,7 +71,6 @@ export default function Categories({ categories, filters }: PageProps) {
     const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
     const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
 
-    const closeTimeoutRef = useRef<number | null>(null);
 
     // Local optimistic state and delete modal
     const [localCategories, setLocalCategories] = useState<Category[]>(categories?.data || []);
@@ -98,14 +97,7 @@ export default function Categories({ categories, filters }: PageProps) {
         return () => window.removeEventListener(CATEGORY_CREATE_EVENT, handleOpen);
     }, [clearErrors, reset]);
 
-    // Cleanup any pending close timeout when component unmounts
-    useEffect(() => {
-        return () => {
-            if (closeTimeoutRef.current) {
-                clearTimeout(closeTimeoutRef.current);
-            }
-        };
-    }, []);
+    // no-op
 
     // Keep local list in sync with server props
     useEffect(() => {
@@ -126,22 +118,7 @@ export default function Categories({ categories, filters }: PageProps) {
     };
 
     const closeCreateDialog = () => {
-        // start closing the dialog (triggers animation)
         setIsDialogOpen(false);
-
-        // Delay clearing/reset until after the close animation finishes
-        // (matches the dialog animation duration)
-        if (closeTimeoutRef.current) {
-            clearTimeout(closeTimeoutRef.current);
-        }
-
-        closeTimeoutRef.current = window.setTimeout(() => {
-            setDialogMode('create');
-            setActiveCategoryId(null);
-            reset();
-            clearErrors();
-            closeTimeoutRef.current = null;
-        }, 220);
     };
 
     const handleEditClick = (category: Category) => {

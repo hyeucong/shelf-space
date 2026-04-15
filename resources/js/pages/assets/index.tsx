@@ -38,6 +38,7 @@ import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { Pencil, Trash2, Filter, ArrowUpDown, List as ListIcon, Bookmark, Rows3 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { SearchInput } from '@/components/search-input';
 import {
     Dialog,
@@ -114,6 +115,32 @@ export default function Assets({ assets, filters }: PageProps) {
     useEffect(() => {
         setLocalAssets(assets?.data || []);
     }, [assets]);
+
+    // Ensure selection stays in-sync when the assets list changes
+    useEffect(() => {
+        setSelectedIds((prev) => prev.filter((id) => localAssets.some((a) => a.id === id)));
+    }, [localAssets]);
+
+    // Selection state for rows
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+    const toggleOne = (id: number, checked: boolean) => {
+        setSelectedIds((prev) => {
+            if (checked) return Array.from(new Set([...prev, id]));
+            return prev.filter((i) => i !== id);
+        });
+    };
+
+    const toggleAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedIds(localAssets.map((a) => a.id));
+        } else {
+            setSelectedIds([]);
+        }
+    };
+
+    const allSelected = localAssets.length > 0 && selectedIds.length === localAssets.length;
+    const someSelected = selectedIds.length > 0 && selectedIds.length < localAssets.length;
 
     const closeDeleteDialog = () => {
         setAssetToDelete(null);
@@ -332,6 +359,13 @@ export default function Assets({ assets, filters }: PageProps) {
                         <TableHeader>
                             {isAllTable ? (
                                 <TableRow>
+                                    <TableHead>
+                                        <Checkbox
+                                            aria-label="Select all"
+                                            checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                                            onCheckedChange={(val) => toggleAll(!!val)}
+                                        />
+                                    </TableHead>
                                     <TableHead>ID</TableHead>
                                     <TableHead>Name</TableHead>
                                     <TableHead>Asset ID</TableHead>
@@ -347,6 +381,13 @@ export default function Assets({ assets, filters }: PageProps) {
                                 </TableRow>
                             ) : (
                                 <TableRow>
+                                    <TableHead>
+                                        <Checkbox
+                                            aria-label="Select all"
+                                            checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                                            onCheckedChange={(val) => toggleAll(!!val)}
+                                        />
+                                    </TableHead>
                                     <TableHead>Name</TableHead>
                                     <TableHead>Asset ID</TableHead>
                                     <TableHead>Status</TableHead>
@@ -360,6 +401,13 @@ export default function Assets({ assets, filters }: PageProps) {
                                 localAssets.map((asset) => (
                                     isAllTable ? (
                                         <TableRow key={asset.id}>
+                                            <TableCell>
+                                                <Checkbox
+                                                    aria-label={`Select ${asset.name}`}
+                                                    checked={selectedIds.includes(asset.id)}
+                                                    onCheckedChange={(val) => toggleOne(asset.id, !!val)}
+                                                />
+                                            </TableCell>
                                             <TableCell className="font-medium text-muted-foreground">{asset.id}</TableCell>
                                             <TableCell className="min-w-55 max-w-80 whitespace-normal font-semibold">{asset.name}</TableCell>
                                             <TableCell className="font-medium text-muted-foreground">{asset.asset_id}</TableCell>
@@ -403,6 +451,13 @@ export default function Assets({ assets, filters }: PageProps) {
                                         </TableRow>
                                     ) : (
                                         <TableRow key={asset.id}>
+                                            <TableCell>
+                                                <Checkbox
+                                                    aria-label={`Select ${asset.name}`}
+                                                    checked={selectedIds.includes(asset.id)}
+                                                    onCheckedChange={(val) => toggleOne(asset.id, !!val)}
+                                                />
+                                            </TableCell>
                                             <TableCell className="font-semibold">{asset.name}</TableCell>
                                             <TableCell className="font-medium text-muted-foreground">{asset.asset_id}</TableCell>
                                             <TableCell>
@@ -415,7 +470,7 @@ export default function Assets({ assets, filters }: PageProps) {
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={isAllTable ? 12 : 5} className="h-24 text-center text-muted-foreground">
+                                    <TableCell colSpan={isAllTable ? 13 : 6} className="h-24 text-center text-muted-foreground">
                                         No assets found.
                                     </TableCell>
                                 </TableRow>
