@@ -58,6 +58,39 @@ function DialogContent({
                     "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
                     className
                 )}
+                onOpenAutoFocus={(event) => {
+                    // Prevent Radix's default which may select input content.
+                    event.preventDefault();
+
+                    try {
+                        const content = event.target as HTMLElement | null;
+                        if (!content) return;
+
+                        // Find first focusable element inside the dialog
+                        const focusable = content.querySelector<HTMLElement>(
+                            'input:not([type=hidden]),textarea,select,button,[tabindex]:not([tabindex="-1"])'
+                        );
+
+                        if (focusable) {
+                            focusable.focus({ preventScroll: true } as FocusOptions);
+
+                            // If it's an input/textarea, place caret at end instead of selecting whole value
+                            if (
+                                focusable instanceof HTMLInputElement ||
+                                focusable instanceof HTMLTextAreaElement
+                            ) {
+                                const len = focusable.value?.length ?? 0;
+                                try {
+                                    focusable.setSelectionRange(len, len);
+                                } catch (e) {
+                                    // ignore
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        // swallow any errors to avoid breaking dialog open
+                    }
+                }}
                 {...props}
             >
                 {children}

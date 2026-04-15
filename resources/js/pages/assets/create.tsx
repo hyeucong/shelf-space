@@ -134,40 +134,39 @@ export default function Create() {
 
             <form onSubmit={submit} className="px-6 space-y-6 max-w-4xl pb-10">
                 <Card className="rounded border shadow-none">
-                    <div className="flex items-center justify-between pr-6 border-b border-border/50">
-                        <CardHeader>
-                            <CardTitle className="text-lg">Basic fields</CardTitle>
-                            <CardDescription>
-                                Basic information about your asset.
-                            </CardDescription>
-                        </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="flex justify-between border-b border-border/50 pb-6">
+                            <CardHeader>
+                                <CardTitle className="text-lg">Basic fields</CardTitle>
+                                <CardDescription>
+                                    Basic information about your asset.
+                                </CardDescription>
+                            </CardHeader>
 
-                        <div className="flex items-center gap-2">
-                            <div className="flex -space-x-px">
+                            <div className="flex gap-2">
+                                <div className="flex -space-x-px">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="rounded-l rounded-r-none border-r-0"
+                                        onClick={() => window.history.back()}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button type="button" variant="outline" className="rounded-l-none rounded-r">
+                                        Add another
+                                    </Button>
+                                </div>
+
                                 <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="rounded-l rounded-r-none border-r-0"
-                                    onClick={() => window.history.back()}
+                                    type="submit"
+                                    disabled={processing}
+                                    className={`rounded bg-[#f0642d] hover:bg-[#d95627] text-white border-none`}
                                 >
-                                    Cancel
-                                </Button>
-                                <Button type="button" variant="outline" className="rounded-l-none rounded-r">
-                                    Add another
+                                    Save
                                 </Button>
                             </div>
-
-                            <Button
-                                type="submit"
-                                disabled={processing}
-                                className={`rounded bg-[#f0642d] hover:bg-[#d95627] text-white border-none`}
-                            >
-                                Save
-                            </Button>
                         </div>
-                    </div>
-
-                    <CardContent className="space-y-6 pt-6">
                         {/* Name Input */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                             <div>

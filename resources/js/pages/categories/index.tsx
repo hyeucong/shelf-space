@@ -10,9 +10,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
-import { ArrowUpDown, Pencil, Trash2 } from 'lucide-react';
+import { ArrowUpDown, Pipette, Pencil, Trash2 } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -71,6 +71,8 @@ export default function Categories({ categories, filters }: PageProps) {
     const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
     const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
 
+    const closeTimeoutRef = useRef<number | null>(null);
+
     // Local optimistic state and delete modal
     const [localCategories, setLocalCategories] = useState<Category[]>(categories?.data || []);
     const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
@@ -96,6 +98,15 @@ export default function Categories({ categories, filters }: PageProps) {
         return () => window.removeEventListener(CATEGORY_CREATE_EVENT, handleOpen);
     }, [clearErrors, reset]);
 
+    // Cleanup any pending close timeout when component unmounts
+    useEffect(() => {
+        return () => {
+            if (closeTimeoutRef.current) {
+                clearTimeout(closeTimeoutRef.current);
+            }
+        };
+    }, []);
+
     // Keep local list in sync with server props
     useEffect(() => {
         setLocalCategories(categories?.data || []);
@@ -115,11 +126,22 @@ export default function Categories({ categories, filters }: PageProps) {
     };
 
     const closeCreateDialog = () => {
+        // start closing the dialog (triggers animation)
         setIsDialogOpen(false);
-        setDialogMode('create');
-        setActiveCategoryId(null);
-        reset();
-        clearErrors();
+
+        // Delay clearing/reset until after the close animation finishes
+        // (matches the dialog animation duration)
+        if (closeTimeoutRef.current) {
+            clearTimeout(closeTimeoutRef.current);
+        }
+
+        closeTimeoutRef.current = window.setTimeout(() => {
+            setDialogMode('create');
+            setActiveCategoryId(null);
+            reset();
+            clearErrors();
+            closeTimeoutRef.current = null;
+        }, 220);
     };
 
     const handleEditClick = (category: Category) => {
@@ -310,18 +332,34 @@ export default function Categories({ categories, filters }: PageProps) {
 
                         <div className="grid gap-2">
                             <Label htmlFor="hex_color">Hex Color</Label>
-                            <Input
-                                id="hex_color"
-                                type="text"
-                                value={data.hex_color}
-                                onChange={(event) => setData('hex_color', event.target.value)}
-                                className="rounded"
-                                placeholder="#ab339f"
-                            />
+                            <div className='flex items-center gap-2'>
+                                <Input
+                                    id="hex_color"
+                                    type="text"
+                                    value={data.hex_color}
+                                    onChange={(event) => setData('hex_color', event.target.value)}
+                                    className="rounded"
+                                    placeholder="#ab339f"
+                                />
+                                <Button
+                                    type="button"
+                                    onClick={() => {
+                                        const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+                                        setData('hex_color', randomColor);
+                                    }}
+                                    style={{
+                                        backgroundColor: data.hex_color,
+                                    }}
+                                    className="h-10 px-3 shrink-0 rounded border-2 border-border hover:shadow-md transition-shadow flex items-center justify-center gap-2 text-white font-semibold text-sm"
+                                    title="Click to generate random color"
+                                >
+                                    <Pipette size={16} className="drop-shadow-md" />
+                                </Button>
+                            </div>
                             {errors.hex_color && <span className="text-sm text-red-500">{errors.hex_color}</span>}
                         </div>
 
-                        <DialogFooter className="gap-2 sm:gap-0">
+                        <DialogFooter className="gap-2">
                             <Button type="button" variant="outline" onClick={closeCreateDialog} className="rounded">
                                 Cancel
                             </Button>
@@ -345,7 +383,7 @@ export default function Categories({ categories, filters }: PageProps) {
                     <div className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-muted-foreground">
                         Delete this category only if you are sure it should no longer exist and won't break any asset associations.
                     </div>
-                    <DialogFooter className="gap-2 sm:gap-0">
+                    <DialogFooter className="gap-2">
                         <Button variant="outline" onClick={closeDeleteDialog} className="rounded">Cancel</Button>
                         <Button variant="destructive" onClick={handleDelete} className="rounded" disabled={isDeleting}>
                             {isDeleting ? 'Deleting...' : 'Delete category'}

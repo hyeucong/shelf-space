@@ -42,7 +42,7 @@ export function SearchInput({
             <Input
                 type="search"
                 placeholder={placeholder}
-                className="pl-9 h-9 text-sm w-full lg:w-[300px] shadow-none"
+                className="pl-9 h-9 text-sm w-full lg:w-75 shadow-none"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
             />

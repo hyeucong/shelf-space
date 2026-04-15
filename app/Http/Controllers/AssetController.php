@@ -40,7 +40,7 @@ class AssetController extends Controller
                 $query->where('status', $status);
             })
             ->orderBy($sort, $order)
-            ->paginate($request->input('per_page', 10))
+            ->paginate($request->input('per_page', 20))
             ->withQueryString();
 
         return Inertia::render('assets/index', [

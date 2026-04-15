@@ -222,273 +222,275 @@ export default function Assets({ assets, filters }: PageProps) {
             <Head title="Assets" />
 
             <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
-                {/* Scrollable Table Area */}
-                <div className="flex-1 overflow-y-auto p-4">
-                    {/* Filter Options Toolbar */}
-                    <div className="mb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 rounded border bg-background p-2 shadow-sm min-h-12">
-                        <div className="flex flex-1 flex-row flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
-                                        <Filter size={16} /> Filter
-                                        {filters?.status && (
-                                            <span className="ml-1 rounded-full bg-primary w-1.5 h-1.5" />
-                                        )}
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start" className="w-48">
-                                    <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuRadioGroup
-                                        value={filters?.status || 'all'}
-                                        onValueChange={handleFilterChange}
-                                    >
-                                        <DropdownMenuRadioItem value="all">All Assets</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="available">Available</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="assigned">Assigned</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="maintenance">In Maintenance</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="retired">Retired</DropdownMenuRadioItem>
-                                    </DropdownMenuRadioGroup>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
-                                        <ArrowUpDown size={16} /> Sort
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start" className="w-48">
-                                    <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuRadioGroup
-                                        value={`${filters?.sort || 'created_at'}:${filters?.order || 'desc'}`}
-                                        onValueChange={handleSortChange}
-                                    >
-                                        <DropdownMenuRadioItem value="created_at:desc">Newest</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="created_at:asc">Oldest</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="name:asc">Name (A-Z)</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="name:desc">Name (Z-A)</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="value:desc">Value (Highest)</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="value:asc">Value (Lowest)</DropdownMenuRadioItem>
-                                    </DropdownMenuRadioGroup>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                            <div className="flex items-center rounded-md border bg-background p-1">
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className={tableMode === 'simple' ? 'h-7 gap-1.5 px-2 shadow-none bg-muted text-foreground' : 'h-7 gap-1.5 px-2 shadow-none text-muted-foreground'}
-                                    onClick={() => setTableMode('simple')}
-                                >
-                                    <ListIcon size={15} /> Simple
+                {/* Filter Options Toolbar */}
+                <div className="shrink-0 mb-4 mx-4 mt-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 rounded border bg-background p-2 shadow-sm min-h-12">
+                    <div className="flex flex-1 flex-row flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
+                                    <Filter size={16} /> Filter
+                                    {filters?.status && (
+                                        <span className="ml-1 rounded-full bg-primary w-1.5 h-1.5" />
+                                    )}
                                 </Button>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className={tableMode === 'all' ? 'h-7 gap-1.5 px-2 shadow-none bg-muted text-foreground' : 'h-7 gap-1.5 px-2 shadow-none text-muted-foreground'}
-                                    onClick={() => setTableMode('all')}
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="w-48">
+                                <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuRadioGroup
+                                    value={filters?.status || 'all'}
+                                    onValueChange={handleFilterChange}
                                 >
-                                    <Rows3 size={15} /> All data
+                                    <DropdownMenuRadioItem value="all">All Assets</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="available">Available</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="assigned">Assigned</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="maintenance">In Maintenance</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="retired">Retired</DropdownMenuRadioItem>
+                                </DropdownMenuRadioGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
+                                    <ArrowUpDown size={16} /> Sort
                                 </Button>
-                            </div>
-                            <div className="flex">
-                                <SearchInput
-                                    url="/assets"
-                                    placeholder="Search assets..."
-                                    initialValue={filters?.search}
-                                />
-                            </div>
-
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="w-48">
+                                <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuRadioGroup
+                                    value={`${filters?.sort || 'created_at'}:${filters?.order || 'desc'}`}
+                                    onValueChange={handleSortChange}
+                                >
+                                    <DropdownMenuRadioItem value="created_at:desc">Newest</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="created_at:asc">Oldest</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="name:asc">Name (A-Z)</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="name:desc">Name (Z-A)</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="value:desc">Value (Highest)</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="value:asc">Value (Lowest)</DropdownMenuRadioItem>
+                                </DropdownMenuRadioGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <div className="flex items-center rounded border bg-background p-1 gap-1">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className={tableMode === 'simple' ? 'h-7 px-2 shadow-none bg-muted text-foreground' : 'h-7 px-2 shadow-none text-muted-foreground'}
+                                onClick={() => setTableMode('simple')}
+                                title="Simple view"
+                            >
+                                <ListIcon size={15} />
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className={tableMode === 'all' ? 'h-7 px-2 shadow-none bg-muted text-foreground' : 'h-7 px-2 shadow-none text-muted-foreground'}
+                                onClick={() => setTableMode('all')}
+                                title="All data view"
+                            >
+                                <Rows3 size={15} />
+                            </Button>
                         </div>
-                        <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0">
-                            <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
-                                <Bookmark size={16} /> Saved Filters
+                        <div className="flex">
+                            <SearchInput
+                                url="/assets"
+                                placeholder="Search assets..."
+                                initialValue={filters?.search}
+                            />
+                        </div>
+
+                    </div>
+                    <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0">
+                        <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
+                            <Bookmark size={16} /> Saved Filters
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Scrollable Table Area */}
+                <div className="flex-1 overflow-y-auto mx-4 mb-4 rounded border shadow-none bg-background flex flex-col">
+                    <div className="flex items-center justify-between p-4 border-b border-border/50 shrink-0">
+                        <div>
+                            <h2 className="text-lg font-semibold tracking-tight">Assets</h2>
+                            <p className="text-sm text-muted-foreground">
+                                {localAssets?.length || 0} asset{localAssets?.length !== 1 ? 's' : ''}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" className="rounded shadow-none">
+                                Export selection
+                            </Button>
+                            <Button variant="outline" className="rounded shadow-none">
+                                Actions
                             </Button>
                         </div>
                     </div>
 
-                    <div className="rounded border shadow-none bg-background">
-                        <div className="flex items-center justify-between p-4 border-b border-border/50">
-                            <div>
-                                <h2 className="text-lg font-semibold tracking-tight">Assets</h2>
-                                <p className="text-sm text-muted-foreground">
-                                    {localAssets?.length || 0} asset{localAssets?.length !== 1 ? 's' : ''}
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Button variant="outline" className="rounded shadow-none">
-                                    Export selection
-                                </Button>
-                                <Button variant="outline" className="rounded shadow-none">
-                                    Actions
-                                </Button>
-                            </div>
-                        </div>
-
-                        <Table className={isAllTable ? 'min-w-330' : undefined}>
-                            <TableHeader>
-                                {isAllTable ? (
-                                    <TableRow>
-                                        <TableHead>ID</TableHead>
-                                        <TableHead>Name</TableHead>
-                                        <TableHead>Asset ID</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Category</TableHead>
-                                        <TableHead>Location</TableHead>
-                                        <TableHead>Tags</TableHead>
-                                        <TableHead>Description</TableHead>
-                                        <TableHead>Value</TableHead>
-                                        <TableHead>Created</TableHead>
-                                        <TableHead>Updated</TableHead>
-                                        <TableHead>Actions</TableHead>
-                                    </TableRow>
-                                ) : (
-                                    <TableRow>
-                                        <TableHead>Name</TableHead>
-                                        <TableHead>Asset ID</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Value</TableHead>
-                                        <TableHead>Actions</TableHead>
-                                    </TableRow>
-                                )}
-                            </TableHeader>
-                            <TableBody>
-                                {localAssets && localAssets.length > 0 ? (
-                                    localAssets.map((asset) => (
-                                        isAllTable ? (
-                                            <TableRow key={asset.id}>
-                                                <TableCell className="font-medium text-muted-foreground">#{asset.id}</TableCell>
-                                                <TableCell className="min-w-55 max-w-80 whitespace-normal font-semibold">{asset.name}</TableCell>
-                                                <TableCell className="font-medium text-muted-foreground">{asset.asset_id}</TableCell>
-                                                <TableCell>
-                                                    <Badge variant="outline" className="capitalize">{asset.status}</Badge>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="min-w-35 whitespace-normal">
-                                                        <div>{asset.category?.name || '-'}</div>
-                                                        <div className="text-xs text-muted-foreground">
-                                                            {asset.category_id ? `ID ${asset.category_id}` : 'No category'}
-                                                        </div>
+                    <Table className={isAllTable ? 'min-w-330' : undefined}>
+                        <TableHeader>
+                            {isAllTable ? (
+                                <TableRow>
+                                    <TableHead>ID</TableHead>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Asset ID</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Category</TableHead>
+                                    <TableHead>Location</TableHead>
+                                    <TableHead>Tags</TableHead>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead>Value</TableHead>
+                                    <TableHead>Created</TableHead>
+                                    <TableHead>Updated</TableHead>
+                                    <TableHead>Actions</TableHead>
+                                </TableRow>
+                            ) : (
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Asset ID</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Value</TableHead>
+                                    <TableHead>Actions</TableHead>
+                                </TableRow>
+                            )}
+                        </TableHeader>
+                        <TableBody>
+                            {localAssets && localAssets.length > 0 ? (
+                                localAssets.map((asset) => (
+                                    isAllTable ? (
+                                        <TableRow key={asset.id}>
+                                            <TableCell className="font-medium text-muted-foreground">{asset.id}</TableCell>
+                                            <TableCell className="min-w-55 max-w-80 whitespace-normal font-semibold">{asset.name}</TableCell>
+                                            <TableCell className="font-medium text-muted-foreground">{asset.asset_id}</TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className="capitalize">{asset.status}</Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="min-w-35 whitespace-normal">
+                                                    <div>{asset.category?.name || '-'}</div>
+                                                    <div className="text-xs text-muted-foreground">
+                                                        {asset.category_id ? `ID ${asset.category_id}` : 'No category'}
                                                     </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="min-w-35 whitespace-normal">
-                                                        <div>{asset.location?.name || '-'}</div>
-                                                        <div className="text-xs text-muted-foreground">
-                                                            {asset.location_id ? `ID ${asset.location_id}` : 'No location'}
-                                                        </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="min-w-35 whitespace-normal">
+                                                    <div>{asset.location?.name || '-'}</div>
+                                                    <div className="text-xs text-muted-foreground">
+                                                        {asset.location_id ? `ID ${asset.location_id}` : 'No location'}
                                                     </div>
-                                                </TableCell>
-                                                <TableCell className="min-w-45 whitespace-normal">
-                                                    {asset.tags && asset.tags.length > 0 ? (
-                                                        <div className="flex flex-wrap gap-1">
-                                                            {asset.tags.map((tag) => (
-                                                                <Badge key={tag.id} variant="outline">{tag.name}</Badge>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-muted-foreground">-</span>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="min-w-60 max-w-80 whitespace-normal text-muted-foreground">
-                                                    {asset.description || '-'}
-                                                </TableCell>
-                                                <TableCell>{formatCurrency(asset.value)}</TableCell>
-                                                <TableCell>{formatDate(asset.created_at)}</TableCell>
-                                                <TableCell>{formatDate(asset.updated_at)}</TableCell>
-                                                <TableCell>{renderActionButtons(asset)}</TableCell>
-                                            </TableRow>
-                                        ) : (
-                                            <TableRow key={asset.id}>
-                                                <TableCell className="font-semibold">{asset.name}</TableCell>
-                                                <TableCell className="font-medium text-muted-foreground">{asset.asset_id}</TableCell>
-                                                <TableCell>
-                                                    <span className="capitalize">{asset.status}</span>
-                                                </TableCell>
-                                                <TableCell>{formatCurrency(asset.value)}</TableCell>
-                                                <TableCell>{renderActionButtons(asset)}</TableCell>
-                                            </TableRow>
-                                        )
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={isAllTable ? 12 : 5} className="h-24 text-center text-muted-foreground">
-                                            No assets found.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="min-w-45 whitespace-normal">
+                                                {asset.tags && asset.tags.length > 0 ? (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {asset.tags.map((tag) => (
+                                                            <Badge key={tag.id} variant="outline">{tag.name}</Badge>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-muted-foreground">-</span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="min-w-60 max-w-80 whitespace-normal text-muted-foreground">
+                                                {asset.description || '-'}
+                                            </TableCell>
+                                            <TableCell>{formatCurrency(asset.value)}</TableCell>
+                                            <TableCell>{formatDate(asset.created_at)}</TableCell>
+                                            <TableCell>{formatDate(asset.updated_at)}</TableCell>
+                                            <TableCell>{renderActionButtons(asset)}</TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        <TableRow key={asset.id}>
+                                            <TableCell className="font-semibold">{asset.name}</TableCell>
+                                            <TableCell className="font-medium text-muted-foreground">{asset.asset_id}</TableCell>
+                                            <TableCell>
+                                                <span className="capitalize">{asset.status}</span>
+                                            </TableCell>
+                                            <TableCell>{formatCurrency(asset.value)}</TableCell>
+                                            <TableCell>{renderActionButtons(asset)}</TableCell>
+                                        </TableRow>
+                                    )
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={isAllTable ? 12 : 5} className="h-24 text-center text-muted-foreground">
+                                        No assets found.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 </div>
 
                 {/* Fixed Pagination Bar at Bottom */}
-                {assets.links && assets.links.length > 0 && (
-                    <div className="shrink-0 border-t bg-background/95 p-4 backdrop-blur supports-backdrop-filter:bg-background/60">
-                        <Pagination className="justify-start">
-                            <PaginationContent>
-                                <PaginationItem>
-                                    <PaginationFirst
-                                        href={assets.first_page_url}
-                                        className={assets.current_page === 1 ? "opacity-30 pointer-events-none" : ""}
-                                    />
-                                </PaginationItem>
+                {
+                    assets.links && assets.links.length > 0 && (
+                        <div className="shrink-0 border-t bg-background/95 p-4 backdrop-blur supports-backdrop-filter:bg-background/60">
+                            <Pagination className="w-full flex gap-2">
+                                <PaginationContent>
+                                    <PaginationItem className='border-r'>
+                                        <PaginationFirst
+                                            href={assets.first_page_url}
+                                            className={assets.current_page === 1 ? "opacity-30 pointer-events-none" : ""}
+                                        />
+                                    </PaginationItem>
 
-                                <PaginationItem>
-                                    <PaginationPrevious
-                                        href={assets.links[0].url || "#"}
-                                        className={!assets.links[0].url ? "opacity-30 pointer-events-none" : ""}
-                                    />
-                                </PaginationItem>
+                                    <PaginationItem>
+                                        <PaginationPrevious
+                                            href={assets.links[0].url || "#"}
+                                            className={!assets.links[0].url ? "opacity-30 pointer-events-none" : ""}
+                                        />
+                                    </PaginationItem>
 
-                                <PaginationItem>
-                                    <PaginationPageIndicator
-                                        currentPage={assets.current_page}
-                                        lastPage={assets.last_page}
-                                    />
-                                </PaginationItem>
+                                    <PaginationItem>
+                                        <PaginationPageIndicator
+                                            currentPage={assets.current_page}
+                                            lastPage={assets.last_page}
+                                        />
+                                    </PaginationItem>
 
-                                <PaginationItem>
-                                    <PaginationNext
-                                        href={assets.links[assets.links.length - 1].url || "#"}
-                                        className={!assets.links[assets.links.length - 1].url ? "opacity-30 pointer-events-none" : ""}
-                                    />
-                                </PaginationItem>
+                                    <PaginationItem>
+                                        <PaginationNext
+                                            href={assets.links[assets.links.length - 1].url || "#"}
+                                            className={!assets.links[assets.links.length - 1].url ? "opacity-30 pointer-events-none" : ""}
+                                        />
+                                    </PaginationItem>
 
-                                <PaginationItem>
-                                    <PaginationLast
-                                        href={assets.last_page_url}
-                                        className={assets.current_page === assets.last_page ? "opacity-30 pointer-events-none" : ""}
-                                    />
-                                </PaginationItem>
-                            </PaginationContent>
+                                    <PaginationItem className='border-l'>
+                                        <PaginationLast
+                                            href={assets.last_page_url}
+                                            className={assets.current_page === assets.last_page ? "opacity-30 pointer-events-none" : ""}
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
 
-                            <div className="flex items-center gap-2 ml-2">
-                                <Select
-                                    value={String(assets.per_page)}
-                                    onValueChange={handlePerPageChange}
-                                >
-                                    <SelectTrigger size="sm" className="h-9 w-17.5 rounded-md shadow-none">
-                                        <SelectValue placeholder={assets.per_page} />
-                                    </SelectTrigger>
-                                    <SelectContent side="top">
-                                        <SelectItem value="10">10</SelectItem>
-                                        <SelectItem value="20">20</SelectItem>
-                                        <SelectItem value="50">50</SelectItem>
-                                        <SelectItem value="100">100</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <span className="text-sm text-muted-foreground whitespace-nowrap">Assets per page</span>
-                            </div>
-                        </Pagination>
-                    </div>
-                )}
-            </div>
+                                <div className="flex items-center gap-2">
+                                    <Select
+                                        value={String(assets.per_page)}
+                                        onValueChange={handlePerPageChange}
+                                    >
+                                        <SelectTrigger className="h-9 w-17.5 rounded shadow-none cursor-pointer">
+                                            <SelectValue placeholder={assets.per_page} />
+                                        </SelectTrigger>
+                                        <SelectContent side="top">
+                                            <SelectItem value="20">20</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                            <SelectItem value="100">100</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <span className="text-sm text-muted-foreground whitespace-nowrap">Assets per page</span>
+                                </div>
+                            </Pagination>
+                        </div>
+                    )
+                }
+            </div >
 
             {/* Delete Confirmation Dialog */}
-            <Dialog open={!!assetToDelete} onOpenChange={(open) => !open && closeDeleteDialog()}>
+            < Dialog open={!!assetToDelete
+            } onOpenChange={(open) => !open && closeDeleteDialog()}>
                 <DialogContent className="sm:max-w-106.25 rounded-lg" onPointerDownOutside={closeDeleteDialog}>
                     <DialogHeader>
                         <DialogTitle>Delete Asset</DialogTitle>
@@ -500,7 +502,7 @@ export default function Assets({ assets, filters }: PageProps) {
                             This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-muted-foreground">
+                    <div className="rounded border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-muted-foreground">
                         Delete this asset only if you are sure it should no longer exist in your inventory records.
                     </div>
                     <DialogFooter className="gap-2 sm:gap-0">
@@ -512,7 +514,7 @@ export default function Assets({ assets, filters }: PageProps) {
                         </Button>
                     </DialogFooter>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
         </>
     );
 }

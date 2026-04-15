@@ -30,7 +30,7 @@ function PaginationContent({
     return (
         <ul
             data-slot="pagination-content"
-            className={cn("flex items-center rounded-md border -space-x-px bg-background", className)}
+            className={cn("flex items-center rounded border -space-x-px bg-background", className)}
             {...props}
         />
     )
@@ -61,7 +61,7 @@ function PaginationLink({
                     variant: "ghost",
                     size,
                 }),
-                "rounded-none border-l first:border-l-0 first:rounded-l-md last:rounded-r-md h-9 text-muted-foreground hover:text-foreground",
+                "rounded-none border-l first:border-l-0 h-9 text-muted-foreground hover:text-foreground",
                 className
             )}
             preserveScroll
@@ -161,7 +161,7 @@ function PaginationPageIndicator({
     className?: string;
 }) {
     return (
-        <div className={cn("px-4 py-2 text-sm font-medium border-l text-muted-foreground whitespace-nowrap", className)}>
+        <div className={cn("px-4 py-2 text-sm font-medium border-l border-r text-muted-foreground whitespace-nowrap", className)}>
             Page <span className="text-foreground">{currentPage}</span> of <span className="text-foreground">{lastPage}</span>
         </div>
     );

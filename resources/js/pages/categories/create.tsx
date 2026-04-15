@@ -33,7 +33,7 @@ export default function Create() {
             <Head title="New category" />
 
             <Dialog open={open} onOpenChange={(o) => { if (!o) window.history.back(); setOpen(o); }}>
-                <DialogContent className="sm:max-w-[720px] rounded-lg">
+                <DialogContent className="sm:max-w-180 rounded-lg">
                     <DialogHeader>
                         <DialogTitle>{data.name || 'New category'}</DialogTitle>
                         <DialogDescription>Basic information about your category.</DialogDescription>
