@@ -28,5 +28,9 @@ Route::middleware([
     Route::resource('reminders', ReminderController::class);
 });
 
+Route::get('/ping', function () {
+    return response('Awake', 200);
+});
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
