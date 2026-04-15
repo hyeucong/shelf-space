@@ -63,6 +63,14 @@ interface PageProps {
     };
 }
 
+type AssetQueryValue = string | number | undefined;
+
+const sanitizeQuery = (query: Record<string, AssetQueryValue>) => (
+    Object.fromEntries(
+        Object.entries(query).filter(([, value]) => value !== undefined && value !== ''),
+    ) as Record<string, string | number>
+);
+
 export default function Assets({ assets, filters }: PageProps) {
     // Local state for optimistic updates
     const [localAssets, setLocalAssets] = useState<Asset[]>(assets?.data || []);
@@ -124,37 +132,38 @@ export default function Assets({ assets, filters }: PageProps) {
     };
 
     const handlePerPageChange = (value: string) => {
-        router.get('/assets', {
+        router.get('/assets', sanitizeQuery({
             ...filters,
             per_page: value,
-            page: 1 // Reset to first page when changing per page
-        }, {
+            page: 1,
+        }), {
             preserveState: true,
-            replace: true
+            replace: true,
         });
     };
 
     const handleSortChange = (value: string) => {
         const [sort, order] = value.split(':');
-        router.get('/assets', {
+
+        router.get('/assets', sanitizeQuery({
             ...filters,
             sort,
             order,
-            page: 1
-        }, {
+            page: 1,
+        }), {
             preserveState: true,
-            replace: true
+            replace: true,
         });
     };
 
     const handleFilterChange = (value: string) => {
-        router.get('/assets', {
+        router.get('/assets', sanitizeQuery({
             ...filters,
             status: value === 'all' ? undefined : value,
-            page: 1
-        }, {
+            page: 1,
+        }), {
             preserveState: true,
-            replace: true
+            replace: true,
         });
     };
 
@@ -202,13 +211,13 @@ export default function Assets({ assets, filters }: PageProps) {
     );
 
     const isAllTable = tableMode === 'all';
+    const hasAssets = localAssets.length > 0;
 
     return (
         <>
             <Head title="Assets" />
 
             <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
-                {/* Filter Options Toolbar */}
                 <div className="shrink-0 mb-4 mx-4 mt-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 rounded border bg-background p-2 shadow-sm min-h-12">
                     <div className="flex flex-1 flex-row flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
                         <DropdownMenu>
@@ -284,67 +293,65 @@ export default function Assets({ assets, filters }: PageProps) {
                                 url="/assets"
                                 placeholder="Search assets..."
                                 initialValue={filters?.search}
-                                query={{
+                                query={sanitizeQuery({
                                     ...filters,
                                     page: undefined,
-                                }}
+                                })}
                             />
                         </div>
-
                     </div>
                     <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0">
-                        <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
+                        <Button type="button" variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
                             <Bookmark size={16} /> Saved Filters
                         </Button>
-                        <Button variant="outline" className="h-9 rounded shadow-none shrink-0">
+                        <Button type="button" variant="outline" className="h-9 rounded shadow-none shrink-0">
                             Export selection
                         </Button>
-                        <Button variant="outline" className="h-9 rounded shadow-none shrink-0">
+                        <Button type="button" variant="outline" className="h-9 rounded shadow-none shrink-0">
                             Actions
                         </Button>
                     </div>
                 </div>
 
-                {/* Scrollable Table Area */}
-                <div className="flex-1 overflow-y-auto mx-4 mb-4 rounded border shadow-none bg-background flex flex-col">
-                    <Table className={isAllTable ? 'min-w-330' : undefined}>
-                        <TableHeader className="bg-background">
-                            <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
-                                <TableHead className="w-12.5">
-                                    <Checkbox
-                                        aria-label="Select all"
-                                        checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                                        onCheckedChange={(val) => toggleAll(!!val)}
-                                    />
-                                </TableHead>
-                                {isAllTable ? (
-                                    <>
-                                        <TableHead>ID</TableHead>
-                                        <TableHead>Name</TableHead>
-                                        <TableHead>Asset ID</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Category</TableHead>
-                                        <TableHead>Location</TableHead>
-                                        <TableHead>Tags</TableHead>
-                                        <TableHead>Description</TableHead>
-                                        <TableHead>Value</TableHead>
-                                        <TableHead>Created</TableHead>
-                                        <TableHead>Updated</TableHead>
-                                    </>
-                                ) : (
-                                    <>
-                                        <TableHead>Name</TableHead>
-                                        <TableHead>Asset ID</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Value</TableHead>
-                                    </>
-                                )}
-                                <TableHead>Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {localAssets && localAssets.length > 0 ? (
-                                localAssets.map((asset) => (
+                {hasAssets ? (
+                    <div className="flex-1 overflow-y-auto mx-4 mb-4 rounded border shadow-none bg-background flex flex-col">
+                        <Table className={isAllTable ? 'min-w-330' : undefined}>
+                            <TableHeader className="bg-background">
+                                <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
+                                    <TableHead className="w-12.5">
+                                        <Checkbox
+                                            aria-label="Select all"
+                                            checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                                            onCheckedChange={(val) => toggleAll(!!val)}
+                                        />
+                                    </TableHead>
+                                    {isAllTable ? (
+                                        <>
+                                            <TableHead>ID</TableHead>
+                                            <TableHead>Name</TableHead>
+                                            <TableHead>Asset ID</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead>Category</TableHead>
+                                            <TableHead>Location</TableHead>
+                                            <TableHead>Tags</TableHead>
+                                            <TableHead>Description</TableHead>
+                                            <TableHead>Value</TableHead>
+                                            <TableHead>Created</TableHead>
+                                            <TableHead>Updated</TableHead>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <TableHead>Name</TableHead>
+                                            <TableHead>Asset ID</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead>Value</TableHead>
+                                        </>
+                                    )}
+                                    <TableHead>Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {localAssets.map((asset) => (
                                     isAllTable ? (
                                         <TableRow key={asset.id}>
                                             <TableCell>
@@ -417,23 +424,26 @@ export default function Assets({ assets, filters }: PageProps) {
                                             <TableCell>{renderActionButtons(asset)}</TableCell>
                                         </TableRow>
                                     )
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={isAllTable ? 13 : 6} className="h-24 text-center text-muted-foreground">
-                                        No assets found.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                ) : (
+                    <div className="mx-4 mb-4 flex flex-1 items-center justify-center rounded border border-dashed bg-background p-6 text-center shadow-sm">
+                        <div className="mx-auto max-w-lg space-y-1">
+                            <h3 className="text-2xl font-bold tracking-tight">No assets yet</h3>
+                            <p className="text-sm text-muted-foreground">You don't have any assets yet. Create your first asset to get started.</p>
+                        </div>
+                    </div>
+                )}
 
-                <DataTablePagination
-                    pagination={assets}
-                    onPerPageChange={handlePerPageChange}
-                />
-            </div >
+                {hasAssets && (
+                    <DataTablePagination
+                        pagination={assets}
+                        onPerPageChange={handlePerPageChange}
+                    />
+                )}
+            </div>
 
             <ResourceDeleteDialog
                 open={!!assetToDelete}

@@ -19,6 +19,8 @@ class AssetController extends Controller
         $sort = $request->input('sort', 'created_at');
         $order = $request->input('order', 'desc');
         $perPage = $request->integer('per_page', 20);
+        $status = trim((string) $request->input('status', ''));
+        $status = $status !== '' ? $status : null;
 
         $allowedSorts = ['name', 'asset_id', 'status', 'value', 'created_at'];
         if (! in_array($sort, $allowedSorts)) {
@@ -41,7 +43,7 @@ class AssetController extends Controller
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('asset_id', 'like', "%{$search}%");
             })
-            ->when($request->input('status'), function ($query, $status) {
+            ->when($status, function ($query, $status) {
                 $query->where('status', $status);
             })
             ->orderBy($sort, $order)
@@ -55,7 +57,7 @@ class AssetController extends Controller
                 'per_page' => $perPage,
                 'sort' => $sort,
                 'order' => $order,
-                'status' => $request->input('status'),
+                'status' => $status,
             ],
         ]);
     }

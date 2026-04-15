@@ -16,13 +16,18 @@ export function SearchInput({
     initialValue = "",
     query,
 }: SearchInputProps) {
-    const [value, setValue] = useState(initialValue);
-    const serializedQuery = JSON.stringify(query || {});
+    const normalizedInitialValue = initialValue ?? '';
+    const serializedQuery = JSON.stringify(
+        Object.fromEntries(
+            Object.entries(query || {}).filter(([, queryValue]) => queryValue !== undefined && queryValue !== ''),
+        ),
+    );
+    const [value, setValue] = useState(normalizedInitialValue);
 
     // Debounce search
     useEffect(() => {
         // Skip if the value is the same as initial to avoid circular loops on load
-        if (value === initialValue) return;
+        if (value === normalizedInitialValue) return;
 
         const baseQuery = JSON.parse(serializedQuery) as Record<string, string | number | undefined>;
 
@@ -38,12 +43,12 @@ export function SearchInput({
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [value, url, initialValue, serializedQuery]);
+    }, [value, url, normalizedInitialValue, serializedQuery]);
 
     // Sync state when initialValue changes (e.g. browser back button)
     useEffect(() => {
-        setValue(initialValue || '');
-    }, [initialValue]);
+        setValue(normalizedInitialValue);
+    }, [normalizedInitialValue]);
 
     return (
         <div className="relative w-full max-w-sm">
