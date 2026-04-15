@@ -112,9 +112,17 @@ class AssetController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Asset $asset)
     {
-        //
+        $asset->load([
+            'category:id,name',
+            'location:id,name',
+            'tags:id,name',
+        ]);
+
+        return Inertia::render('assets/show', [
+            'asset' => $asset,
+        ]);
     }
 
     /**

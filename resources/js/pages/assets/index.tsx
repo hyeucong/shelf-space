@@ -224,7 +224,7 @@ export default function Assets({ assets, filters }: PageProps) {
 
     const renderActionButtons = (asset: Asset) => (
         <div className="flex gap-2">
-            <Button variant="ghost" size="icon" className="h-8 w-8 border" asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 border" asChild onClick={(e) => e.stopPropagation()}>
                 <Link href={`/assets/${asset.id}/edit`}>
                     <Pencil className="h-4 w-4" />
                     <span className="sr-only">Edit</span>
@@ -234,7 +234,7 @@ export default function Assets({ assets, filters }: PageProps) {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 border text-destructive hover:bg-destructive/10 hover:text-destructive"
-                onClick={() => setAssetToDelete(asset)}
+                onClick={(e) => { e.stopPropagation(); setAssetToDelete(asset); }}
             >
                 <Trash2 className="h-4 w-4" />
                 <span className="sr-only">Delete</span>
@@ -356,52 +356,46 @@ export default function Assets({ assets, filters }: PageProps) {
                     </div>
 
                     <Table className={isAllTable ? 'min-w-330' : undefined}>
-                        <TableHeader>
-                            {isAllTable ? (
-                                <TableRow>
-                                    <TableHead>
-                                        <Checkbox
-                                            aria-label="Select all"
-                                            checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                                            onCheckedChange={(val) => toggleAll(!!val)}
-                                        />
-                                    </TableHead>
-                                    <TableHead>ID</TableHead>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Asset ID</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Category</TableHead>
-                                    <TableHead>Location</TableHead>
-                                    <TableHead>Tags</TableHead>
-                                    <TableHead>Description</TableHead>
-                                    <TableHead>Value</TableHead>
-                                    <TableHead>Created</TableHead>
-                                    <TableHead>Updated</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            ) : (
-                                <TableRow>
-                                    <TableHead>
-                                        <Checkbox
-                                            aria-label="Select all"
-                                            checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                                            onCheckedChange={(val) => toggleAll(!!val)}
-                                        />
-                                    </TableHead>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Asset ID</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Value</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            )}
+                        <TableHeader className="bg-background">
+                            <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-transparent">
+                                <TableHead className="w-12.5">
+                                    <Checkbox
+                                        aria-label="Select all"
+                                        checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                                        onCheckedChange={(val) => toggleAll(!!val)}
+                                    />
+                                </TableHead>
+                                {isAllTable ? (
+                                    <>
+                                        <TableHead>ID</TableHead>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Asset ID</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Category</TableHead>
+                                        <TableHead>Location</TableHead>
+                                        <TableHead>Tags</TableHead>
+                                        <TableHead>Description</TableHead>
+                                        <TableHead>Value</TableHead>
+                                        <TableHead>Created</TableHead>
+                                        <TableHead>Updated</TableHead>
+                                    </>
+                                ) : (
+                                    <>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Asset ID</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Value</TableHead>
+                                    </>
+                                )}
+                                <TableHead>Actions</TableHead>
+                            </TableRow>
                         </TableHeader>
                         <TableBody>
                             {localAssets && localAssets.length > 0 ? (
                                 localAssets.map((asset) => (
                                     isAllTable ? (
-                                        <TableRow key={asset.id}>
-                                            <TableCell>
+                                        <TableRow key={asset.id} className="cursor-pointer" onClick={() => router.get(`/assets/${asset.id}`)}>
+                                            <TableCell onClick={(e) => e.stopPropagation()}>
                                                 <Checkbox
                                                     aria-label={`Select ${asset.name}`}
                                                     checked={selectedIds.includes(asset.id)}
@@ -447,11 +441,11 @@ export default function Assets({ assets, filters }: PageProps) {
                                             <TableCell>{formatCurrency(asset.value)}</TableCell>
                                             <TableCell>{formatDate(asset.created_at)}</TableCell>
                                             <TableCell>{formatDate(asset.updated_at)}</TableCell>
-                                            <TableCell>{renderActionButtons(asset)}</TableCell>
+                                            <TableCell onClick={(e) => e.stopPropagation()}>{renderActionButtons(asset)}</TableCell>
                                         </TableRow>
                                     ) : (
-                                        <TableRow key={asset.id}>
-                                            <TableCell>
+                                        <TableRow key={asset.id} className="cursor-pointer" onClick={() => router.get(`/assets/${asset.id}`)}>
+                                            <TableCell onClick={(e) => e.stopPropagation()}>
                                                 <Checkbox
                                                     aria-label={`Select ${asset.name}`}
                                                     checked={selectedIds.includes(asset.id)}
@@ -464,7 +458,7 @@ export default function Assets({ assets, filters }: PageProps) {
                                                 <span className="capitalize">{asset.status}</span>
                                             </TableCell>
                                             <TableCell>{formatCurrency(asset.value)}</TableCell>
-                                            <TableCell>{renderActionButtons(asset)}</TableCell>
+                                            <TableCell onClick={(e) => e.stopPropagation()}>{renderActionButtons(asset)}</TableCell>
                                         </TableRow>
                                     )
                                 ))
