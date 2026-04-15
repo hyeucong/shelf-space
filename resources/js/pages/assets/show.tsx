@@ -1,6 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { Badge } from '@/components/ui/badge';
+import { Camera } from 'lucide-react';
 
 interface AssetType {
     id: number;
@@ -16,30 +17,24 @@ interface AssetType {
     updated_at?: string | null;
 }
 
-function formatCurrency(value: number | null) {
-    if (value === null || typeof value === 'undefined') return '-';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value));
-}
-
-function formatDate(value?: string | null) {
-    if (!value) return '-';
-    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value));
-}
-
 export default function AssetShow({ asset }: { asset: AssetType }) {
     return (
         <>
             <Head title={asset?.name || 'Asset'} />
-
-            <div className="p-6">
-
-                <div className="flex items-start justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-semibold">{asset?.name || 'Asset'}</h1>
-                        <p className="text-sm text-muted-foreground">{asset?.asset_id || ''}</p>
+            <div className="p-4">
+                <div className='flex items-start'>
+                    <div className="shrink-0">
+                        <div className="w-13 h-13 rounded border bg-background flex items-center justify-center overflow-hidden">
+                            <Camera className="text-muted-foreground" size={32} />
+                        </div>
+                    </div>
+                    <div className="flex items-start justify-between gap-4 ml-4">
+                        <div>
+                            <h1 className="text-2xl font-semibold">{asset?.name || 'Asset'}</h1>
+                            <p className="text-sm text-muted-foreground">{asset?.asset_id || ''}</p>
+                        </div>
                     </div>
                 </div>
-
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="rounded border p-4 bg-background">
                         <h3 className="text-sm font-medium text-muted-foreground mb-2">Summary</h3>
@@ -58,15 +53,15 @@ export default function AssetShow({ asset }: { asset: AssetType }) {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Value</span>
-                                <span>{formatCurrency(asset?.value ?? null)}</span>
+                                <span>{asset?.value ?? '-'}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Created</span>
-                                <span>{formatDate(asset?.created_at)}</span>
+                                <span>{asset?.created_at ?? '-'}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Updated</span>
-                                <span>{formatDate(asset?.updated_at)}</span>
+                                <span>{asset?.updated_at ?? '-'}</span>
                             </div>
                         </div>
                     </div>
@@ -97,12 +92,12 @@ export default function AssetShow({ asset }: { asset: AssetType }) {
     );
 }
 
-AssetShow.layout = (page: React.ReactNode & { props: { asset: AssetType } }) => (
+AssetShow.layout = (page: React.ReactNode) => (
     <AppSidebarLayout
         children={page}
         breadcrumbs={[
             { title: 'Assets', href: '/assets' },
-            { title: page.props.asset?.name || 'Asset', href: '#' }
+            { title: (page as any)?.props?.asset?.name || 'Asset', href: '#' }
         ]}
     />
 );
