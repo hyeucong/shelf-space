@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { DataTablePagination } from '@/components/data-table-pagination';
+import { ResourceDeleteDialog } from '@/components/resource-form-dialog';
 import {
     Table,
     TableBody,
@@ -25,14 +26,6 @@ import { useState, useEffect } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SearchInput } from '@/components/search-input';
 import type { PaginatedData } from '@/types/pagination';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
 
 interface Asset {
     id: number;
@@ -442,33 +435,19 @@ export default function Assets({ assets, filters }: PageProps) {
                 />
             </div >
 
-            {/* Delete Confirmation Dialog */}
-            < Dialog open={!!assetToDelete
-            } onOpenChange={(open) => !open && closeDeleteDialog()}>
-                <DialogContent className="sm:max-w-106.25 rounded-lg" onPointerDownOutside={closeDeleteDialog}>
-                    <DialogHeader>
-                        <DialogTitle>Delete Asset</DialogTitle>
-                        <DialogDescription>
-                            This will permanently remove <span className="font-semibold text-foreground">{assetToDelete?.name}</span>
-                            {assetToDelete?.asset_id ? (
-                                <span className="text-muted-foreground"> ({assetToDelete.asset_id})</span>
-                            ) : null}.
-                            This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="rounded border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-muted-foreground">
-                        Delete this asset only if you are sure it should no longer exist in your inventory records.
-                    </div>
-                    <DialogFooter className="gap-2 sm:gap-0">
-                        <Button variant="outline" onClick={closeDeleteDialog} className="rounded">
-                            Cancel
-                        </Button>
-                        <Button variant="destructive" onClick={handleDelete} className="rounded" disabled={isDeleting}>
-                            {isDeleting ? 'Deleting asset...' : 'Delete asset'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog >
+            <ResourceDeleteDialog
+                open={!!assetToDelete}
+                onOpenChange={(open) => !open && closeDeleteDialog()}
+                title="Delete Asset"
+                itemName={assetToDelete?.name}
+                itemMeta={assetToDelete?.asset_id}
+                warning="Delete this asset only if you are sure it should no longer exist in your inventory records."
+                processing={isDeleting}
+                onConfirm={handleDelete}
+                confirmLabel="Delete asset"
+                confirmPendingLabel="Deleting asset..."
+                contentClassName="sm:max-w-106.25 rounded-lg"
+            />
         </>
     );
 }

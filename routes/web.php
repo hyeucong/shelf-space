@@ -21,8 +21,8 @@ Route::middleware([
     Route::resource('assets', AssetController::class);
     Route::resource('kits', KitController::class);
 
-    Route::resource('categories', CategoryController::class);
-    Route::resource('tags', TagController::class);
+    Route::resource('categories', CategoryController::class)->except(['create', 'edit']);
+    Route::resource('tags', TagController::class)->except(['create', 'edit']);
     Route::resource('locations', LocationController::class);
     Route::resource('audits', AuditController::class);
     Route::resource('reminders', ReminderController::class);

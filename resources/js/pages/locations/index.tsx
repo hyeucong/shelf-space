@@ -1,18 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import { ResourceDeleteDialog } from '@/components/resource-form-dialog';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { ResourceIndexTable, type ResourceIndexColumn, type ResourceIndexSortOption } from '@/components/resource-index-table';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { PaginatedData } from '@/types/pagination';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 
 interface Location {
     id: number;
@@ -121,26 +114,16 @@ export default function Locations({ locations, filters }: PageProps) {
                     options: sortOptions,
                 }}
             />
-            {/* Delete Confirmation Dialog */}
-            <Dialog open={!!locationToDelete} onOpenChange={(open) => !open && closeDeleteDialog()}>
-                <DialogContent className="sm:max-w-106.25 rounded-lg" onPointerDownOutside={closeDeleteDialog}>
-                    <DialogHeader>
-                        <DialogTitle>Delete Location</DialogTitle>
-                        <DialogDescription>
-                            This will permanently remove <span className="font-semibold text-foreground">{locationToDelete?.name}</span>. This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-muted-foreground">
-                        Delete this location only if you are sure it should no longer exist and won't break any asset associations.
-                    </div>
-                    <DialogFooter className="gap-2 sm:gap-0">
-                        <Button variant="outline" onClick={closeDeleteDialog} className="rounded">Cancel</Button>
-                        <Button variant="destructive" onClick={handleDelete} className="rounded" disabled={isDeleting}>
-                            {isDeleting ? 'Deleting...' : 'Delete location'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ResourceDeleteDialog
+                open={!!locationToDelete}
+                onOpenChange={(open) => !open && closeDeleteDialog()}
+                title="Delete Location"
+                itemName={locationToDelete?.name}
+                warning="Delete this location only if you are sure it should no longer exist and won't break any asset associations."
+                processing={isDeleting}
+                onConfirm={handleDelete}
+                confirmLabel="Delete location"
+            />
         </>
     );
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Tag;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class TagController extends Controller
@@ -48,19 +49,13 @@ class TagController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return Inertia::render('tags/create');
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        //
+        Tag::create($this->validatedData($request));
+
+        return redirect()->route('tags.index');
     }
 
     /**
@@ -72,19 +67,13 @@ class TagController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Tag $tag)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Tag $tag)
     {
-        //
+        $tag->update($this->validatedData($request, $tag));
+
+        return redirect()->route('tags.index');
     }
 
     /**
@@ -92,6 +81,24 @@ class TagController extends Controller
      */
     public function destroy(Tag $tag)
     {
-        //
+        $tag->delete();
+
+        return redirect()->route('tags.index');
+    }
+
+    /**
+     * Validate and normalize tag input.
+     *
+     * @return array<string, mixed>
+     */
+    private function validatedData(Request $request, ?Tag $tag = null): array
+    {
+        $request->merge([
+            'name' => trim((string) $request->input('name', '')),
+        ]);
+
+        return $request->validate([
+            'name' => ['required', 'string', 'max:255', Rule::unique('tags', 'name')->ignore($tag?->id)],
+        ]);
     }
 }

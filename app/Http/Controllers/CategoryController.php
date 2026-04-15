@@ -39,23 +39,11 @@ class CategoryController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return Inertia::render('categories/create');
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'hex_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-        ]);
+        $validated = $this->validatedData($request);
 
         $redirectTo = $request->string('redirect_to')->toString();
         if ($redirectTo === '' || ! str_starts_with($redirectTo, '/')) {
@@ -88,23 +76,11 @@ class CategoryController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Category $category)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Category $category)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'hex_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-        ]);
+        $validated = $this->validatedData($request);
 
         $baseSlug = Str::slug($validated['name']);
         $slug = $baseSlug;
@@ -129,5 +105,28 @@ class CategoryController extends Controller
         $category->delete();
 
         return redirect()->route('categories.index');
+    }
+
+    /**
+     * Validate and normalize category input.
+     *
+     * @return array<string, mixed>
+     */
+    private function validatedData(Request $request): array
+    {
+        $description = $request->input('description');
+        $hexColor = $request->input('hex_color');
+
+        $request->merge([
+            'name' => trim((string) $request->input('name', '')),
+            'description' => is_string($description) ? trim($description) ?: null : null,
+            'hex_color' => is_string($hexColor) ? trim($hexColor) ?: null : null,
+        ]);
+
+        return $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'hex_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+        ]);
     }
 }

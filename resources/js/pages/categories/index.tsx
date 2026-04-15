@@ -1,6 +1,7 @@
 import { Head, router, useForm } from '@inertiajs/react';
 
 import { Button } from '@/components/ui/button';
+import { ResourceDeleteDialog, ResourceFormDialog, ResourceHeaderAction } from '@/components/resource-form-dialog';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { ResourceIndexTable, type ResourceIndexColumn } from '@/components/resource-index-table';
 import { Pipette, Pencil, Trash2 } from 'lucide-react';
@@ -8,14 +9,6 @@ import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { PaginatedData } from '@/types/pagination';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 
 const CATEGORY_CREATE_EVENT = 'categories:create:open';
 
@@ -98,7 +91,7 @@ export default function Categories({ categories, filters }: PageProps) {
         setSelectedIds([]);
     };
 
-    const closeCreateDialog = () => {
+    const closeFormDialog = () => {
         setIsDialogOpen(false);
     };
 
@@ -118,11 +111,7 @@ export default function Categories({ categories, filters }: PageProps) {
         event.preventDefault();
 
         const onSuccess = () => {
-            setIsDialogOpen(false);
-            setDialogMode('create');
-            setActiveCategoryId(null);
-            reset();
-            clearErrors();
+            closeFormDialog();
         };
 
         if (dialogMode === 'edit' && activeCategoryId !== null) {
@@ -247,103 +236,85 @@ export default function Categories({ categories, filters }: PageProps) {
             />
 
             {/* Create / Edit Dialog */}
-            <Dialog open={isDialogOpen} onOpenChange={(open) => !open ? closeCreateDialog() : setIsDialogOpen(true)}>
-                <DialogContent className="sm:max-w-180 rounded-lg" onPointerDownOutside={closeCreateDialog}>
-                    <DialogHeader>
-                        <DialogTitle>
-                            {dialogMode === 'edit' ? (data.name || 'Edit category') : (data.name || 'New category')}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {dialogMode === 'edit' ? 'Update the selected category.' : 'Basic information about your category.'}
-                        </DialogDescription>
-                    </DialogHeader>
+            <ResourceFormDialog
+                open={isDialogOpen}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        closeFormDialog();
+                    }
+                }}
+                onSubmit={submitDialog}
+                title={dialogMode === 'edit' ? (data.name || 'Edit category') : (data.name || 'New category')}
+                description={dialogMode === 'edit' ? 'Update the selected category.' : 'Basic information about your category.'}
+                processing={processing}
+                submitLabel={dialogMode === 'edit' ? 'Update' : 'Save'}
+                submitPendingLabel={dialogMode === 'edit' ? 'Updating...' : 'Saving...'}
+                contentClassName="sm:max-w-180 rounded-lg"
+            >
+                <div className="grid gap-2">
+                    <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
+                    <Input
+                        id="name"
+                        value={data.name}
+                        onChange={(event) => setData('name', event.target.value)}
+                        className="rounded"
+                        placeholder="e.g. Office Equipment"
+                    />
+                    {errors.name && <span className="text-sm text-red-500">{errors.name}</span>}
+                </div>
 
-                    <form onSubmit={submitDialog} className="space-y-6">
-                        <div className="grid gap-2">
-                            <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
-                            <Input
-                                id="name"
-                                value={data.name}
-                                onChange={(event) => setData('name', event.target.value)}
-                                className="rounded"
-                                placeholder="e.g. Office Equipment"
-                            />
-                            {errors.name && <span className="text-sm text-red-500">{errors.name}</span>}
-                        </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Input
+                        id="description"
+                        value={data.description}
+                        onChange={(event) => setData('description', event.target.value)}
+                        className="rounded"
+                        placeholder="Items used for office work, such as computers, printers, scanners, or phones."
+                    />
+                    {errors.description && <span className="text-sm text-red-500">{errors.description}</span>}
+                </div>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="description">Description</Label>
-                            <Input
-                                id="description"
-                                value={data.description}
-                                onChange={(event) => setData('description', event.target.value)}
-                                className="rounded"
-                                placeholder="Items used for office work, such as computers, printers, scanners, or phones."
-                            />
-                            {errors.description && <span className="text-sm text-red-500">{errors.description}</span>}
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="hex_color">Hex Color</Label>
-                            <div className='flex items-center gap-2'>
-                                <Input
-                                    id="hex_color"
-                                    type="text"
-                                    value={data.hex_color}
-                                    onChange={(event) => setData('hex_color', event.target.value)}
-                                    className="rounded"
-                                    placeholder="#ab339f"
-                                />
-                                <Button
-                                    type="button"
-                                    onClick={() => {
-                                        const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
-                                        setData('hex_color', randomColor);
-                                    }}
-                                    style={{
-                                        backgroundColor: data.hex_color,
-                                    }}
-                                    className="h-10 px-3 shrink-0 rounded border-2 border-border hover:shadow-md transition-shadow flex items-center justify-center gap-2 text-white font-semibold text-sm"
-                                    title="Click to generate random color"
-                                >
-                                    <Pipette size={16} className="drop-shadow-md" />
-                                </Button>
-                            </div>
-                            {errors.hex_color && <span className="text-sm text-red-500">{errors.hex_color}</span>}
-                        </div>
-
-                        <DialogFooter className="gap-2">
-                            <Button type="button" variant="outline" onClick={closeCreateDialog} className="rounded">
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={processing} className="rounded bg-[#f0642d] hover:bg-[#d95627] text-white border-none">
-                                {processing ? (dialogMode === 'edit' ? 'Updating...' : 'Saving...') : (dialogMode === 'edit' ? 'Update' : 'Save')}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            {/* Delete Confirmation Dialog */}
-            <Dialog open={!!categoryToDelete} onOpenChange={(open) => !open && closeDeleteDialog()}>
-                <DialogContent className="sm:max-w-106.25 rounded-lg" onPointerDownOutside={closeDeleteDialog}>
-                    <DialogHeader>
-                        <DialogTitle>Delete Category</DialogTitle>
-                        <DialogDescription>
-                            This will permanently remove <span className="font-semibold text-foreground">{categoryToDelete?.name}</span>. This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-muted-foreground">
-                        Delete this category only if you are sure it should no longer exist and won't break any asset associations.
-                    </div>
-                    <DialogFooter className="gap-2">
-                        <Button variant="outline" onClick={closeDeleteDialog} className="rounded">Cancel</Button>
-                        <Button variant="destructive" onClick={handleDelete} className="rounded" disabled={isDeleting}>
-                            {isDeleting ? 'Deleting...' : 'Delete category'}
+                <div className="grid gap-2">
+                    <Label htmlFor="hex_color">Hex Color</Label>
+                    <div className="flex items-center gap-2">
+                        <Input
+                            id="hex_color"
+                            type="text"
+                            value={data.hex_color}
+                            onChange={(event) => setData('hex_color', event.target.value)}
+                            className="rounded"
+                            placeholder="#ab339f"
+                        />
+                        <Button
+                            type="button"
+                            onClick={() => {
+                                const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+                                setData('hex_color', randomColor);
+                            }}
+                            style={{
+                                backgroundColor: data.hex_color,
+                            }}
+                            className="h-10 shrink-0 items-center justify-center gap-2 rounded border-2 border-border px-3 text-sm font-semibold text-white transition-shadow hover:shadow-md"
+                            title="Click to generate random color"
+                        >
+                            <Pipette size={16} className="drop-shadow-md" />
                         </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                    </div>
+                    {errors.hex_color && <span className="text-sm text-red-500">{errors.hex_color}</span>}
+                </div>
+            </ResourceFormDialog>
+
+            <ResourceDeleteDialog
+                open={!!categoryToDelete}
+                onOpenChange={(open) => !open && closeDeleteDialog()}
+                title="Delete Category"
+                itemName={categoryToDelete?.name}
+                warning="Delete this category only if you are sure it should no longer exist and won't break any asset associations."
+                processing={isDeleting}
+                onConfirm={handleDelete}
+                confirmLabel="Delete category"
+            />
         </>
     );
 }
@@ -355,9 +326,7 @@ Categories.layout = (page: React.ReactNode) => (
             { title: 'Categories', href: '/categories' }
         ]}
         headerAction={
-            <Button className="rounded border-none" onClick={() => dispatchCategoryCreateEvent()}>
-                New category
-            </Button>
+            <ResourceHeaderAction label="New category" onClick={dispatchCategoryCreateEvent} />
         }
     />
 );

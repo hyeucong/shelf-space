@@ -1,18 +1,20 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
+
 import { Button } from '@/components/ui/button';
+import { ResourceDeleteDialog, ResourceFormDialog, ResourceHeaderAction } from '@/components/resource-form-dialog';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { ResourceIndexTable, type ResourceIndexColumn, type ResourceIndexSortOption } from '@/components/resource-index-table';
 import { Pencil, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import type { PaginatedData } from '@/types/pagination';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+
+const TAG_CREATE_EVENT = 'tags:create:open';
+
+function dispatchTagCreateEvent() {
+    window.dispatchEvent(new CustomEvent(TAG_CREATE_EVENT));
+}
 
 interface Tag {
     id: number;
@@ -30,13 +32,70 @@ interface PageProps {
 }
 
 export default function Tags({ tags, filters }: PageProps) {
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+    const [activeTagId, setActiveTagId] = useState<number | null>(null);
     const [localTags, setLocalTags] = useState<Tag[]>(tags?.data || []);
     const [tagToDelete, setTagToDelete] = useState<Tag | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
+        name: '',
+    });
+
+    useEffect(() => {
+        const handleOpen = () => {
+            reset();
+            clearErrors();
+            setDialogMode('create');
+            setActiveTagId(null);
+            setIsDialogOpen(true);
+        };
+
+        window.addEventListener(TAG_CREATE_EVENT, handleOpen);
+
+        return () => window.removeEventListener(TAG_CREATE_EVENT, handleOpen);
+    }, [clearErrors, reset]);
+
     useEffect(() => {
         setLocalTags(tags?.data || []);
     }, [tags]);
+
+    const closeFormDialog = () => {
+        setIsDialogOpen(false);
+    };
+
+    const handleEditClick = (tag: Tag) => {
+        clearErrors();
+        setDialogMode('edit');
+        setActiveTagId(tag.id);
+        setData({
+            name: tag.name,
+        });
+        setIsDialogOpen(true);
+    };
+
+    const submitDialog = (event: React.FormEvent) => {
+        event.preventDefault();
+
+        const onSuccess = () => {
+            closeFormDialog();
+        };
+
+        if (dialogMode === 'edit' && activeTagId !== null) {
+            put(`/tags/${activeTagId}`, {
+                preserveScroll: true,
+                onSuccess,
+            });
+
+            return;
+        }
+
+        post('/tags', {
+            preserveScroll: true,
+            onSuccess,
+        });
+    };
 
     const closeDeleteDialog = () => setTagToDelete(null);
 
@@ -75,17 +134,16 @@ export default function Tags({ tags, filters }: PageProps) {
             headerClassName: 'w-31.25',
             render: (tag) => (
                 <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/tags/${tag.id}/edit`}>
-                            <Pencil className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
-                        </Link>
+                    <Button variant="ghost" size="icon" onClick={() => handleEditClick(tag)} disabled={processing}>
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
                     </Button>
                     <Button
                         variant="ghost"
                         size="icon"
                         className="border text-destructive hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => setTagToDelete(tag)}
+                        disabled={processing}
                     >
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Delete</span>
@@ -114,26 +172,45 @@ export default function Tags({ tags, filters }: PageProps) {
                     options: sortOptions,
                 }}
             />
-            {/* Delete Confirmation Dialog */}
-            <Dialog open={!!tagToDelete} onOpenChange={(open) => !open && closeDeleteDialog()}>
-                <DialogContent className="sm:max-w-106.25 rounded-lg" onPointerDownOutside={closeDeleteDialog}>
-                    <DialogHeader>
-                        <DialogTitle>Delete Tag</DialogTitle>
-                        <DialogDescription>
-                            This will permanently remove <span className="font-semibold text-foreground">{tagToDelete?.name}</span>. This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-muted-foreground">
-                        Delete this tag only if you are sure it should no longer exist and won't break any asset associations.
-                    </div>
-                    <DialogFooter className="gap-2 sm:gap-0">
-                        <Button variant="outline" onClick={closeDeleteDialog} className="rounded">Cancel</Button>
-                        <Button variant="destructive" onClick={handleDelete} className="rounded" disabled={isDeleting}>
-                            {isDeleting ? 'Deleting...' : 'Delete tag'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+
+            <ResourceFormDialog
+                open={isDialogOpen}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        closeFormDialog();
+                    }
+                }}
+                onSubmit={submitDialog}
+                title={dialogMode === 'edit' ? (data.name || 'Edit tag') : (data.name || 'New tag')}
+                description={dialogMode === 'edit' ? 'Update the selected tag.' : 'Basic information about your tag.'}
+                processing={processing}
+                submitLabel={dialogMode === 'edit' ? 'Update' : 'Save'}
+                submitPendingLabel={dialogMode === 'edit' ? 'Updating...' : 'Saving...'}
+                contentClassName="sm:max-w-xl rounded-lg"
+            >
+                <div className="grid gap-2">
+                    <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
+                    <Input
+                        id="name"
+                        value={data.name}
+                        onChange={(event) => setData('name', event.target.value)}
+                        className="rounded"
+                        placeholder="e.g. Critical"
+                    />
+                    {errors.name && <span className="text-sm text-red-500">{errors.name}</span>}
+                </div>
+            </ResourceFormDialog>
+
+            <ResourceDeleteDialog
+                open={!!tagToDelete}
+                onOpenChange={(open) => !open && closeDeleteDialog()}
+                title="Delete Tag"
+                itemName={tagToDelete?.name}
+                warning="Delete this tag only if you are sure it should no longer exist and won't break any asset associations."
+                processing={isDeleting}
+                onConfirm={handleDelete}
+                confirmLabel="Delete tag"
+            />
         </>
     );
 }
@@ -145,11 +222,7 @@ Tags.layout = (page: React.ReactNode) => (
             { title: 'Tags', href: '/tags' }
         ]}
         headerAction={
-            <Button className="rounded border-none" asChild>
-                <Link href="/tags/create">
-                    New tag
-                </Link>
-            </Button>
+            <ResourceHeaderAction label="New tag" onClick={dispatchTagCreateEvent} />
         }
     />
 );
