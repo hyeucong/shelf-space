@@ -7,29 +7,38 @@ interface SearchInputProps {
     url: string;
     placeholder?: string;
     initialValue?: string;
+    query?: Record<string, string | number | undefined>;
 }
 
 export function SearchInput({
     url,
     placeholder = "Search...",
-    initialValue = ""
+    initialValue = "",
+    query,
 }: SearchInputProps) {
     const [value, setValue] = useState(initialValue);
+    const serializedQuery = JSON.stringify(query || {});
 
     // Debounce search
     useEffect(() => {
         // Skip if the value is the same as initial to avoid circular loops on load
         if (value === initialValue) return;
 
+        const baseQuery = JSON.parse(serializedQuery) as Record<string, string | number | undefined>;
+
         const timer = setTimeout(() => {
-            router.get(url, { search: value }, {
+            router.get(url, {
+                ...baseQuery,
+                search: value || undefined,
+                page: 1,
+            }, {
                 preserveState: true,
                 replace: true
             });
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [value, url]);
+    }, [value, url, initialValue, serializedQuery]);
 
     // Sync state when initialValue changes (e.g. browser back button)
     useEffect(() => {

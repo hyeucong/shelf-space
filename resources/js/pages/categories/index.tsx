@@ -1,18 +1,8 @@
 import { Head, router, useForm } from '@inertiajs/react';
 
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { DataTablePagination } from '@/components/data-table-pagination';
-import { SearchInput } from '@/components/search-input';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
+import { ResourceIndexTable, type ResourceIndexColumn } from '@/components/resource-index-table';
 import { Pipette, Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
@@ -108,17 +98,6 @@ export default function Categories({ categories, filters }: PageProps) {
         setSelectedIds([]);
     };
 
-    const handlePerPageChange = (value: string) => {
-        router.get('/categories', {
-            ...filters,
-            per_page: value,
-            page: 1,
-        }, {
-            preserveState: true,
-            replace: true,
-        });
-    };
-
     const allSelected = localCategories.length > 0 && selectedIds.length === localCategories.length;
     const someSelected = selectedIds.length > 0 && selectedIds.length < localCategories.length;
 
@@ -183,121 +162,89 @@ export default function Categories({ categories, filters }: PageProps) {
         });
     };
 
+    const columns: ResourceIndexColumn<Category>[] = [
+        {
+            key: 'name',
+            header: 'Name',
+            cellClassName: 'font-medium text-foreground',
+            render: (category) => category.name,
+        },
+        {
+            key: 'description',
+            header: 'Description',
+            cellClassName: 'max-w-120 whitespace-normal text-muted-foreground',
+            render: (category) => category.description || 'No description yet.',
+        },
+        {
+            key: 'assets',
+            header: 'Assets',
+            cellClassName: 'font-medium text-muted-foreground',
+            render: (category) => `${category.assets_count} asset${category.assets_count === 1 ? '' : 's'}`,
+        },
+        {
+            key: 'color',
+            header: 'Color',
+            render: (category) => (
+                <div className="flex items-center gap-2">
+                    <span
+                        className="h-4 w-4 rounded-full border border-border"
+                        style={{ backgroundColor: category.hex_color || '#d1d5db' }}
+                    />
+                    <span className="text-sm text-muted-foreground">
+                        {category.hex_color || '-'}
+                    </span>
+                </div>
+            ),
+        },
+        {
+            key: 'actions',
+            header: 'Actions',
+            render: (category) => (
+                <div className="flex gap-2">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 border"
+                        disabled={processing}
+                        onClick={() => handleEditClick(category)}
+                    >
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 border text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => setCategoryToDelete(category)}
+                        disabled={processing}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                    </Button>
+                </div>
+            ),
+        },
+    ];
+
     return (
         <>
             <Head title="Categories" />
 
-            <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
-
-                <div className="flex-1 overflow-y-auto mx-4 my-4 rounded border bg-background shadow-sm flex flex-col">
-                    <div className="flex items-center justify-between p-4 border-b border-border/50 shrink-0">
-                        <div>
-                            <h2 className="text-lg font-semibold tracking-tight">Categories</h2>
-                            <p className="text-sm text-muted-foreground">
-                                {localCategories.length} categor{localCategories.length === 1 ? 'y' : 'ies'} on this page
-                            </p>
-                        </div>
-                        <div className="ml-4">
-                            <div className="flex items-center">
-                                <SearchInput
-                                    url="/categories"
-                                    placeholder="Search categories..."
-                                    initialValue={filters?.search}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <Table>
-                        <TableHeader className="bg-background">
-                            <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
-                                <TableHead className="w-12.5">
-                                    <Checkbox
-                                        aria-label="Select all"
-                                        checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                                        onCheckedChange={(value) => toggleAll(!!value)}
-                                    />
-                                </TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead>Assets</TableHead>
-                                <TableHead>Color</TableHead>
-                                <TableHead>Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {localCategories.length > 0 ? (
-                                localCategories.map((category) => (
-                                    <TableRow key={category.id}>
-                                        <TableCell>
-                                            <Checkbox
-                                                aria-label={`Select ${category.name}`}
-                                                checked={selectedIds.includes(category.id)}
-                                                onCheckedChange={(value) => toggleOne(category.id, !!value)}
-                                            />
-                                        </TableCell>
-                                        <TableCell className="font-medium text-foreground">{category.name}</TableCell>
-                                        <TableCell className="max-w-120 whitespace-normal text-muted-foreground">
-                                            {category.description || 'No description yet.'}
-                                        </TableCell>
-                                        <TableCell className="font-medium text-muted-foreground">
-                                            {category.assets_count} asset{category.assets_count === 1 ? '' : 's'}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <span
-                                                    className="h-4 w-4 rounded-full border border-border"
-                                                    style={{ backgroundColor: category.hex_color || '#d1d5db' }}
-                                                />
-                                                <span className="text-sm text-muted-foreground">
-                                                    {category.hex_color || '-'}
-                                                </span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 border"
-                                                    disabled={processing}
-                                                    onClick={() => handleEditClick(category)}
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                    <span className="sr-only">Edit</span>
-                                                </Button>
-
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 border"
-                                                    onClick={() => setCategoryToDelete(category)}
-                                                    disabled={processing}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                    <span className="sr-only">Delete</span>
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                                        No categories found.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
-
-                <DataTablePagination
-                    pagination={categories}
-                    itemLabel="Categories"
-                    onPerPageChange={handlePerPageChange}
-                />
-            </div>
+            <ResourceIndexTable
+                resourcePath="/categories"
+                searchPlaceholder="Search categories..."
+                pagination={{ ...categories, data: localCategories }}
+                filters={filters}
+                columns={columns}
+                emptyMessage="No categories found."
+                selection={{
+                    selectedIds,
+                    onToggleAll: toggleAll,
+                    onToggleOne: (category, checked) => toggleOne(category.id, checked),
+                    getLabel: (category) => `Select ${category.name}`,
+                }}
+            />
 
             {/* Create / Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={(open) => !open ? closeCreateDialog() : setIsDialogOpen(true)}>

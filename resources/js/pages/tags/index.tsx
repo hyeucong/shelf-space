@@ -1,36 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
-import { ArrowUpDown, Pencil, Trash2 } from 'lucide-react';
-import { SearchInput } from '@/components/search-input';
+import { ResourceIndexTable, type ResourceIndexColumn, type ResourceIndexSortOption } from '@/components/resource-index-table';
+import { Pencil, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationNext,
-    PaginationPrevious,
-    PaginationFirst,
-    PaginationLast,
-    PaginationPageIndicator,
-} from '@/components/ui/pagination';
+import type { PaginatedData } from '@/types/pagination';
 import {
     Dialog,
     DialogContent,
@@ -43,25 +17,6 @@ import {
 interface Tag {
     id: number;
     name: string;
-}
-
-interface PaginationLinkType {
-    url: string | null;
-    label: string;
-    active: boolean;
-}
-
-interface PaginatedData<T> {
-    data: T[];
-    links: PaginationLinkType[];
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    first_page_url: string;
-    last_page_url: string;
-    from: number;
-    to: number;
-    total: number;
 }
 
 interface PageProps {
@@ -101,148 +56,61 @@ export default function Tags({ tags, filters }: PageProps) {
         });
     };
 
-    const handleSortChange = (value: string) => {
-        const [sort, order] = value.split(':');
-        router.get('/tags', {
-            ...filters,
-            sort,
-            order,
-            page: 1
-        }, {
-            preserveState: true,
-            replace: true
-        });
-    };
+    const sortOptions: ResourceIndexSortOption[] = [
+        { value: 'created_at:desc', label: 'Newest' },
+        { value: 'created_at:asc', label: 'Oldest' },
+        { value: 'name:asc', label: 'Name (A-Z)' },
+        { value: 'name:desc', label: 'Name (Z-A)' },
+    ];
+
+    const columns: ResourceIndexColumn<Tag>[] = [
+        {
+            key: 'name',
+            header: 'Name',
+            render: (tag) => tag.name,
+        },
+        {
+            key: 'actions',
+            header: 'Actions',
+            headerClassName: 'w-31.25',
+            render: (tag) => (
+                <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="icon" asChild>
+                        <Link href={`/tags/${tag.id}/edit`}>
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                        </Link>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="border text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => setTagToDelete(tag)}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                    </Button>
+                </div>
+            ),
+        },
+    ];
 
     return (
         <>
             <Head title="Tags" />
 
-            <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto p-4">
-                    {/* Toolbar */}
-                    <div className="mb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 rounded border bg-background p-2 shadow-sm min-h-12">
-                        <div className="flex flex-1 flex-row flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
-                                        <ArrowUpDown size={16} /> Sort
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start" className="w-48">
-                                    <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuRadioGroup
-                                        value={`${filters?.sort || 'created_at'}:${filters?.order || 'desc'}`}
-                                        onValueChange={handleSortChange}
-                                    >
-                                        <DropdownMenuRadioItem value="created_at:desc">Newest</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="created_at:asc">Oldest</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="name:asc">Name (A-Z)</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="name:desc">Name (Z-A)</DropdownMenuRadioItem>
-                                    </DropdownMenuRadioGroup>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-
-                            <div className="flex">
-                                <SearchInput
-                                    url="/tags"
-                                    placeholder="Search tags..."
-                                    initialValue={filters?.search}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Content Area */}
-                    {localTags.length > 0 ? (
-                        <div className="rounded border bg-background shadow-sm">
-                            <div className="p-4">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Name</TableHead>
-                                            <TableHead className="w-31.25">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {localTags.map((tag) => (
-                                            <TableRow key={tag.id}>
-                                                <TableCell>{tag.name}</TableCell>
-                                                <TableCell>
-                                                    <div className="flex gap-2 justify-end">
-                                                        <Button variant="ghost" size="icon" asChild>
-                                                            <Link href={`/tags/${tag.id}/edit`}>
-                                                                <Pencil className="h-4 w-4" />
-                                                            </Link>
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10 border" onClick={() => setTagToDelete(tag)}>
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-
-                            {tags.links && tags.links.length > 0 && (
-                                <div className="shrink-0 border-t bg-background/95 p-4">
-                                    <Pagination className="justify-start">
-                                        <PaginationContent>
-                                            <PaginationItem>
-                                                <PaginationFirst
-                                                    href={tags.first_page_url}
-                                                    className={tags.current_page === 1 ? "opacity-30 pointer-events-none" : ""}
-                                                />
-                                            </PaginationItem>
-
-                                            <PaginationItem>
-                                                <PaginationPrevious
-                                                    href={tags.links[0].url || "#"}
-                                                    className={!tags.links[0].url ? "opacity-30 pointer-events-none" : ""}
-                                                />
-                                            </PaginationItem>
-
-                                            <PaginationItem>
-                                                <PaginationPageIndicator
-                                                    currentPage={tags.current_page}
-                                                    lastPage={tags.last_page}
-                                                />
-                                            </PaginationItem>
-
-                                            <PaginationItem>
-                                                <PaginationNext
-                                                    href={tags.links[tags.links.length - 1].url || "#"}
-                                                    className={!tags.links[tags.links.length - 1].url ? "opacity-30 pointer-events-none" : ""}
-                                                />
-                                            </PaginationItem>
-
-                                            <PaginationItem>
-                                                <PaginationLast
-                                                    href={tags.last_page_url}
-                                                    className={tags.current_page === tags.last_page ? "opacity-30 pointer-events-none" : ""}
-                                                />
-                                            </PaginationItem>
-                                        </PaginationContent>
-                                    </Pagination>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="flex flex-1 items-center justify-center rounded border border-dashed bg-background h-75">
-                            <div className="flex flex-col items-center gap-1 text-center">
-                                <h3 className="text-2xl font-bold tracking-tight">No tags yet</h3>
-                                <p className="text-sm text-muted-foreground">Tags allow you to add flexible labels to your assets.</p>
-                                <Button className="mt-4 rounded" asChild>
-                                    <Link href="/tags/create">New tag</Link>
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
+            <ResourceIndexTable
+                resourcePath="/tags"
+                searchPlaceholder="Search tags..."
+                pagination={{ ...tags, data: localTags }}
+                filters={filters}
+                columns={columns}
+                emptyMessage="No tags found."
+                sort={{
+                    value: `${filters?.sort || 'created_at'}:${filters?.order || 'desc'}`,
+                    options: sortOptions,
+                }}
+            />
             {/* Delete Confirmation Dialog */}
             <Dialog open={!!tagToDelete} onOpenChange={(open) => !open && closeDeleteDialog()}>
                 <DialogContent className="sm:max-w-106.25 rounded-lg" onPointerDownOutside={closeDeleteDialog}>

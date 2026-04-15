@@ -18,15 +18,13 @@ import {
 import type { PaginatedData } from '@/types/pagination';
 
 interface DataTablePaginationProps {
-    pagination: Pick<PaginatedData<unknown>, 'links' | 'current_page' | 'last_page' | 'per_page' | 'first_page_url' | 'last_page_url'>;
-    itemLabel: string;
+    pagination: Pick<PaginatedData<unknown>, 'links' | 'current_page' | 'last_page' | 'per_page' | 'first_page_url' | 'last_page_url' | 'from' | 'to' | 'total'>;
     onPerPageChange: (value: string) => void;
     perPageOptions?: string[];
 }
 
 export function DataTablePagination({
     pagination,
-    itemLabel,
     onPerPageChange,
     perPageOptions = ['20', '50', '100'],
 }: DataTablePaginationProps) {
@@ -36,7 +34,7 @@ export function DataTablePagination({
 
     return (
         <div className="shrink-0 border-t bg-background/95 p-4 backdrop-blur supports-backdrop-filter:bg-background/60">
-            <Pagination className="w-full flex gap-2">
+            <Pagination className="flex w-full flex-col gap-3 sm:flex-row sm:items-center ">
                 <PaginationContent>
                     <PaginationItem className="border-r">
                         <PaginationFirst
@@ -88,7 +86,9 @@ export function DataTablePagination({
                             ))}
                         </SelectContent>
                     </Select>
-                    <span className="text-sm text-muted-foreground whitespace-nowrap">{itemLabel} per page</span>
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                        Showing {pagination.from ?? 0}-{pagination.to ?? 0} of {pagination.total} items
+                    </span>
                 </div>
             </Pagination>
         </div>

@@ -291,36 +291,29 @@ export default function Assets({ assets, filters }: PageProps) {
                                 url="/assets"
                                 placeholder="Search assets..."
                                 initialValue={filters?.search}
+                                query={{
+                                    ...filters,
+                                    page: undefined,
+                                }}
                             />
                         </div>
 
                     </div>
-                    <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0">
+                    <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0">
                         <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
                             <Bookmark size={16} /> Saved Filters
+                        </Button>
+                        <Button variant="outline" className="h-9 rounded shadow-none shrink-0">
+                            Export selection
+                        </Button>
+                        <Button variant="outline" className="h-9 rounded shadow-none shrink-0">
+                            Actions
                         </Button>
                     </div>
                 </div>
 
                 {/* Scrollable Table Area */}
                 <div className="flex-1 overflow-y-auto mx-4 mb-4 rounded border shadow-none bg-background flex flex-col">
-                    <div className="flex items-center justify-between p-4 border-b border-border/50 shrink-0">
-                        <div>
-                            <h2 className="text-lg font-semibold tracking-tight">Assets</h2>
-                            <p className="text-sm text-muted-foreground">
-                                {localAssets?.length || 0} asset{localAssets?.length !== 1 ? 's' : ''}
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button variant="outline" className="rounded shadow-none">
-                                Export selection
-                            </Button>
-                            <Button variant="outline" className="rounded shadow-none">
-                                Actions
-                            </Button>
-                        </div>
-                    </div>
-
                     <Table className={isAllTable ? 'min-w-330' : undefined}>
                         <TableHeader className="bg-background">
                             <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
@@ -445,7 +438,6 @@ export default function Assets({ assets, filters }: PageProps) {
 
                 <DataTablePagination
                     pagination={assets}
-                    itemLabel="Assets"
                     onPerPageChange={handlePerPageChange}
                 />
             </div >
