@@ -51,13 +51,18 @@ interface ResourceIndexSortConfig {
     options: ResourceIndexSortOption[];
 }
 
+interface ResourceIndexEmptyState {
+    title: string;
+    description?: string;
+}
+
 interface ResourceIndexTableProps<T extends { id: number }> {
     resourcePath: string;
     searchPlaceholder: string;
     pagination: PaginatedData<T>;
     filters: Record<string, FilterValue>;
     columns: ResourceIndexColumn<T>[];
-    emptyMessage: string;
+    emptyState: ResourceIndexEmptyState;
     sort?: ResourceIndexSortConfig;
     selection?: ResourceIndexSelection<T>;
     tableClassName?: string;
@@ -69,12 +74,13 @@ export function ResourceIndexTable<T extends { id: number }>({
     pagination,
     filters,
     columns,
-    emptyMessage,
+    emptyState,
     sort,
     selection,
     tableClassName,
 }: ResourceIndexTableProps<T>) {
     const items = pagination?.data || [];
+    const hasItems = items.length > 0;
     const allSelected = selection ? items.length > 0 && selection.selectedIds.length === items.length : false;
     const someSelected = selection ? selection.selectedIds.length > 0 && selection.selectedIds.length < items.length : false;
 
@@ -107,9 +113,6 @@ export function ResourceIndexTable<T extends { id: number }>({
         ...filters,
         page: undefined,
     };
-
-    const emptyColSpan = columns.length + (selection ? 1 : 0);
-
     return (
         <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
             <div className="shrink-0 mb-4 mx-4 mt-4 flex min-h-12 flex-col items-start justify-between gap-3 rounded border bg-background p-2 shadow-sm md:flex-row md:items-center">
@@ -144,30 +147,30 @@ export function ResourceIndexTable<T extends { id: number }>({
                 </div>
             </div>
 
-            <div className="mx-4 mb-4 flex flex-1 flex-col overflow-y-auto rounded border bg-background shadow-sm">
-                <Table className={tableClassName}>
-                    <TableHeader className="bg-background">
-                        <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
-                            {selection ? (
-                                <TableHead className="w-12.5">
-                                    <Checkbox
-                                        aria-label="Select all"
-                                        checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                                        onCheckedChange={(value) => selection.onToggleAll(!!value)}
-                                    />
-                                </TableHead>
-                            ) : null}
+            {hasItems ? (
+                <div className="mx-4 mb-4 flex flex-1 flex-col overflow-y-auto rounded border bg-background shadow-sm">
+                    <Table className={tableClassName}>
+                        <TableHeader className="bg-background">
+                            <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
+                                {selection ? (
+                                    <TableHead className="w-12.5">
+                                        <Checkbox
+                                            aria-label="Select all"
+                                            checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                                            onCheckedChange={(value) => selection.onToggleAll(!!value)}
+                                        />
+                                    </TableHead>
+                                ) : null}
 
-                            {columns.map((column) => (
-                                <TableHead key={column.key} className={column.headerClassName}>
-                                    {column.header}
-                                </TableHead>
-                            ))}
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {items.length > 0 ? (
-                            items.map((item) => (
+                                {columns.map((column) => (
+                                    <TableHead key={column.key} className={column.headerClassName}>
+                                        {column.header}
+                                    </TableHead>
+                                ))}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {items.map((item) => (
                                 <TableRow key={item.id}>
                                     {selection ? (
                                         <TableCell>
@@ -191,19 +194,22 @@ export function ResourceIndexTable<T extends { id: number }>({
                                         );
                                     })}
                                 </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={emptyColSpan} className="h-24 text-center text-muted-foreground">
-                                    {emptyMessage}
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+            ) : (
+                <div className="mx-4 mb-4 flex flex-1 items-center justify-center rounded border border-dashed bg-background p-6 text-center shadow-sm">
+                    <div className="mx-auto max-w-lg space-y-1">
+                        <h3 className="text-2xl font-bold tracking-tight">{emptyState.title}</h3>
+                        {emptyState.description ? (
+                            <p className="text-sm text-muted-foreground">{emptyState.description}</p>
+                        ) : null}
+                    </div>
+                </div>
+            )}
 
-            <DataTablePagination pagination={pagination} onPerPageChange={handlePerPageChange} />
+            {hasItems ? <DataTablePagination pagination={pagination} onPerPageChange={handlePerPageChange} /> : null}
         </div>
     );
 }

@@ -14,18 +14,27 @@ class CategoryController extends Controller
      */
     public function index(Request $request)
     {
+        $perPage = $request->integer('per_page', 20);
+
+        if (! in_array($perPage, [20, 50, 100], true)) {
+            $perPage = 20;
+        }
+
         $categories = Category::query()
             ->withCount('assets')
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
             ->orderBy('created_at', 'desc')
-            ->paginate($request->input('per_page', 20))
+            ->paginate($perPage)
             ->withQueryString();
 
         return Inertia::render('categories/index', [
             'categories' => $categories,
-            'filters' => $request->only(['search', 'per_page']),
+            'filters' => [
+                'search' => $request->input('search'),
+                'per_page' => $perPage,
+            ],
         ]);
     }
 

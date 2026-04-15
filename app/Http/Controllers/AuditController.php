@@ -15,10 +15,15 @@ class AuditController extends Controller
     {
         $sort = $request->input('sort', 'created_at');
         $order = $request->input('order', 'desc');
+        $perPage = $request->integer('per_page', 20);
 
         $allowedSorts = ['event', 'created_at'];
         if (!in_array($sort, $allowedSorts)) {
             $sort = 'created_at';
+        }
+
+        if (!in_array($perPage, [20, 50, 100], true)) {
+            $perPage = 20;
         }
 
         $order = in_array(strtolower($order), ['asc', 'desc']) ? $order : 'desc';
@@ -29,12 +34,17 @@ class AuditController extends Controller
                       ->orWhere('description', 'like', "%{$search}%");
             })
             ->orderBy($sort, $order)
-            ->paginate($request->input('per_page', 10))
+            ->paginate($perPage)
             ->withQueryString();
 
         return Inertia::render('audits/index', [
             'audits' => $audits,
-            'filters' => $request->only(['search', 'per_page', 'sort', 'order']),
+            'filters' => [
+                'search' => $request->input('search'),
+                'per_page' => $perPage,
+                'sort' => $sort,
+                'order' => $order,
+            ],
         ]);
     }
 

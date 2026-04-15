@@ -98,9 +98,6 @@ export default function Categories({ categories, filters }: PageProps) {
         setSelectedIds([]);
     };
 
-    const allSelected = localCategories.length > 0 && selectedIds.length === localCategories.length;
-    const someSelected = selectedIds.length > 0 && selectedIds.length < localCategories.length;
-
     const closeCreateDialog = () => {
         setIsDialogOpen(false);
     };
@@ -237,7 +234,10 @@ export default function Categories({ categories, filters }: PageProps) {
                 pagination={{ ...categories, data: localCategories }}
                 filters={filters}
                 columns={columns}
-                emptyMessage="No categories found."
+                emptyState={{
+                    title: 'No categories yet',
+                    description: 'Categories help organize assets into clear groups so your inventory stays easier to manage.',
+                }}
                 selection={{
                     selectedIds,
                     onToggleAll: toggleAll,

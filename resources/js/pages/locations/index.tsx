@@ -112,7 +112,10 @@ export default function Locations({ locations, filters }: PageProps) {
                 pagination={{ ...locations, data: localLocations }}
                 filters={filters}
                 columns={columns}
-                emptyMessage="No locations found."
+                emptyState={{
+                    title: 'No locations yet',
+                    description: 'Locations help you track where your assets are physically stored.',
+                }}
                 sort={{
                     value: `${filters?.sort || 'created_at'}:${filters?.order || 'desc'}`,
                     options: sortOptions,

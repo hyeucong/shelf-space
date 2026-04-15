@@ -105,7 +105,10 @@ export default function Tags({ tags, filters }: PageProps) {
                 pagination={{ ...tags, data: localTags }}
                 filters={filters}
                 columns={columns}
-                emptyMessage="No tags found."
+                emptyState={{
+                    title: 'No tags yet',
+                    description: 'Tags let you label assets with flexible keywords. Create tags to add custom metadata to your inventory.',
+                }}
                 sort={{
                     value: `${filters?.sort || 'created_at'}:${filters?.order || 'desc'}`,
                     options: sortOptions,
