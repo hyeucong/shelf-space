@@ -1,21 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationNext,
-    PaginationPrevious,
-    PaginationFirst,
-    PaginationLast,
-    PaginationPageIndicator,
-} from "@/components/ui/pagination";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import { DataTablePagination } from '@/components/data-table-pagination';
 import {
     Table,
     TableBody,
@@ -40,6 +24,7 @@ import { Pencil, Trash2, Filter, ArrowUpDown, List as ListIcon, Bookmark, Rows3 
 import { useState, useEffect } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SearchInput } from '@/components/search-input';
+import type { PaginatedData } from '@/types/pagination';
 import {
     Dialog,
     DialogContent,
@@ -72,25 +57,6 @@ interface Asset {
         id: number;
         name: string;
     }>;
-}
-
-interface PaginationLinkType {
-    url: string | null;
-    label: string;
-    active: boolean;
-}
-
-interface PaginatedData<T> {
-    data: T[];
-    links: PaginationLinkType[];
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    first_page_url: string;
-    last_page_url: string;
-    from: number;
-    to: number;
-    total: number;
 }
 
 interface PageProps {
@@ -224,7 +190,7 @@ export default function Assets({ assets, filters }: PageProps) {
 
     const renderActionButtons = (asset: Asset) => (
         <div className="flex gap-2">
-            <Button variant="ghost" size="icon" className="h-8 w-8 border" asChild onClick={(e) => e.stopPropagation()}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 border" asChild>
                 <Link href={`/assets/${asset.id}/edit`}>
                     <Pencil className="h-4 w-4" />
                     <span className="sr-only">Edit</span>
@@ -234,7 +200,7 @@ export default function Assets({ assets, filters }: PageProps) {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 border text-destructive hover:bg-destructive/10 hover:text-destructive"
-                onClick={(e) => { e.stopPropagation(); setAssetToDelete(asset); }}
+                onClick={() => setAssetToDelete(asset)}
             >
                 <Trash2 className="h-4 w-4" />
                 <span className="sr-only">Delete</span>
@@ -357,7 +323,7 @@ export default function Assets({ assets, filters }: PageProps) {
 
                     <Table className={isAllTable ? 'min-w-330' : undefined}>
                         <TableHeader className="bg-background">
-                            <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-transparent">
+                            <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
                                 <TableHead className="w-12.5">
                                     <Checkbox
                                         aria-label="Select all"
@@ -394,8 +360,8 @@ export default function Assets({ assets, filters }: PageProps) {
                             {localAssets && localAssets.length > 0 ? (
                                 localAssets.map((asset) => (
                                     isAllTable ? (
-                                        <TableRow key={asset.id} className="cursor-pointer" onClick={() => router.get(`/assets/${asset.id}`)}>
-                                            <TableCell onClick={(e) => e.stopPropagation()}>
+                                        <TableRow key={asset.id}>
+                                            <TableCell>
                                                 <Checkbox
                                                     aria-label={`Select ${asset.name}`}
                                                     checked={selectedIds.includes(asset.id)}
@@ -403,7 +369,9 @@ export default function Assets({ assets, filters }: PageProps) {
                                                 />
                                             </TableCell>
                                             <TableCell className="font-medium text-muted-foreground">{asset.id}</TableCell>
-                                            <TableCell className="min-w-55 max-w-80 whitespace-normal font-semibold">{asset.name}</TableCell>
+                                            <TableCell className="min-w-55 max-w-80 whitespace-normal font-semibold">
+                                                <Link href={`/assets/${asset.id}`} className="hover:underline">{asset.name}</Link>
+                                            </TableCell>
                                             <TableCell className="font-medium text-muted-foreground">{asset.asset_id}</TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className="capitalize">{asset.status}</Badge>
@@ -441,24 +409,26 @@ export default function Assets({ assets, filters }: PageProps) {
                                             <TableCell>{formatCurrency(asset.value)}</TableCell>
                                             <TableCell>{formatDate(asset.created_at)}</TableCell>
                                             <TableCell>{formatDate(asset.updated_at)}</TableCell>
-                                            <TableCell onClick={(e) => e.stopPropagation()}>{renderActionButtons(asset)}</TableCell>
+                                            <TableCell>{renderActionButtons(asset)}</TableCell>
                                         </TableRow>
                                     ) : (
-                                        <TableRow key={asset.id} className="cursor-pointer" onClick={() => router.get(`/assets/${asset.id}`)}>
-                                            <TableCell onClick={(e) => e.stopPropagation()}>
+                                        <TableRow key={asset.id}>
+                                            <TableCell>
                                                 <Checkbox
                                                     aria-label={`Select ${asset.name}`}
                                                     checked={selectedIds.includes(asset.id)}
                                                     onCheckedChange={(val) => toggleOne(asset.id, !!val)}
                                                 />
                                             </TableCell>
-                                            <TableCell className="font-semibold">{asset.name}</TableCell>
+                                            <TableCell className="font-semibold">
+                                                <Link href={`/assets/${asset.id}`} className="hover:underline">{asset.name}</Link>
+                                            </TableCell>
                                             <TableCell className="font-medium text-muted-foreground">{asset.asset_id}</TableCell>
                                             <TableCell>
                                                 <span className="capitalize">{asset.status}</span>
                                             </TableCell>
                                             <TableCell>{formatCurrency(asset.value)}</TableCell>
-                                            <TableCell onClick={(e) => e.stopPropagation()}>{renderActionButtons(asset)}</TableCell>
+                                            <TableCell>{renderActionButtons(asset)}</TableCell>
                                         </TableRow>
                                     )
                                 ))
@@ -473,68 +443,11 @@ export default function Assets({ assets, filters }: PageProps) {
                     </Table>
                 </div>
 
-                {/* Fixed Pagination Bar at Bottom */}
-                {
-                    assets.links && assets.links.length > 0 && (
-                        <div className="shrink-0 border-t bg-background/95 p-4 backdrop-blur supports-backdrop-filter:bg-background/60">
-                            <Pagination className="w-full flex gap-2">
-                                <PaginationContent>
-                                    <PaginationItem className='border-r'>
-                                        <PaginationFirst
-                                            href={assets.first_page_url}
-                                            className={assets.current_page === 1 ? "opacity-30 pointer-events-none" : ""}
-                                        />
-                                    </PaginationItem>
-
-                                    <PaginationItem>
-                                        <PaginationPrevious
-                                            href={assets.links[0].url || "#"}
-                                            className={!assets.links[0].url ? "opacity-30 pointer-events-none" : ""}
-                                        />
-                                    </PaginationItem>
-
-                                    <PaginationItem>
-                                        <PaginationPageIndicator
-                                            currentPage={assets.current_page}
-                                            lastPage={assets.last_page}
-                                        />
-                                    </PaginationItem>
-
-                                    <PaginationItem>
-                                        <PaginationNext
-                                            href={assets.links[assets.links.length - 1].url || "#"}
-                                            className={!assets.links[assets.links.length - 1].url ? "opacity-30 pointer-events-none" : ""}
-                                        />
-                                    </PaginationItem>
-
-                                    <PaginationItem className='border-l'>
-                                        <PaginationLast
-                                            href={assets.last_page_url}
-                                            className={assets.current_page === assets.last_page ? "opacity-30 pointer-events-none" : ""}
-                                        />
-                                    </PaginationItem>
-                                </PaginationContent>
-
-                                <div className="flex items-center gap-2">
-                                    <Select
-                                        value={String(assets.per_page)}
-                                        onValueChange={handlePerPageChange}
-                                    >
-                                        <SelectTrigger className="h-9 w-17.5 rounded shadow-none cursor-pointer">
-                                            <SelectValue placeholder={assets.per_page} />
-                                        </SelectTrigger>
-                                        <SelectContent side="top">
-                                            <SelectItem value="20">20</SelectItem>
-                                            <SelectItem value="50">50</SelectItem>
-                                            <SelectItem value="100">100</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <span className="text-sm text-muted-foreground whitespace-nowrap">Assets per page</span>
-                                </div>
-                            </Pagination>
-                        </div>
-                    )
-                }
+                <DataTablePagination
+                    pagination={assets}
+                    itemLabel="Assets"
+                    onPerPageChange={handlePerPageChange}
+                />
             </div >
 
             {/* Delete Confirmation Dialog */}

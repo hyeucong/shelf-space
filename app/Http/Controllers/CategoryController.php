@@ -14,27 +14,18 @@ class CategoryController extends Controller
      */
     public function index(Request $request)
     {
-        $sort = $request->input('sort', 'created_at');
-        $order = $request->input('order', 'desc');
-
-        $allowedSorts = ['name', 'created_at'];
-        if (!in_array($sort, $allowedSorts)) {
-            $sort = 'created_at';
-        }
-
-        $order = in_array(strtolower($order), ['asc', 'desc']) ? $order : 'desc';
-
         $categories = Category::query()
+            ->withCount('assets')
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
-            ->orderBy($sort, $order)
-            ->paginate($request->input('per_page', 10))
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->input('per_page', 20))
             ->withQueryString();
 
         return Inertia::render('categories/index', [
             'categories' => $categories,
-            'filters' => $request->only(['search', 'per_page', 'sort', 'order']),
+            'filters' => $request->only(['search', 'per_page']),
         ]);
     }
 
@@ -66,7 +57,7 @@ class CategoryController extends Controller
         $slug = $baseSlug;
         $counter = 1;
         while (Category::where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $counter++;
+            $slug = $baseSlug.'-'.$counter++;
         }
 
         $validated['slug'] = $slug;
@@ -110,7 +101,7 @@ class CategoryController extends Controller
         $slug = $baseSlug;
         $counter = 1;
         while (Category::where('slug', $slug)->where('id', '!=', $category->id)->exists()) {
-            $slug = $baseSlug . '-' . $counter++;
+            $slug = $baseSlug.'-'.$counter++;
         }
 
         $validated['slug'] = $slug;

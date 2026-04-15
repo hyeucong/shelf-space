@@ -1,20 +1,23 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { Button } from '@/components/ui/button';
-import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
-import { ArrowUpDown, Pipette, Pencil, Trash2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DataTablePagination } from '@/components/data-table-pagination';
 import { SearchInput } from '@/components/search-input';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
+import { Pipette, Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import type { PaginatedData } from '@/types/pagination';
 import {
     Dialog,
     DialogContent,
@@ -35,25 +38,7 @@ interface Category {
     name: string;
     description: string | null;
     hex_color?: string | null;
-}
-
-interface PaginationLinkType {
-    url: string | null;
-    label: string;
-    active: boolean;
-}
-
-interface PaginatedData<T> {
-    data: T[];
-    links: PaginationLinkType[];
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    first_page_url: string;
-    last_page_url: string;
-    from: number;
-    to: number;
-    total: number;
+    assets_count: number;
 }
 
 interface PageProps {
@@ -61,8 +46,6 @@ interface PageProps {
     filters: {
         search?: string;
         per_page?: string | number;
-        sort?: string;
-        order?: 'asc' | 'desc';
     };
 }
 
@@ -71,11 +54,11 @@ export default function Categories({ categories, filters }: PageProps) {
     const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
     const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
 
-
     // Local optimistic state and delete modal
     const [localCategories, setLocalCategories] = useState<Category[]>(categories?.data || []);
     const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
     const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
         name: '',
@@ -97,25 +80,47 @@ export default function Categories({ categories, filters }: PageProps) {
         return () => window.removeEventListener(CATEGORY_CREATE_EVENT, handleOpen);
     }, [clearErrors, reset]);
 
-    // no-op
-
     // Keep local list in sync with server props
     useEffect(() => {
         setLocalCategories(categories?.data || []);
     }, [categories]);
 
-    const handleSortChange = (value: string) => {
-        const [sort, order] = value.split(':');
-        router.get('/categories', {
-            ...filters,
-            sort,
-            order,
-            page: 1
-        }, {
-            preserveState: true,
-            replace: true
+    useEffect(() => {
+        setSelectedIds((prev) => prev.filter((id) => localCategories.some((category) => category.id === id)));
+    }, [localCategories]);
+
+    const toggleOne = (id: number, checked: boolean) => {
+        setSelectedIds((prev) => {
+            if (checked) {
+                return Array.from(new Set([...prev, id]));
+            }
+
+            return prev.filter((currentId) => currentId !== id);
         });
     };
+
+    const toggleAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedIds(localCategories.map((category) => category.id));
+            return;
+        }
+
+        setSelectedIds([]);
+    };
+
+    const handlePerPageChange = (value: string) => {
+        router.get('/categories', {
+            ...filters,
+            per_page: value,
+            page: 1,
+        }, {
+            preserveState: true,
+            replace: true,
+        });
+    };
+
+    const allSelected = localCategories.length > 0 && selectedIds.length === localCategories.length;
+    const someSelected = selectedIds.length > 0 && selectedIds.length < localCategories.length;
 
     const closeCreateDialog = () => {
         setIsDialogOpen(false);
@@ -171,6 +176,7 @@ export default function Categories({ categories, filters }: PageProps) {
             onBefore: () => setIsDeleting(true),
             onSuccess: () => {
                 setLocalCategories((prev) => prev.filter((c) => c.id !== id));
+                setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
                 setCategoryToDelete(null);
             },
             onFinish: () => setIsDeleting(false),
@@ -182,32 +188,17 @@ export default function Categories({ categories, filters }: PageProps) {
             <Head title="Categories" />
 
             <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto p-4">
-                    {/* Toolbar */}
-                    <div className="mb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 rounded border bg-background p-2 shadow-sm min-h-12">
-                        <div className="flex flex-1 flex-row flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
-                                        <ArrowUpDown size={16} /> Sort
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start" className="w-48">
-                                    <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuRadioGroup
-                                        value={`${filters?.sort || 'created_at'}:${filters?.order || 'desc'}`}
-                                        onValueChange={handleSortChange}
-                                    >
-                                        <DropdownMenuRadioItem value="created_at:desc">Newest</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="created_at:asc">Oldest</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="name:asc">Name (A-Z)</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="name:desc">Name (Z-A)</DropdownMenuRadioItem>
-                                    </DropdownMenuRadioGroup>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
 
-                            <div className="flex">
+                <div className="flex-1 overflow-y-auto mx-4 my-4 rounded border bg-background shadow-sm flex flex-col">
+                    <div className="flex items-center justify-between p-4 border-b border-border/50 shrink-0">
+                        <div>
+                            <h2 className="text-lg font-semibold tracking-tight">Categories</h2>
+                            <p className="text-sm text-muted-foreground">
+                                {localCategories.length} categor{localCategories.length === 1 ? 'y' : 'ies'} on this page
+                            </p>
+                        </div>
+                        <div className="ml-4">
+                            <div className="flex items-center">
                                 <SearchInput
                                     url="/categories"
                                     placeholder="Search categories..."
@@ -217,57 +208,95 @@ export default function Categories({ categories, filters }: PageProps) {
                         </div>
                     </div>
 
-                    {/* Content Area */}
-                    {localCategories.length > 0 ? (
-                        <div className="rounded border bg-background shadow-sm">
-                            <div className="divide-y">
-                                {localCategories.map((category) => (
-                                    <div key={category.id} className="flex items-start justify-between gap-4 p-4">
-                                        <div className="min-w-0 space-y-1">
-                                            <h3 className="font-medium text-foreground">{category.name}</h3>
-                                            <p className="text-sm text-muted-foreground">
-                                                {category.description || 'No description yet.'}
-                                            </p>
-                                        </div>
+                    <Table>
+                        <TableHeader className="bg-background">
+                            <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
+                                <TableHead className="w-12.5">
+                                    <Checkbox
+                                        aria-label="Select all"
+                                        checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                                        onCheckedChange={(value) => toggleAll(!!value)}
+                                    />
+                                </TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Description</TableHead>
+                                <TableHead>Assets</TableHead>
+                                <TableHead>Color</TableHead>
+                                <TableHead>Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {localCategories.length > 0 ? (
+                                localCategories.map((category) => (
+                                    <TableRow key={category.id}>
+                                        <TableCell>
+                                            <Checkbox
+                                                aria-label={`Select ${category.name}`}
+                                                checked={selectedIds.includes(category.id)}
+                                                onCheckedChange={(value) => toggleOne(category.id, !!value)}
+                                            />
+                                        </TableCell>
+                                        <TableCell className="font-medium text-foreground">{category.name}</TableCell>
+                                        <TableCell className="max-w-120 whitespace-normal text-muted-foreground">
+                                            {category.description || 'No description yet.'}
+                                        </TableCell>
+                                        <TableCell className="font-medium text-muted-foreground">
+                                            {category.assets_count} asset{category.assets_count === 1 ? '' : 's'}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <span
+                                                    className="h-4 w-4 rounded-full border border-border"
+                                                    style={{ backgroundColor: category.hex_color || '#d1d5db' }}
+                                                />
+                                                <span className="text-sm text-muted-foreground">
+                                                    {category.hex_color || '-'}
+                                                </span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 border"
+                                                    disabled={processing}
+                                                    onClick={() => handleEditClick(category)}
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                    <span className="sr-only">Edit</span>
+                                                </Button>
 
-                                        <div className="flex gap-2">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 border"
-                                                disabled={processing}
-                                                onClick={() => handleEditClick(category)}
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                                <span className="sr-only">Edit</span>
-                                            </Button>
-
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 border"
-                                                onClick={() => setCategoryToDelete(category)}
-                                                disabled={processing}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                                <span className="sr-only">Delete</span>
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="flex flex-1 items-center justify-center rounded border border-dashed bg-background h-75">
-                            <div className="flex flex-col items-center gap-1 text-center">
-                                <h3 className="text-2xl font-bold tracking-tight">No categories yet</h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Categories help you organize your assets into groups like Electronics or Furniture.
-                                </p>
-                            </div>
-                        </div>
-                    )}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 border"
+                                                    onClick={() => setCategoryToDelete(category)}
+                                                    disabled={processing}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                    <span className="sr-only">Delete</span>
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                                        No categories found.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 </div>
+
+                <DataTablePagination
+                    pagination={categories}
+                    itemLabel="Categories"
+                    onPerPageChange={handlePerPageChange}
+                />
             </div>
 
             {/* Create / Edit Dialog */}
