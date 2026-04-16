@@ -1,8 +1,9 @@
 name: Poke
 on:
   schedule:
-    # Every 10 minutes between 08:00–16:59 Hanoi (UTC+7). GitHub Actions uses UTC.
-    - cron: '*/10 1-9 * * *'
+    # Dropped to every 5 minutes. Even if GitHub delays the run by 5-8 minutes, 
+    # it will still trigger before Render's 15-minute sleep timer hits.
+    - cron: '*/5 1-9 * * *'
 jobs:
   ping:
     runs-on: ubuntu-latest
@@ -10,6 +11,9 @@ jobs:
       group: wake-render
       cancel-in-progress: true
     steps:
-      - name: Force Wake
-        # Follow redirects and allow up to 120s for Render to boot
-        run: curl -L --max-time 120 --silent --show-error https://shelf-space.onrender.com/
+      - name: Force Wake with Cache Buster
+        # Appending a dynamic timestamp tricks Render into thinking this is a brand new page request,
+        # forcing it to bypass the CDN cache and actually spin up the server.
+        run: |
+          TIMESTAMP=$(date +%s)
+          curl -L --max-time 120 --silent --show-error "https://shelf-space.onrender.com/?ping=${TIMESTAMP}"
