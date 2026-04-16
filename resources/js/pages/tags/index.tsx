@@ -1,20 +1,13 @@
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 
 import { Button } from '@/components/ui/button';
-import { ResourceDeleteDialog, ResourceFormDialog, ResourceHeaderAction } from '@/components/resource-form-dialog';
+import { ResourceDeleteDialog, ResourceHeaderAction } from '@/components/resource-form-dialog';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { ResourceIndexTable, type ResourceIndexColumn, type ResourceIndexSortOption } from '@/components/resource-index-table';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { TAG_CREATE_EVENT, TagFormDialog, dispatchTagCreateEvent } from '@/pages/tags/create';
 import type { PaginatedData } from '@/types/pagination';
-
-const TAG_CREATE_EVENT = 'tags:create:open';
-
-function dispatchTagCreateEvent() {
-    window.dispatchEvent(new CustomEvent(TAG_CREATE_EVENT));
-}
 
 interface Tag {
     id: number;
@@ -34,28 +27,22 @@ interface PageProps {
 export default function Tags({ tags, filters }: PageProps) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
-    const [activeTagId, setActiveTagId] = useState<number | null>(null);
+    const [activeTag, setActiveTag] = useState<Tag | null>(null);
     const [localTags, setLocalTags] = useState<Tag[]>(tags?.data || []);
     const [tagToDelete, setTagToDelete] = useState<Tag | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
-        name: '',
-    });
-
     useEffect(() => {
         const handleOpen = () => {
-            reset();
-            clearErrors();
             setDialogMode('create');
-            setActiveTagId(null);
+            setActiveTag(null);
             setIsDialogOpen(true);
         };
 
         window.addEventListener(TAG_CREATE_EVENT, handleOpen);
 
         return () => window.removeEventListener(TAG_CREATE_EVENT, handleOpen);
-    }, [clearErrors, reset]);
+    }, []);
 
     useEffect(() => {
         setLocalTags(tags?.data || []);
@@ -63,38 +50,13 @@ export default function Tags({ tags, filters }: PageProps) {
 
     const closeFormDialog = () => {
         setIsDialogOpen(false);
+        setActiveTag(null);
     };
 
     const handleEditClick = (tag: Tag) => {
-        clearErrors();
         setDialogMode('edit');
-        setActiveTagId(tag.id);
-        setData({
-            name: tag.name,
-        });
+        setActiveTag(tag);
         setIsDialogOpen(true);
-    };
-
-    const submitDialog = (event: React.FormEvent) => {
-        event.preventDefault();
-
-        const onSuccess = () => {
-            closeFormDialog();
-        };
-
-        if (dialogMode === 'edit' && activeTagId !== null) {
-            put(`/tags/${activeTagId}`, {
-                preserveScroll: true,
-                onSuccess,
-            });
-
-            return;
-        }
-
-        post('/tags', {
-            preserveScroll: true,
-            onSuccess,
-        });
     };
 
     const closeDeleteDialog = () => setTagToDelete(null);
@@ -134,7 +96,7 @@ export default function Tags({ tags, filters }: PageProps) {
             headerClassName: 'w-31.25',
             render: (tag) => (
                 <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleEditClick(tag)} disabled={processing}>
+                    <Button variant="ghost" size="icon" onClick={() => handleEditClick(tag)} disabled={isDeleting}>
                         <Pencil className="h-4 w-4" />
                         <span className="sr-only">Edit</span>
                     </Button>
@@ -143,7 +105,7 @@ export default function Tags({ tags, filters }: PageProps) {
                         size="icon"
                         className="border text-destructive hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => setTagToDelete(tag)}
-                        disabled={processing}
+                        disabled={isDeleting}
                     >
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Delete</span>
@@ -173,33 +135,14 @@ export default function Tags({ tags, filters }: PageProps) {
                 }}
             />
 
-            <ResourceFormDialog
+            <TagFormDialog
                 open={isDialogOpen}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        closeFormDialog();
-                    }
-                }}
-                onSubmit={submitDialog}
-                title={dialogMode === 'edit' ? (data.name || 'Edit tag') : (data.name || 'New tag')}
-                description={dialogMode === 'edit' ? 'Update the selected tag.' : 'Basic information about your tag.'}
-                processing={processing}
-                submitLabel={dialogMode === 'edit' ? 'Update' : 'Save'}
-                submitPendingLabel={dialogMode === 'edit' ? 'Updating...' : 'Saving...'}
-                contentClassName="sm:max-w-xl rounded-lg"
-            >
-                <div className="grid gap-2">
-                    <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
-                    <Input
-                        id="name"
-                        value={data.name}
-                        onChange={(event) => setData('name', event.target.value)}
-                        className="rounded"
-                        placeholder="e.g. Critical"
-                    />
-                    {errors.name && <span className="text-sm text-red-500">{errors.name}</span>}
-                </div>
-            </ResourceFormDialog>
+                onOpenChange={setIsDialogOpen}
+                mode={dialogMode}
+                tagId={activeTag?.id ?? null}
+                initialValues={activeTag ? { name: activeTag.name } : undefined}
+                onSuccess={closeFormDialog}
+            />
 
             <ResourceDeleteDialog
                 open={!!tagToDelete}

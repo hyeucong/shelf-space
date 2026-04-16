@@ -53,9 +53,17 @@ class TagController extends Controller
      */
     public function store(Request $request)
     {
-        Tag::create($this->validatedData($request));
+        $redirectTo = $request->string('redirect_to')->toString();
+        if ($redirectTo === '' || ! str_starts_with($redirectTo, '/')) {
+            $redirectTo = route('tags.index');
+        }
 
-        return redirect()->route('tags.index');
+        $tag = Tag::create($this->validatedData($request));
+
+        return redirect()->to($redirectTo)->with('createdTag', [
+            'id' => $tag->id,
+            'name' => $tag->name,
+        ]);
     }
 
     /**

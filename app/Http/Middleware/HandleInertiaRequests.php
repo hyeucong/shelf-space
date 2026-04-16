@@ -43,6 +43,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'flash' => [
                 'createdCategory' => fn () => $request->session()->get('createdCategory'),
+                'createdTag' => fn () => $request->session()->get('createdTag'),
                 'createdLocation' => fn () => $request->session()->get('createdLocation'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',

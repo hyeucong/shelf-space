@@ -1,10 +1,11 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { ResourceDeleteDialog } from '@/components/resource-form-dialog';
+import { ResourceDeleteDialog, ResourceHeaderAction } from '@/components/resource-form-dialog';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { ResourceIndexTable, type ResourceIndexColumn, type ResourceIndexSortOption } from '@/components/resource-index-table';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { LOCATION_CREATE_EVENT, LocationFormDialog, dispatchLocationCreateEvent } from '@/pages/locations/create';
 import type { PaginatedData } from '@/types/pagination';
 
 interface Location {
@@ -25,12 +26,32 @@ interface PageProps {
 
 export default function Locations({ locations, filters }: PageProps) {
     const [localLocations, setLocalLocations] = useState<Location[]>(locations?.data || []);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+    const [activeLocation, setActiveLocation] = useState<Location | null>(null);
     const [locationToDelete, setLocationToDelete] = useState<Location | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
+        const handleOpen = () => {
+            setDialogMode('create');
+            setActiveLocation(null);
+            setIsDialogOpen(true);
+        };
+
+        window.addEventListener(LOCATION_CREATE_EVENT, handleOpen);
+
+        return () => window.removeEventListener(LOCATION_CREATE_EVENT, handleOpen);
+    }, []);
+
+    useEffect(() => {
         setLocalLocations(locations?.data || []);
     }, [locations]);
+
+    const closeFormDialog = () => {
+        setIsDialogOpen(false);
+        setActiveLocation(null);
+    };
 
     const closeDeleteDialog = () => setLocationToDelete(null);
 
@@ -75,17 +96,25 @@ export default function Locations({ locations, filters }: PageProps) {
             headerClassName: 'w-31.25',
             render: (location) => (
                 <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/locations/${location.id}/edit`}>
-                            <Pencil className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
-                        </Link>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                            setDialogMode('edit');
+                            setActiveLocation(location);
+                            setIsDialogOpen(true);
+                        }}
+                        disabled={isDeleting}
+                    >
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
                     </Button>
                     <Button
                         variant="ghost"
                         size="icon"
                         className="border text-destructive hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => setLocationToDelete(location)}
+                        disabled={isDeleting}
                     >
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Delete</span>
@@ -114,6 +143,17 @@ export default function Locations({ locations, filters }: PageProps) {
                     options: sortOptions,
                 }}
             />
+            <LocationFormDialog
+                open={isDialogOpen}
+                onOpenChange={setIsDialogOpen}
+                mode={dialogMode}
+                locationId={activeLocation?.id ?? null}
+                initialValues={activeLocation ? {
+                    name: activeLocation.name,
+                    description: activeLocation.description ?? '',
+                } : undefined}
+                onSuccess={closeFormDialog}
+            />
             <ResourceDeleteDialog
                 open={!!locationToDelete}
                 onOpenChange={(open) => !open && closeDeleteDialog()}
@@ -135,11 +175,7 @@ Locations.layout = (page: React.ReactNode) => (
             { title: 'Locations', href: '/locations' }
         ]}
         headerAction={
-            <Button className="rounded border-none" asChild>
-                <Link href="/locations/create">
-                    New location
-                </Link>
-            </Button>
+            <ResourceHeaderAction label="New location" onClick={dispatchLocationCreateEvent} />
         }
     />
 );
