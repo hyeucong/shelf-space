@@ -1,0 +1,12 @@
+name: Poke
+on:
+  schedule:
+    - cron: '*/14 * * * *' # Every 14 mins (Render sleeps at 15)
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Force Wake
+        # The -L flag is the secret—it follows that redirect you mentioned
+        # The --max-time 60 gives Render plenty of time to boot
+        run: curl -L --max-time 60 https://shelf-space.onrender.com/
