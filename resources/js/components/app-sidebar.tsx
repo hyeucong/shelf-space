@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, Tags, Hash, MapPin, ClipboardList, Package, Bell, Home } from 'lucide-react';
+import { BookOpen, FolderGit2, ShoppingBag, Tags, Layers, MapPin, ClipboardList, Package, Bell, Home } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -25,22 +25,22 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Assets',
         href: '/assets',
-        icon: LayoutGrid,
+        icon: Package,
     },
     {
         title: 'Kits',
         href: '/kits',
-        icon: Package,
+        icon: ShoppingBag,
     },
     {
         title: 'Categories',
         href: '/categories',
-        icon: Tags,
+        icon: Layers,
     },
     {
         title: 'Tags',
         href: '/tags',
-        icon: Hash,
+        icon: Tags,
     },
     {
         title: 'Locations',
