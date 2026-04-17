@@ -34,7 +34,7 @@ export function DataTablePagination({
 
     return (
         <div className="shrink-0 border-t bg-background/95 p-4 backdrop-blur supports-backdrop-filter:bg-background/60">
-            <Pagination className="flex w-full flex-col gap-3 sm:flex-row sm:items-center ">
+            <Pagination className="flex w-full flex-col gap-2 sm:flex-row sm:items-center ">
                 <PaginationContent>
                     <PaginationItem className="border-r">
                         <PaginationFirst

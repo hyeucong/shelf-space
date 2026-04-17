@@ -1,4 +1,5 @@
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { QuickFindInput } from '@/components/quick-find-input';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
 
@@ -15,10 +16,10 @@ export function AppSidebarHeader({
                 <SidebarTrigger className="-ml-1" />
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
 
-                {/* This empty div eats all the middle space */}
                 <div className="flex-1" />
 
-                {/* This renders your "New Asset" button on the far right */}
+                <QuickFindInput />
+
                 {headerAction && (
                     <div className="flex items-center gap-2">
                         {headerAction}
