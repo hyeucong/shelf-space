@@ -18,6 +18,7 @@ Route::middleware([
 ])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 
+    Route::post('assets/saved-filters', [AssetController::class, 'storeSavedFilter'])->name('assets.saved-filters.store');
     Route::resource('assets', AssetController::class);
     Route::resource('kits', KitController::class);
 

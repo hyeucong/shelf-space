@@ -1,3 +1,4 @@
+import { AssetFilterOption, AssetFiltersQuery, AssetQueryBuilder, AssetQueryValue, AssetSavedFilter, AssetSortDraft } from '@/components/asset-query-builder';
 import { Head, Link, router } from '@inertiajs/react';
 import { DataTablePagination } from '@/components/data-table-pagination';
 import { ResourceDeleteDialog } from '@/components/resource-form-dialog';
@@ -9,19 +10,10 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
-import { Pencil, Trash2, Filter, ArrowUpDown, List as ListIcon, Bookmark, Rows3 } from 'lucide-react';
+import { Pencil, Trash2, List as ListIcon, Rows3 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SearchInput } from '@/components/search-input';
@@ -54,41 +46,31 @@ interface Asset {
 
 interface PageProps {
     assets: PaginatedData<Asset>;
-    filters: {
-        search?: string;
-        per_page?: string | number;
-        sort?: string;
-        order?: 'asc' | 'desc';
-        status?: string;
-    };
+    categories: AssetFilterOption[];
+    locations: AssetFilterOption[];
+    savedFilters: AssetSavedFilter[];
+    filters: AssetFiltersQuery;
+    sorts: AssetSortDraft[];
 }
-
-type AssetQueryValue = string | number | undefined;
 
 const sanitizeQuery = (query: Record<string, AssetQueryValue>) => (
     Object.fromEntries(
         Object.entries(query).filter(([, value]) => value !== undefined && value !== ''),
     ) as Record<string, string | number>
 );
-
-export default function Assets({ assets, filters }: PageProps) {
-    // Local state for optimistic updates
+export default function Assets({ assets, categories, locations, savedFilters, filters, sorts }: PageProps) {
     const [localAssets, setLocalAssets] = useState<Asset[]>(assets?.data || []);
     const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [tableMode, setTableMode] = useState<'simple' | 'all'>('simple');
 
-    // Sync local state when props change (after server refresh)
     useEffect(() => {
         setLocalAssets(assets?.data || []);
     }, [assets]);
 
-    // Ensure selection stays in-sync when the assets list changes
     useEffect(() => {
         setSelectedIds((prev) => prev.filter((id) => localAssets.some((a) => a.id === id)));
     }, [localAssets]);
-
-    // Selection state for rows
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
     const toggleOne = (id: number, checked: boolean) => {
@@ -135,31 +117,6 @@ export default function Assets({ assets, filters }: PageProps) {
         router.get('/assets', sanitizeQuery({
             ...filters,
             per_page: value,
-            page: 1,
-        }), {
-            preserveState: true,
-            replace: true,
-        });
-    };
-
-    const handleSortChange = (value: string) => {
-        const [sort, order] = value.split(':');
-
-        router.get('/assets', sanitizeQuery({
-            ...filters,
-            sort,
-            order,
-            page: 1,
-        }), {
-            preserveState: true,
-            replace: true,
-        });
-    };
-
-    const handleFilterChange = (value: string) => {
-        router.get('/assets', sanitizeQuery({
-            ...filters,
-            status: value === 'all' ? undefined : value,
             page: 1,
         }), {
             preserveState: true,
@@ -218,98 +175,61 @@ export default function Assets({ assets, filters }: PageProps) {
             <Head title="Assets" />
 
             <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
-                <div className="shrink-0 mb-4 mx-4 mt-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 rounded border bg-background p-2 shadow-sm min-h-12">
-                    <div className="flex flex-1 flex-row flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
-                                    <Filter size={16} /> Filter
-                                    {filters?.status && (
-                                        <span className="ml-1 rounded-full bg-primary w-1.5 h-1.5" />
-                                    )}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-48">
-                                <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuRadioGroup
-                                    value={filters?.status || 'all'}
-                                    onValueChange={handleFilterChange}
-                                >
-                                    <DropdownMenuRadioItem value="all">All Assets</DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="available">Available</DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="assigned">Assigned</DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="maintenance">In Maintenance</DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="retired">Retired</DropdownMenuRadioItem>
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
-                                    <ArrowUpDown size={16} /> Sort
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-48">
-                                <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuRadioGroup
-                                    value={`${filters?.sort || 'created_at'}:${filters?.order || 'desc'}`}
-                                    onValueChange={handleSortChange}
-                                >
-                                    <DropdownMenuRadioItem value="created_at:desc">Newest</DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="created_at:asc">Oldest</DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="name:asc">Name (A-Z)</DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="name:desc">Name (Z-A)</DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="value:desc">Value (Highest)</DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="value:asc">Value (Lowest)</DropdownMenuRadioItem>
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <div className="flex items-center rounded border bg-background p-1 gap-1">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className={tableMode === 'simple' ? 'h-7 px-2 shadow-none bg-muted text-foreground' : 'h-7 px-2 shadow-none text-muted-foreground'}
-                                onClick={() => setTableMode('simple')}
-                                title="Simple view"
-                            >
-                                <ListIcon size={15} />
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className={tableMode === 'all' ? 'h-7 px-2 shadow-none bg-muted text-foreground' : 'h-7 px-2 shadow-none text-muted-foreground'}
-                                onClick={() => setTableMode('all')}
-                                title="All data view"
-                            >
-                                <Rows3 size={15} />
-                            </Button>
-                        </div>
-                        <div className="flex">
-                            <SearchInput
-                                url="/assets"
-                                placeholder="Search assets..."
-                                initialValue={filters?.search}
-                                query={sanitizeQuery({
-                                    ...filters,
-                                    page: undefined,
-                                })}
-                            />
-                        </div>
+                <div className="shrink-0 mt-4">
+                    <div className="mx-4 mb-4">
+                        <AssetQueryBuilder
+                            categories={categories}
+                            locations={locations}
+                            savedFilters={savedFilters}
+                            filters={filters}
+                            sorts={sorts}
+                        />
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0">
-                        <Button type="button" variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
-                            <Bookmark size={16} /> Saved Filters
-                        </Button>
-                        <Button type="button" variant="outline" className="h-9 rounded shadow-none shrink-0">
-                            Export selection
-                        </Button>
-                        <Button type="button" variant="outline" className="h-9 rounded shadow-none shrink-0">
-                            Actions
-                        </Button>
+
+                    <div className="mb-4 mx-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 rounded border bg-background p-2 shadow-sm min-h-12">
+                        <div className="flex flex-1 flex-row flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
+                            <div className="flex items-center rounded border bg-background p-1 gap-1">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className={tableMode === 'simple' ? 'h-7 px-2 shadow-none bg-muted text-foreground' : 'h-7 px-2 shadow-none text-muted-foreground'}
+                                    onClick={() => setTableMode('simple')}
+                                    title="Simple view"
+                                >
+                                    <ListIcon size={15} />
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className={tableMode === 'all' ? 'h-7 px-2 shadow-none bg-muted text-foreground' : 'h-7 px-2 shadow-none text-muted-foreground'}
+                                    onClick={() => setTableMode('all')}
+                                    title="All data view"
+                                >
+                                    <Rows3 size={15} />
+                                </Button>
+                            </div>
+                            <div className="flex">
+                                <SearchInput
+                                    url="/assets"
+                                    placeholder="Search assets..."
+                                    initialValue={filters?.search}
+                                    query={sanitizeQuery({
+                                        ...filters,
+                                        page: undefined,
+                                    })}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0">
+                            <Button type="button" variant="outline" className="h-9 rounded shadow-none shrink-0">
+                                Export selection
+                            </Button>
+                            <Button type="button" variant="outline" className="h-9 rounded shadow-none shrink-0">
+                                Actions
+                            </Button>
+                        </div>
                     </div>
                 </div>
 

@@ -65,4 +65,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Reminder::class);
     }
+
+    public function viewPreferences(): HasMany
+    {
+        return $this->hasMany(UserViewPreference::class);
+    }
 }
