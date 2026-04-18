@@ -2,7 +2,7 @@ import { CategoryFormDialog } from '@/pages/categories/create';
 import { LocationFormDialog } from '@/pages/locations/create';
 import { router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUpDown, Bookmark, Filter, Plus, X } from 'lucide-react';
+import { ArrowUpDown, Bookmark, Filter, Pencil, Plus, Trash2, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -115,13 +115,15 @@ type SortRow = {
 
 type ResourceFilterField = 'category_id' | 'location_id';
 
-type BuilderMode = 'filter' | 'sort' | null;
+type BuilderMode = 'filter' | 'sort' | 'saved' | null;
 type CreateTarget = 'category' | 'location';
 
 type PendingCreate = {
     target: CreateTarget;
     rowId: string;
 };
+
+type SavedFilterDialogMode = 'edit' | 'delete' | null;
 
 type SharedPageProps = Record<string, unknown> & {
     flash?: {
@@ -404,6 +406,8 @@ function BuilderOptionSelect({
 export function AssetQueryBuilder({ categories, locations, savedFilters, filters, sorts }: AssetQueryBuilderProps) {
     const page = usePage<SharedPageProps>();
     const flash = page.props.flash;
+    const overlayWidth = 'min(52rem, calc(100vw - 2rem))';
+    const builderContainerRef = useRef<HTMLDivElement | null>(null);
     const appliedFilters = normalizeDraftFilters(filters);
     const appliedFiltersSignature = JSON.stringify(appliedFilters);
     const appliedSorts = normalizeAppliedSorts(sorts);
@@ -420,12 +424,66 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
     const [sortRows, setSortRows] = useState<SortRow[]>(() => sortDraftsToRows(appliedSorts));
     const [savedFilterName, setSavedFilterName] = useState('');
     const [isSavingFilter, setIsSavingFilter] = useState(false);
+    const [savedFilterDialogMode, setSavedFilterDialogMode] = useState<SavedFilterDialogMode>(null);
+    const [selectedSavedFilter, setSelectedSavedFilter] = useState<AssetSavedFilter | null>(null);
+    const [editingSavedFilterName, setEditingSavedFilterName] = useState('');
+    const [isUpdatingSavedFilter, setIsUpdatingSavedFilter] = useState(false);
+    const [isDeletingSavedFilter, setIsDeletingSavedFilter] = useState(false);
     const [openSelectKey, setOpenSelectKey] = useState<string | null>(null);
     const [pendingCreate, setPendingCreate] = useState<PendingCreate | null>(null);
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
     const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
     const handledCreatedCategoryId = useRef<number | null>(null);
     const handledCreatedLocationId = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (builderMode === null) {
+            return;
+        }
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setBuilderMode(null);
+                setOpenSelectKey(null);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [builderMode]);
+
+    useEffect(() => {
+        if (builderMode === null) {
+            return;
+        }
+
+        const handlePointerDown = (event: MouseEvent | PointerEvent | TouchEvent) => {
+            const target = event.target;
+
+            if (!(target instanceof Node)) {
+                return;
+            }
+
+            if (builderContainerRef.current?.contains(target)) {
+                return;
+            }
+
+            if (
+                target instanceof Element
+                && target.closest('[data-slot="select-content"], [data-slot="dropdown-menu-content"], [data-slot="dialog-content"]')
+            ) {
+                return;
+            }
+
+            setBuilderMode(null);
+            setOpenSelectKey(null);
+        };
+
+        document.addEventListener('pointerdown', handlePointerDown);
+
+        return () => document.removeEventListener('pointerdown', handlePointerDown);
+    }, [builderMode]);
 
     useEffect(() => {
         setFilterRows(filtersToRows(appliedFilters));
@@ -564,8 +622,66 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
         } as AssetFilterState;
 
         setFilterRows(filtersToRows(nextFilters));
-        setBuilderMode('filter');
+        setBuilderMode(null);
         applyFilters(nextFilters);
+    };
+
+    const handleOpenEditSavedFilter = (savedFilter: AssetSavedFilter) => {
+        setSelectedSavedFilter(savedFilter);
+        setEditingSavedFilterName(savedFilter.name);
+        setSavedFilterDialogMode('edit');
+    };
+
+    const handleOpenDeleteSavedFilter = (savedFilter: AssetSavedFilter) => {
+        setSelectedSavedFilter(savedFilter);
+        setSavedFilterDialogMode('delete');
+    };
+
+    const handleCloseSavedFilterDialog = (force = false) => {
+        if (!force && (isUpdatingSavedFilter || isDeletingSavedFilter)) {
+            return;
+        }
+
+        setSavedFilterDialogMode(null);
+        setSelectedSavedFilter(null);
+        setEditingSavedFilterName('');
+    };
+
+    const handleUpdateSavedFilter = () => {
+        if (!selectedSavedFilter || !editingSavedFilterName.trim() || isUpdatingSavedFilter) {
+            return;
+        }
+
+        setIsUpdatingSavedFilter(true);
+
+        router.patch(`/assets/saved-filters/${selectedSavedFilter.id}`, {
+            name: editingSavedFilterName.trim(),
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                handleCloseSavedFilterDialog(true);
+            },
+            onFinish: () => setIsUpdatingSavedFilter(false),
+        });
+    };
+
+    const handleDeleteSavedFilter = () => {
+        if (!selectedSavedFilter || isDeletingSavedFilter) {
+            return;
+        }
+
+        setIsDeletingSavedFilter(true);
+
+        router.delete(`/assets/saved-filters/${selectedSavedFilter.id}`, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                handleCloseSavedFilterDialog(true);
+                setBuilderMode('saved');
+            },
+            onFinish: () => setIsDeletingSavedFilter(false),
+        });
     };
 
     const handleSaveFilter = () => {
@@ -712,15 +828,27 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
         );
     };
 
+    const panelTitle = builderMode === 'filter'
+        ? 'Filter assets'
+        : builderMode === 'sort'
+            ? 'Sort assets'
+            : 'Saved filters';
+    const panelDescription = builderMode === 'filter'
+        ? 'Build filters here without shifting the table layout below.'
+        : builderMode === 'sort'
+            ? 'Adjust the sort order in an overlay panel.'
+            : 'Apply, rename, or remove saved asset filter sets.';
+
     return (
         <>
-            <div className="rounded border bg-background p-2 shadow-sm">
+            <div ref={builderContainerRef} className="relative rounded bg-background shadow-sm">
                 <div className="flex flex-wrap items-center gap-2">
                     <Button
                         type="button"
                         variant="outline"
                         className={builderMode === 'filter' ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0'}
                         onClick={() => setBuilderMode((current) => current === 'filter' ? null : 'filter')}
+                        aria-expanded={builderMode === 'filter'}
                     >
                         <Filter size={16} />
                         {activeFilterCount > 0 ? `Filtered by ${activeFilterCount}` : 'Filter'}
@@ -730,236 +858,286 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
                         variant="outline"
                         className={builderMode === 'sort' ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0'}
                         onClick={() => setBuilderMode((current) => current === 'sort' ? null : 'sort')}
+                        aria-expanded={builderMode === 'sort'}
                     >
                         <ArrowUpDown size={16} /> Sort
                     </Button>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button type="button" variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
-                                <Bookmark size={16} /> Saved Filters
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-60">
-                            <DropdownMenuLabel>Saved asset filters</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            {savedFilters.length > 0 ? savedFilters.map((savedFilter) => (
-                                <DropdownMenuItem key={savedFilter.id} onClick={() => handleApplySavedFilter(savedFilter)}>
-                                    {savedFilter.name}
-                                </DropdownMenuItem>
-                            )) : (
-                                <DropdownMenuItem disabled>
-                                    No saved filters yet
-                                </DropdownMenuItem>
-                            )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className={builderMode === 'saved' ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0'}
+                        onClick={() => setBuilderMode((current) => current === 'saved' ? null : 'saved')}
+                        aria-expanded={builderMode === 'saved'}
+                    >
+                        <Bookmark size={16} /> Saved Filters
+                    </Button>
                 </div>
-            </div>
-
-            {builderMode === 'filter' ? (
-                <div className="mt-4 rounded border bg-background p-4 shadow-sm">
-                    <div className="space-y-3">
-                        {filterRows.length > 0 ? filterRows.map((filterRow) => {
-                            const definition = filterRow.fieldKey ? filterDefinitionMap[filterRow.fieldKey] : null;
-                            const conditionOptions = definition?.conditions ?? [];
-
-                            return (
-                                <div key={filterRow.id} className={PANEL_ROW_CLASS}>
-                                    <div className="md:min-w-48">
-                                        <Select
-                                            value={filterRow.fieldKey || undefined}
-                                            onValueChange={(value) => handleFilterFieldChange(filterRow.id, value as AssetFilterKey)}
-                                        >
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Select field" />
-                                            </SelectTrigger>
-                                            <SelectContent align="start" side="top">
-                                                {filterDefinitions.map((definitionOption) => (
-                                                    <SelectItem key={definitionOption.key} value={definitionOption.key}>
-                                                        {definitionOption.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="md:w-28">
-                                        <Select
-                                            value={filterRow.condition || undefined}
-                                            onValueChange={(value) => handleFilterConditionChange(filterRow.id, value as AssetFilterCondition)}
-                                            disabled={!definition}
-                                        >
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Condition" />
-                                            </SelectTrigger>
-                                            <SelectContent align="start" side="top">
-                                                {conditionOptions.map((condition) => (
-                                                    <SelectItem key={condition} value={condition}>
-                                                        {FILTER_CONDITION_LABELS[condition]}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="flex-1">
-                                        {renderFilterValueControl(filterRow, definition)}
-                                    </div>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-9 w-9 shrink-0"
-                                        onClick={() => handleRemoveFilterRow(filterRow.id)}
-                                    >
-                                        <X className="h-4 w-4" />
-                                        <span className="sr-only">Remove filter</span>
-                                    </Button>
-                                </div>
-                            );
-                        }) : (
-                            <div className={EMPTY_ROW_CLASS}>
-                                No filters added yet. Add one to narrow the assets list.
+                {builderMode ? (
+                    <div
+                        className="absolute left-0 top-full z-50 mt-3 max-w-[calc(100vw-2rem)] min-w-80 rounded border bg-background shadow-xl"
+                        style={{ width: overlayWidth }}
+                    >
+                        <div className="flex items-start justify-between border-b px-4 py-3">
+                            <div>
+                                <h3 className="text-sm font-semibold text-foreground">{panelTitle}</h3>
+                                <p className="text-xs text-muted-foreground">{panelDescription}</p>
                             </div>
-                        )}
-                    </div>
-
-                    <div className="mt-4 flex flex-col gap-3 border-t pt-4 md:flex-row md:items-center md:justify-between">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <Button type="button" variant="outline" className="gap-2" onClick={handleAddFilterRow}>
-                                <Plus size={16} /> Add filter
-                            </Button>
-                            <span className="text-sm text-muted-foreground">
-                                Pick a field, choose a condition, then fill in the value.
-                            </span>
-                        </div>
-
-                        <div className="flex flex-wrap items-center justify-end gap-2">
-                            <Button type="button" variant="ghost" className="px-2 text-sm text-muted-foreground" onClick={handleClearDraftFilters}>
-                                Clear all
-                            </Button>
                             <Button
                                 type="button"
-                                variant="outline"
-                                className="gap-2"
-                                onClick={() => setIsSaveFilterDialogOpen(true)}
-                                disabled={!hasDraftFilters}
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0"
+                                onClick={() => {
+                                    setBuilderMode(null);
+                                    setOpenSelectKey(null);
+                                }}
                             >
-                                <Bookmark size={16} /> Save Filter
-                            </Button>
-                            <Button type="button" onClick={() => applyFilters()} disabled={!hasPendingFilterChanges}>
-                                Apply filters
+                                <X className="h-4 w-4" />
+                                <span className="sr-only">Close panel</span>
                             </Button>
                         </div>
-                    </div>
-                </div>
-            ) : null}
 
-            {builderMode === 'sort' ? (
-                <div className="mt-4 rounded border bg-background p-4 shadow-sm">
-                    <div className="space-y-3">
-                        {sortRows.length > 0 ? sortRows.map((sortRow) => (
-                            <div key={sortRow.id} className={PANEL_ROW_CLASS}>
-                                <div className="flex-1 md:max-w-72">
-                                    <Select
-                                        value={sortRow.field}
-                                        onValueChange={(value) => {
-                                            setSortRows((current) => current.map((row) => (
-                                                row.id === sortRow.id
-                                                    ? { ...row, field: value as AssetSortField }
-                                                    : row
-                                            )));
-                                        }}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select sort field" />
-                                        </SelectTrigger>
-                                        <SelectContent align="start" side="top">
-                                            {SORT_DEFINITIONS.map((definition) => (
-                                                <SelectItem key={definition.key} value={definition.key}>
-                                                    {definition.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                        {builderMode === 'filter' ? (
+                            <div className="p-4">
+                                <div className="space-y-3">
+                                    {filterRows.length > 0 ? filterRows.map((filterRow) => {
+                                        const definition = filterRow.fieldKey ? filterDefinitionMap[filterRow.fieldKey] : null;
+                                        const conditionOptions = definition?.conditions ?? [];
+
+                                        return (
+                                            <div key={filterRow.id} className={PANEL_ROW_CLASS}>
+                                                <div className="md:min-w-48">
+                                                    <Select
+                                                        value={filterRow.fieldKey || undefined}
+                                                        onValueChange={(value) => handleFilterFieldChange(filterRow.id, value as AssetFilterKey)}
+                                                    >
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder="Select field" />
+                                                        </SelectTrigger>
+                                                        <SelectContent align="start" side="top">
+                                                            {filterDefinitions.map((definitionOption) => (
+                                                                <SelectItem key={definitionOption.key} value={definitionOption.key}>
+                                                                    {definitionOption.label}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="md:w-28">
+                                                    <Select
+                                                        value={filterRow.condition || undefined}
+                                                        onValueChange={(value) => handleFilterConditionChange(filterRow.id, value as AssetFilterCondition)}
+                                                        disabled={!definition}
+                                                    >
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder="Condition" />
+                                                        </SelectTrigger>
+                                                        <SelectContent align="start" side="top">
+                                                            {conditionOptions.map((condition) => (
+                                                                <SelectItem key={condition} value={condition}>
+                                                                    {FILTER_CONDITION_LABELS[condition]}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="flex-1">
+                                                    {renderFilterValueControl(filterRow, definition)}
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-9 w-9 shrink-0"
+                                                    onClick={() => handleRemoveFilterRow(filterRow.id)}
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                    <span className="sr-only">Remove filter</span>
+                                                </Button>
+                                            </div>
+                                        );
+                                    }) : (
+                                        <div className={EMPTY_ROW_CLASS}>
+                                            No filters added yet. Add one to narrow the assets list.
+                                        </div>
+                                    )}
                                 </div>
-                                <div className='flex gap-1'>
-                                    <div className="flex items-center rounded border p-1 gap-1">
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            className={sortRow.order === 'asc' ? 'h-7 bg-muted text-foreground shadow-none' : 'h-7 text-muted-foreground shadow-none'}
-                                            onClick={() => setSortRows((current) => current.map((row) => (
-                                                row.id === sortRow.id
-                                                    ? { ...row, order: 'asc' }
-                                                    : row
-                                            )))}
-                                        >
-                                            Ascending
+
+                                <div className="mt-4 flex flex-col gap-3 border-t pt-4 md:flex-row md:items-center md:justify-between">
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <Button type="button" variant="outline" className="gap-2" onClick={handleAddFilterRow}>
+                                            <Plus size={16} /> Add filter
+                                        </Button>
+                                        <span className="text-sm text-muted-foreground">
+                                            Pick a field, choose a condition, then fill in the value.
+                                        </span>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-center justify-end gap-2">
+                                        <Button type="button" variant="ghost" className="px-2 text-sm text-muted-foreground" onClick={handleClearDraftFilters}>
+                                            Clear all
                                         </Button>
                                         <Button
                                             type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            className={sortRow.order === 'desc' ? 'h-7 bg-muted text-foreground shadow-none' : 'h-7 text-muted-foreground shadow-none'}
-                                            onClick={() => setSortRows((current) => current.map((row) => (
-                                                row.id === sortRow.id
-                                                    ? { ...row, order: 'desc' }
-                                                    : row
-                                            )))}
+                                            variant="outline"
+                                            className="gap-2"
+                                            onClick={() => setIsSaveFilterDialogOpen(true)}
+                                            disabled={!hasDraftFilters}
                                         >
-                                            Reverse
+                                            <Bookmark size={16} /> Save Filter
+                                        </Button>
+                                        <Button type="button" onClick={() => applyFilters()} disabled={!hasPendingFilterChanges}>
+                                            Apply filters
                                         </Button>
                                     </div>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-9 w-9 shrink-0"
-                                        onClick={() => setSortRows((current) => current.filter((row) => row.id !== sortRow.id))}
-                                    >
-                                        <X className="h-4 w-4" />
-                                        <span className="sr-only">Remove sort</span>
-                                    </Button>
                                 </div>
                             </div>
-                        )) : (
-                            <div className={EMPTY_ROW_CLASS}>
-                                No sorting added yet. Add one to override the default created date order.
+                        ) : null}
+
+                        {builderMode === 'sort' ? (
+                            <div className="p-4">
+                                <div className="space-y-3">
+                                    {sortRows.length > 0 ? sortRows.map((sortRow) => (
+                                        <div key={sortRow.id} className={PANEL_ROW_CLASS}>
+                                            <div className="flex-1 md:max-w-72">
+                                                <Select
+                                                    value={sortRow.field}
+                                                    onValueChange={(value) => {
+                                                        setSortRows((current) => current.map((row) => (
+                                                            row.id === sortRow.id
+                                                                ? { ...row, field: value as AssetSortField }
+                                                                : row
+                                                        )));
+                                                    }}
+                                                >
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue placeholder="Select sort field" />
+                                                    </SelectTrigger>
+                                                    <SelectContent align="start" side="top">
+                                                        {SORT_DEFINITIONS.map((definition) => (
+                                                            <SelectItem key={definition.key} value={definition.key}>
+                                                                {definition.label}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="flex gap-1">
+                                                <div className="flex items-center rounded border p-1 gap-1">
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className={sortRow.order === 'asc' ? 'h-7 bg-muted text-foreground shadow-none' : 'h-7 text-muted-foreground shadow-none'}
+                                                        onClick={() => setSortRows((current) => current.map((row) => (
+                                                            row.id === sortRow.id
+                                                                ? { ...row, order: 'asc' }
+                                                                : row
+                                                        )))}
+                                                    >
+                                                        Ascending
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className={sortRow.order === 'desc' ? 'h-7 bg-muted text-foreground shadow-none' : 'h-7 text-muted-foreground shadow-none'}
+                                                        onClick={() => setSortRows((current) => current.map((row) => (
+                                                            row.id === sortRow.id
+                                                                ? { ...row, order: 'desc' }
+                                                                : row
+                                                        )))}
+                                                    >
+                                                        Reverse
+                                                    </Button>
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-9 w-9 shrink-0"
+                                                    onClick={() => setSortRows((current) => current.filter((row) => row.id !== sortRow.id))}
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                    <span className="sr-only">Remove sort</span>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )) : (
+                                        <div className={EMPTY_ROW_CLASS}>
+                                            No sorting added yet. Add one to override the default created date order.
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="mt-4 flex flex-col gap-3 border-t pt-4 md:flex-row md:items-center md:justify-between">
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button type="button" variant="outline" className="gap-2">
+                                                    <Plus size={16} /> Add sort
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="start" className="w-56">
+                                                <DropdownMenuLabel>Pick a column to sort by</DropdownMenuLabel>
+                                                <DropdownMenuSeparator />
+                                                {SORT_DEFINITIONS.map((definition) => (
+                                                    <DropdownMenuItem key={definition.key} onClick={() => setSortRows((current) => [...current, createSortRow(definition.key)])}>
+                                                        {definition.label}
+                                                    </DropdownMenuItem>
+                                                ))}
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                        <span className="text-sm text-muted-foreground">
+                                            Add sort blocks in the order they should be applied, then choose ascending or reverse.
+                                        </span>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-center justify-end gap-2">
+                                        <Button type="button" onClick={() => applySort()} disabled={!hasPendingSortChanges}>
+                                            Apply sort
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
-                        )}
-                    </div>
+                        ) : null}
 
-                    <div className="mt-4 flex flex-col gap-3 border-t pt-4 md:flex-row md:items-center md:justify-between">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button type="button" variant="outline" className="gap-2">
-                                        <Plus size={16} /> Add sort
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start" className="w-56">
-                                    <DropdownMenuLabel>Pick a column to sort by</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    {SORT_DEFINITIONS.map((definition) => (
-                                        <DropdownMenuItem key={definition.key} onClick={() => setSortRows((current) => [...current, createSortRow(definition.key)])}>
-                                            {definition.label}
-                                        </DropdownMenuItem>
-                                    ))}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                            <span className="text-sm text-muted-foreground">
-                                Add sort blocks in the order they should be applied, then choose ascending or reverse.
-                            </span>
-                        </div>
-
-                        <div className="flex flex-wrap items-center justify-end gap-2">
-                            <Button type="button" onClick={() => applySort()} disabled={!hasPendingSortChanges}>
-                                Apply sort
-                            </Button>
-                        </div>
+                        {builderMode === 'saved' ? (
+                            <div className="p-4">
+                                <div className="space-y-3">
+                                    {savedFilters.length > 0 ? savedFilters.map((savedFilter) => (
+                                        <div key={savedFilter.id} className="flex flex-col gap-3 rounded border p-3 md:flex-row md:items-center md:justify-between">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="truncate text-sm font-medium text-foreground">{savedFilter.name}</div>
+                                                <div className="text-xs text-muted-foreground">
+                                                    {Object.values(savedFilter.filters).filter((value) => value && String(value).trim() !== '').length} filter rule(s)
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <Button type="button" variant="outline" className="h-8" onClick={() => handleApplySavedFilter(savedFilter)}>
+                                                    Apply
+                                                </Button>
+                                                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenEditSavedFilter(savedFilter)}>
+                                                    <Pencil className="h-4 w-4" />
+                                                    <span className="sr-only">Edit saved filter</span>
+                                                </Button>
+                                                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => handleOpenDeleteSavedFilter(savedFilter)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                    <span className="sr-only">Delete saved filter</span>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )) : (
+                                        <div className={EMPTY_ROW_CLASS}>
+                                            No saved filters yet. Save one from the filter panel.
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ) : null}
                     </div>
-                </div>
-            ) : null}
+                ) : null}
+            </div>
 
             <Dialog open={isSaveFilterDialogOpen} onOpenChange={setIsSaveFilterDialogOpen}>
                 <DialogContent className="sm:max-w-md">
@@ -986,6 +1164,56 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
                         </Button>
                         <Button type="button" onClick={handleSaveFilter} disabled={!savedFilterName.trim() || isSavingFilter}>
                             Save filter
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={savedFilterDialogMode === 'edit'} onOpenChange={(open) => !open && handleCloseSavedFilterDialog()}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Edit saved filter</DialogTitle>
+                        <DialogDescription>
+                            Update the name for this saved asset filter.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="edit-saved-filter-name">Filter name</Label>
+                        <Input
+                            id="edit-saved-filter-name"
+                            value={editingSavedFilterName}
+                            onChange={(event) => setEditingSavedFilterName(event.target.value)}
+                            placeholder="e.g. Available warehouse assets"
+                        />
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => handleCloseSavedFilterDialog()} disabled={isUpdatingSavedFilter}>
+                            Cancel
+                        </Button>
+                        <Button type="button" onClick={handleUpdateSavedFilter} disabled={!editingSavedFilterName.trim() || isUpdatingSavedFilter}>
+                            Save changes
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={savedFilterDialogMode === 'delete'} onOpenChange={(open) => !open && handleCloseSavedFilterDialog()}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Delete saved filter</DialogTitle>
+                        <DialogDescription>
+                            Remove {selectedSavedFilter?.name ? `"${selectedSavedFilter.name}"` : 'this saved filter'} from your saved asset filters.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => handleCloseSavedFilterDialog()} disabled={isDeletingSavedFilter}>
+                            Cancel
+                        </Button>
+                        <Button type="button" variant="destructive" onClick={handleDeleteSavedFilter} disabled={isDeletingSavedFilter}>
+                            Delete filter
                         </Button>
                     </DialogFooter>
                 </DialogContent>

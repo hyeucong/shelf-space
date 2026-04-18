@@ -176,16 +176,6 @@ export default function Assets({ assets, categories, locations, savedFilters, fi
 
             <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
                 <div className="shrink-0 mt-4">
-                    <div className="mx-4 mb-4">
-                        <AssetQueryBuilder
-                            categories={categories}
-                            locations={locations}
-                            savedFilters={savedFilters}
-                            filters={filters}
-                            sorts={sorts}
-                        />
-                    </div>
-
                     <div className="mb-4 mx-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 rounded border bg-background p-2 shadow-sm min-h-12">
                         <div className="flex flex-1 flex-row flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
                             <div className="flex items-center rounded border bg-background p-1 gap-1">
@@ -210,16 +200,27 @@ export default function Assets({ assets, categories, locations, savedFilters, fi
                                     <Rows3 size={15} />
                                 </Button>
                             </div>
-                            <div className="flex">
-                                <SearchInput
-                                    url="/assets"
-                                    placeholder="Search assets..."
-                                    initialValue={filters?.search}
-                                    query={sanitizeQuery({
-                                        ...filters,
-                                        page: undefined,
-                                    })}
-                                />
+                            <div className="flex items-center gap-2">
+                                <div className="shrink-0">
+                                    <AssetQueryBuilder
+                                        categories={categories}
+                                        locations={locations}
+                                        savedFilters={savedFilters}
+                                        filters={filters}
+                                        sorts={sorts}
+                                    />
+                                </div>
+                                <div className="flex flex-1">
+                                    <SearchInput
+                                        url="/assets"
+                                        placeholder="Search assets..."
+                                        initialValue={filters?.search}
+                                        query={sanitizeQuery({
+                                            ...filters,
+                                            page: undefined,
+                                        })}
+                                    />
+                                </div>
                             </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0">

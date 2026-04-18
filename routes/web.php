@@ -19,6 +19,8 @@ Route::middleware([
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 
     Route::post('assets/saved-filters', [AssetController::class, 'storeSavedFilter'])->name('assets.saved-filters.store');
+    Route::patch('assets/saved-filters/{savedFilter}', [AssetController::class, 'updateSavedFilter'])->name('assets.saved-filters.update');
+    Route::delete('assets/saved-filters/{savedFilter}', [AssetController::class, 'destroySavedFilter'])->name('assets.saved-filters.destroy');
     Route::resource('assets', AssetController::class);
     Route::resource('kits', KitController::class);
 

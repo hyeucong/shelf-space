@@ -37,23 +37,10 @@ class AssetController extends Controller
 
     public function storeSavedFilter(Request $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'filters' => ['required', 'array'],
-        ]);
+        $validated = $this->validateSavedFilterPayload($request);
 
         $filters = $this->normalizeAssetFilters($validated['filters']);
-        $baseKey = Str::slug($validated['name']) ?: 'filter';
-        $key = $baseKey;
-        $counter = 1;
-
-        while (UserViewPreference::query()
-            ->where('user_id', $request->user()->id)
-            ->where('resource', 'assets.index')
-            ->where('key', $key)
-            ->exists()) {
-            $key = $baseKey.'-'.$counter++;
-        }
+        $key = $this->generateSavedFilterKey($request, trim($validated['name']));
 
         UserViewPreference::create([
             'user_id' => $request->user()->id,
@@ -66,6 +53,75 @@ class AssetController extends Controller
         ]);
 
         return back();
+    }
+
+    public function updateSavedFilter(Request $request, UserViewPreference $savedFilter)
+    {
+        $savedFilter = $this->resolveSavedFilter($request, $savedFilter);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $name = trim($validated['name']);
+
+        $savedFilter->update([
+            'name' => $name,
+            'key' => $this->generateSavedFilterKey($request, $name, $savedFilter->id),
+        ]);
+
+        return back();
+    }
+
+    public function destroySavedFilter(Request $request, UserViewPreference $savedFilter)
+    {
+        $savedFilter = $this->resolveSavedFilter($request, $savedFilter);
+        $savedFilter->delete();
+
+        return back();
+    }
+
+    /**
+     * @return array{name: string, filters: array<string, mixed>}
+     */
+    private function validateSavedFilterPayload(Request $request): array
+    {
+        /** @var array{name: string, filters: array<string, mixed>} $validated */
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'filters' => ['required', 'array'],
+        ]);
+
+        return $validated;
+    }
+
+    private function resolveSavedFilter(Request $request, UserViewPreference $savedFilter): UserViewPreference
+    {
+        abort_unless(
+            $savedFilter->user_id === $request->user()->id
+                && $savedFilter->resource === 'assets.index',
+            404,
+        );
+
+        return $savedFilter;
+    }
+
+    private function generateSavedFilterKey(Request $request, string $name, ?int $ignoreId = null): string
+    {
+        $baseKey = Str::slug($name) ?: 'filter';
+        $key = $baseKey;
+        $counter = 1;
+
+        while (UserViewPreference::query()
+            ->where('user_id', $request->user()->id)
+            ->where('resource', 'assets.index')
+            ->when($ignoreId !== null, fn (Builder $query) => $query->whereKeyNot($ignoreId))
+            ->where('key', $key)
+            ->exists()) {
+            $key = $baseKey.'-'.$counter++;
+        }
+
+        return $key;
     }
 
     /**
