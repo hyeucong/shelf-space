@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Location;
 use App\Models\Tag;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class AssetController extends Controller
@@ -85,12 +86,39 @@ class AssetController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'asset_id' => ['required', 'string', 'max:255', 'unique:assets,asset_id'],
+            'asset_id' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('assets', 'asset_id')->where(fn ($query) => $query->where('user_id', $request->user()->id)),
+            ],
             'value' => ['nullable', 'numeric', 'min:0'],
-            'category_id' => ['nullable', 'exists:categories,id'],
-            'location_id' => ['nullable', 'exists:locations,id'],
+            'category_id' => [
+                'nullable',
+                Rule::exists('categories', 'id')->where(fn ($query) => $query->where('user_id', $request->user()->id)),
+            ],
+            'location_id' => [
+                'nullable',
+                Rule::exists('locations', 'id')->where(fn ($query) => $query->where('user_id', $request->user()->id)),
+            ],
             'description' => ['nullable', 'string'],
             'tags' => ['nullable', 'array'],
+            'tags.*' => [
+                'nullable',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (is_numeric($value)) {
+                        if (! Tag::query()->whereKey((int) $value)->exists()) {
+                            $fail('The selected tag is invalid.');
+                        }
+
+                        return;
+                    }
+
+                    if (! is_string($value) || trim($value) === '') {
+                        $fail('Each tag must be an existing tag ID or a non-empty tag name.');
+                    }
+                },
+            ],
         ]);
 
         $tags = $validated['tags'] ?? [];
@@ -111,7 +139,10 @@ class AssetController extends Controller
                 continue;
             }
 
-            $tag = Tag::firstOrCreate(['name' => trim($t)]);
+            $tag = Tag::firstOrCreate([
+                'user_id' => $request->user()->id,
+                'name' => trim($t),
+            ]);
             $tagIds[] = $tag->id;
         }
 
@@ -155,7 +186,14 @@ class AssetController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'asset_id' => ['required', 'string', 'max:255', 'unique:assets,asset_id,'.$asset->id],
+            'asset_id' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('assets', 'asset_id')
+                    ->where(fn ($query) => $query->where('user_id', $request->user()->id))
+                    ->ignore($asset->id),
+            ],
             'value' => ['nullable', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],
         ]);

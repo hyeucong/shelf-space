@@ -4,21 +4,27 @@ use App\Models\Tag;
 use App\Models\User;
 
 test('authenticated users can create tags from the index dialog flow', function () {
-    $this->actingAs(User::factory()->create());
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
 
     $this->post('/tags', [
         'name' => '  Critical  ',
     ])->assertRedirect(route('tags.index'));
 
     $this->assertDatabaseHas('tags', [
+        'user_id' => $user->id,
         'name' => 'Critical',
     ]);
 });
 
 test('tag names are required and unique', function () {
-    $this->actingAs(User::factory()->create());
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
 
     Tag::create([
+        'user_id' => $user->id,
         'name' => 'Critical',
     ]);
 

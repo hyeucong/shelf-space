@@ -106,7 +106,14 @@ class TagController extends Controller
         ]);
 
         return $request->validate([
-            'name' => ['required', 'string', 'max:255', Rule::unique('tags', 'name')->ignore($tag?->id)],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('tags', 'name')
+                    ->where(fn ($query) => $query->where('user_id', $request->user()->id))
+                    ->ignore($tag?->id),
+            ],
         ]);
     }
 }

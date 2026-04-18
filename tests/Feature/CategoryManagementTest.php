@@ -4,7 +4,9 @@ use App\Models\Category;
 use App\Models\User;
 
 test('authenticated users can create categories from the index dialog flow', function () {
-    $this->actingAs(User::factory()->create());
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
 
     $this->post('/categories', [
         'name' => '  Electronics  ',
@@ -13,6 +15,7 @@ test('authenticated users can create categories from the index dialog flow', fun
     ])->assertRedirect(route('categories.index'));
 
     $this->assertDatabaseHas('categories', [
+        'user_id' => $user->id,
         'name' => 'Electronics',
         'description' => 'Devices and accessories',
         'hex_color' => '#ab339f',

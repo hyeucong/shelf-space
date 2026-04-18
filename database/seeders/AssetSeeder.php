@@ -6,6 +6,7 @@ use App\Models\Asset;
 use App\Models\Category;
 use App\Models\Location;
 use App\Models\Tag;
+use App\Models\User;
 use Faker\Factory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -15,6 +16,7 @@ class AssetSeeder extends Seeder
     public function run()
     {
         $faker = Factory::create();
+        $user = User::query()->first() ?? User::factory()->create();
 
         $categoryNames = ['Electronics', 'Furniture', 'Office', 'Audio', 'Tools'];
         $locationNames = ['Main Office', 'Warehouse', 'Remote'];
@@ -22,17 +24,18 @@ class AssetSeeder extends Seeder
         for ($i = 0; $i < 30; $i++) {
             $catName = $faker->randomElement($categoryNames);
             $category = Category::firstOrCreate(
-                ['name' => $catName],
+                ['user_id' => $user->id, 'name' => $catName],
                 ['slug' => Str::slug($catName)]
             );
 
             $locName = $faker->randomElement($locationNames);
             $location = Location::firstOrCreate(
-                ['name' => $locName],
+                ['user_id' => $user->id, 'name' => $locName],
                 ['description' => $faker->sentence()]
             );
 
             $asset = Asset::create([
+                'user_id' => $user->id,
                 'name' => $faker->words(3, true),
                 'asset_id' => 'AST-'.strtoupper($faker->bothify('??-####')),
                 'description' => $faker->sentence(),
@@ -45,7 +48,7 @@ class AssetSeeder extends Seeder
             $chosen = $faker->randomElements($possibleTags, rand(1, 3));
             $tagIds = [];
             foreach ($chosen as $t) {
-                $tagIds[] = Tag::firstOrCreate(['name' => $t])->id;
+                $tagIds[] = Tag::firstOrCreate(['user_id' => $user->id, 'name' => $t])->id;
             }
 
             $asset->tags()->sync(array_values(array_unique($tagIds)));

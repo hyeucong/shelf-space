@@ -10,13 +10,16 @@ return new class extends Migration
     {
         Schema::create('assets', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('category_id')->nullable()->index();
-            $table->string('asset_id')->unique();
+            $table->string('asset_id');
             $table->string('name');
             $table->text('description')->nullable();
             $table->decimal('value', 10, 2)->nullable();
             $table->string('status')->default('available');
             $table->timestamps();
+
+            $table->unique(['user_id', 'asset_id']);
         });
     }
 
