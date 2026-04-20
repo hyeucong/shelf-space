@@ -438,6 +438,38 @@ class AssetController extends Controller
     }
 
     /**
+     * Display analytics for the specified asset (temporary page).
+     */
+    public function analytics(Asset $asset)
+    {
+        $asset->load([
+            'category:id,name',
+            'location:id,name',
+            'tags:id,name',
+        ]);
+
+        return Inertia::render('assets/analytics', [
+            'asset' => $asset,
+        ]);
+    }
+
+    /**
+     * Display reports for the specified asset (temporary page).
+     */
+    public function reports(Asset $asset)
+    {
+        $asset->load([
+            'category:id,name',
+            'location:id,name',
+            'tags:id,name',
+        ]);
+
+        return Inertia::render('assets/reports', [
+            'asset' => $asset,
+        ]);
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(Asset $asset)

@@ -28,6 +28,8 @@ Route::middleware([
     });
 
     Route::get('assets/{asset}/overview', [AssetController::class, 'show'])->name('assets.overview');
+    Route::get('assets/{asset}/analytics', [AssetController::class, 'analytics'])->name('assets.analytics');
+    Route::get('assets/{asset}/reports', [AssetController::class, 'reports'])->name('assets.reports');
     Route::resource('assets', AssetController::class)->except(['show']);
     Route::resource('kits', KitController::class);
 
