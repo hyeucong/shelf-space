@@ -13,7 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
-import { Pencil, Trash2, List as ListIcon, Rows3 } from 'lucide-react';
+import { Pencil, Trash2, List as ListIcon, Rows3, Camera } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SearchInput } from '@/components/search-input';
@@ -169,6 +169,8 @@ export default function Assets({ assets, categories, locations, savedFilters, fi
 
     const isAllTable = tableMode === 'all';
     const hasAssets = localAssets.length > 0;
+    const baseTableClassName = isAllTable ? 'min-w-[1100px]' : undefined;
+    const selectionColumnClassName = 'w-11 px-3 md:px-4';
 
     return (
         <>
@@ -235,11 +237,11 @@ export default function Assets({ assets, categories, locations, savedFilters, fi
                 </div>
 
                 {hasAssets ? (
-                    <div className="flex-1 overflow-y-auto mx-4 mb-4 rounded border shadow-none bg-background flex flex-col">
-                        <Table className={isAllTable ? 'min-w-330' : undefined}>
-                            <TableHeader className="bg-background">
+                    <div className="mx-4 mb-4 flex flex-1 min-h-0 flex-col overflow-y-auto rounded border bg-background shadow-none">
+                        <Table className={baseTableClassName}>
+                            <TableHeader>
                                 <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
-                                    <TableHead className="w-12.5">
+                                    <TableHead className={selectionColumnClassName}>
                                         <Checkbox
                                             aria-label="Select all"
                                             checked={allSelected ? true : someSelected ? 'indeterminate' : false}
@@ -256,26 +258,26 @@ export default function Assets({ assets, categories, locations, savedFilters, fi
                                             <TableHead>Location</TableHead>
                                             <TableHead>Tags</TableHead>
                                             <TableHead>Description</TableHead>
-                                            <TableHead>Value</TableHead>
-                                            <TableHead>Created</TableHead>
-                                            <TableHead>Updated</TableHead>
+                                            <TableHead className="text-right">Value</TableHead>
+                                            <TableHead className="hidden xl:table-cell">Created</TableHead>
+                                            <TableHead className="hidden xl:table-cell">Updated</TableHead>
                                         </>
                                     ) : (
                                         <>
-                                            <TableHead>Name</TableHead>
-                                            <TableHead>Asset ID</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Value</TableHead>
+                                            <TableHead className="w-full">Name</TableHead>
+                                            <TableHead className="hidden sm:table-cell sm:w-40">Asset ID</TableHead>
+                                            <TableHead className="hidden md:table-cell md:w-32">Status</TableHead>
+                                            <TableHead className="w-28 text-right">Value</TableHead>
                                         </>
                                     )}
-                                    <TableHead>Actions</TableHead>
+                                    <TableHead className="w-24 text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {localAssets.map((asset) => (
                                     isAllTable ? (
                                         <TableRow key={asset.id}>
-                                            <TableCell>
+                                            <TableCell className={selectionColumnClassName}>
                                                 <Checkbox
                                                     aria-label={`Select ${asset.name}`}
                                                     checked={selectedIds.includes(asset.id)}
@@ -283,30 +285,42 @@ export default function Assets({ assets, categories, locations, savedFilters, fi
                                                 />
                                             </TableCell>
                                             <TableCell className="font-medium text-muted-foreground">{asset.id}</TableCell>
-                                            <TableCell className="min-w-55 max-w-80 whitespace-normal font-semibold">
-                                                <Link href={`/assets/${asset.id}`} className="hover:underline">{asset.name}</Link>
+                                            <TableCell className="min-w-48 whitespace-normal font-semibold text-foreground">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded border bg-muted/10 flex items-center justify-center overflow-hidden">
+                                                        {
+                                                            // If you add an image URL to assets in future, set `asset.image_url`.
+                                                            (asset as any).image_url ? (
+                                                                <img src={(asset as any).image_url} alt={asset.name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <Camera className="text-muted-foreground" size={18} />
+                                                            )
+                                                        }
+                                                    </div>
+                                                    <Link href={`/assets/${asset.id}/overview`} className="line-clamp-2 hover:underline">{asset.name}</Link>
+                                                </div>
                                             </TableCell>
                                             <TableCell className="font-medium text-muted-foreground">{asset.asset_id}</TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className="capitalize">{asset.status}</Badge>
                                             </TableCell>
                                             <TableCell>
-                                                <div className="min-w-35 whitespace-normal">
+                                                <div className="min-w-32 whitespace-normal">
                                                     <div>{asset.category?.name || '-'}</div>
-                                                    <div className="text-xs text-muted-foreground">
-                                                        {asset.category_id ? `ID ${asset.category_id}` : 'No category'}
-                                                    </div>
+                                                    {asset.category_id ? (
+                                                        <div className="text-xs text-muted-foreground">{`ID ${asset.category_id}`}</div>
+                                                    ) : null}
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <div className="min-w-35 whitespace-normal">
+                                                <div className="min-w-32 whitespace-normal">
                                                     <div>{asset.location?.name || '-'}</div>
-                                                    <div className="text-xs text-muted-foreground">
-                                                        {asset.location_id ? `ID ${asset.location_id}` : 'No location'}
-                                                    </div>
+                                                    {asset.location_id ? (
+                                                        <div className="text-xs text-muted-foreground">{`ID ${asset.location_id}`}</div>
+                                                    ) : null}
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="min-w-45 whitespace-normal">
+                                            <TableCell className="min-w-40 whitespace-normal">
                                                 {asset.tags && asset.tags.length > 0 ? (
                                                     <div className="flex flex-wrap gap-1">
                                                         {asset.tags.map((tag) => (
@@ -317,32 +331,46 @@ export default function Assets({ assets, categories, locations, savedFilters, fi
                                                     <span className="text-muted-foreground">-</span>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="min-w-60 max-w-80 whitespace-normal text-muted-foreground">
+                                            <TableCell className="min-w-56 max-w-80 whitespace-normal text-muted-foreground">
                                                 {asset.description || '-'}
                                             </TableCell>
-                                            <TableCell>{formatCurrency(asset.value)}</TableCell>
-                                            <TableCell>{formatDate(asset.created_at)}</TableCell>
-                                            <TableCell>{formatDate(asset.updated_at)}</TableCell>
-                                            <TableCell>{renderActionButtons(asset)}</TableCell>
+                                            <TableCell className="text-right font-medium whitespace-nowrap">{formatCurrency(asset.value)}</TableCell>
+                                            <TableCell className="hidden xl:table-cell whitespace-nowrap">{formatDate(asset.created_at)}</TableCell>
+                                            <TableCell className="hidden xl:table-cell whitespace-nowrap">{formatDate(asset.updated_at)}</TableCell>
+                                            <TableCell className="text-right">{renderActionButtons(asset)}</TableCell>
                                         </TableRow>
                                     ) : (
                                         <TableRow key={asset.id}>
-                                            <TableCell>
+                                            <TableCell className={selectionColumnClassName}>
                                                 <Checkbox
                                                     aria-label={`Select ${asset.name}`}
                                                     checked={selectedIds.includes(asset.id)}
                                                     onCheckedChange={(val) => toggleOne(asset.id, !!val)}
                                                 />
                                             </TableCell>
-                                            <TableCell className="font-semibold">
-                                                <Link href={`/assets/${asset.id}`} className="hover:underline">{asset.name}</Link>
+                                            <TableCell className="w-full min-w-0 font-semibold">
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div className="w-10 h-10 rounded border bg-muted/10 flex items-center justify-center overflow-hidden">
+                                                        {
+                                                            (asset as any).image_url ? (
+                                                                <img src={(asset as any).image_url} alt={asset.name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <Camera className="text-muted-foreground" size={18} />
+                                                            )
+                                                        }
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <Link href={`/assets/${asset.id}/overview`} className="block truncate hover:underline sm:whitespace-normal sm:truncate-none">{asset.name}</Link>
+                                                        <div className="mt-1 text-xs text-muted-foreground sm:hidden">{asset.asset_id}</div>
+                                                    </div>
+                                                </div>
                                             </TableCell>
-                                            <TableCell className="font-medium text-muted-foreground">{asset.asset_id}</TableCell>
-                                            <TableCell>
+                                            <TableCell className="hidden sm:table-cell sm:w-40 font-medium text-muted-foreground whitespace-nowrap">{asset.asset_id}</TableCell>
+                                            <TableCell className="hidden md:table-cell md:w-32 whitespace-nowrap">
                                                 <span className="capitalize">{asset.status}</span>
                                             </TableCell>
-                                            <TableCell>{formatCurrency(asset.value)}</TableCell>
-                                            <TableCell>{renderActionButtons(asset)}</TableCell>
+                                            <TableCell className="w-28 text-right font-medium whitespace-nowrap">{formatCurrency(asset.value)}</TableCell>
+                                            <TableCell className="w-24 text-right">{renderActionButtons(asset)}</TableCell>
                                         </TableRow>
                                     )
                                 ))}

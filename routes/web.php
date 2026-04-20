@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AssetController;
+use App\Models\Asset;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\KitController;
@@ -21,7 +22,13 @@ Route::middleware([
     Route::post('assets/saved-filters', [AssetController::class, 'storeSavedFilter'])->name('assets.saved-filters.store');
     Route::patch('assets/saved-filters/{savedFilter}', [AssetController::class, 'updateSavedFilter'])->name('assets.saved-filters.update');
     Route::delete('assets/saved-filters/{savedFilter}', [AssetController::class, 'destroySavedFilter'])->name('assets.saved-filters.destroy');
-    Route::resource('assets', AssetController::class);
+    // compatibility: redirect legacy `/assets/{asset}` GET to the new overview route
+    Route::get('assets/{asset}', function (Asset $asset) {
+        return redirect()->route('assets.overview', $asset);
+    });
+
+    Route::get('assets/{asset}/overview', [AssetController::class, 'show'])->name('assets.overview');
+    Route::resource('assets', AssetController::class)->except(['show']);
     Route::resource('kits', KitController::class);
 
     Route::resource('categories', CategoryController::class)->except(['create', 'edit']);

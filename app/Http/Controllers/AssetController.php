@@ -432,7 +432,7 @@ class AssetController extends Controller
             'tags:id,name',
         ]);
 
-        return Inertia::render('assets/show', [
+        return Inertia::render('assets/overview', [
             'asset' => $asset,
         ]);
     }

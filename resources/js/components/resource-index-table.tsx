@@ -148,12 +148,12 @@ export function ResourceIndexTable<T extends { id: number }>({
             </div>
 
             {hasItems ? (
-                <div className="mx-4 mb-4 flex flex-1 flex-col overflow-y-auto rounded border bg-background shadow-sm">
+                <div className="mx-4 mb-4 flex flex-1 min-h-0 flex-col overflow-y-auto rounded border bg-background shadow-sm">
                     <Table className={tableClassName}>
-                        <TableHeader className="bg-background">
+                        <TableHeader>
                             <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
                                 {selection ? (
-                                    <TableHead className="w-12.5">
+                                    <TableHead className="w-11 px-3 md:px-4">
                                         <Checkbox
                                             aria-label="Select all"
                                             checked={allSelected ? true : someSelected ? 'indeterminate' : false}
@@ -173,7 +173,7 @@ export function ResourceIndexTable<T extends { id: number }>({
                             {items.map((item) => (
                                 <TableRow key={item.id}>
                                     {selection ? (
-                                        <TableCell>
+                                        <TableCell className="w-11 px-3 md:px-4">
                                             <Checkbox
                                                 aria-label={selection.getLabel(item)}
                                                 checked={selection.selectedIds.includes(item.id)}
