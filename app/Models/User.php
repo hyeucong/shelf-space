@@ -56,11 +56,6 @@ class User extends Authenticatable
         return $this->hasMany(Kit::class);
     }
 
-    public function audits(): HasMany
-    {
-        return $this->hasMany(Audit::class);
-    }
-
     public function reminders(): HasMany
     {
         return $this->hasMany(Reminder::class);

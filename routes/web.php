@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\AssetController;
-use App\Http\Controllers\AuditController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\KitController;
 use App\Http\Controllers\LocationController;
@@ -64,7 +63,6 @@ Route::middleware([
     Route::resource('categories', CategoryController::class)->except(['create', 'edit']);
     Route::resource('tags', TagController::class)->except(['create', 'edit']);
     Route::resource('locations', LocationController::class);
-    Route::resource('audits', AuditController::class);
     Route::resource('reminders', ReminderController::class);
 });
 

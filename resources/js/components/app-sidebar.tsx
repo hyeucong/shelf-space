@@ -47,11 +47,7 @@ const mainNavItems: NavItem[] = [
         href: '/locations',
         icon: MapPin,
     },
-    {
-        title: 'Audit',
-        href: '/audits',
-        icon: ClipboardList,
-    }
+
 ];
 
 const footerNavItems: NavItem[] = [
