@@ -1,13 +1,13 @@
 <?php
 
 use App\Http\Controllers\AssetController;
-use App\Models\Asset;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\KitController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\TagController;
+use App\Models\Asset;
 use Illuminate\Support\Facades\Route;
 use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
 
@@ -19,18 +19,45 @@ Route::middleware([
 ])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 
-    Route::post('assets/saved-filters', [AssetController::class, 'storeSavedFilter'])->name('assets.saved-filters.store');
-    Route::patch('assets/saved-filters/{savedFilter}', [AssetController::class, 'updateSavedFilter'])->name('assets.saved-filters.update');
-    Route::delete('assets/saved-filters/{savedFilter}', [AssetController::class, 'destroySavedFilter'])->name('assets.saved-filters.destroy');
-    // compatibility: redirect legacy `/assets/{asset}` GET to the new overview route
-    Route::get('assets/{asset}', function (Asset $asset) {
-        return redirect()->route('assets.overview', $asset);
+    Route::prefix('assets')->name('assets.')->group(function () {
+        Route::post('saved-filters', [AssetController::class, 'storeSavedFilter'])->name('saved-filters.store');
+        Route::patch('saved-filters/{savedFilter}', [AssetController::class, 'updateSavedFilter'])->name('saved-filters.update');
+        Route::delete('saved-filters/{savedFilter}', [AssetController::class, 'destroySavedFilter'])->name('saved-filters.destroy');
+
+        Route::get('/', [AssetController::class, 'index'])->name('index');
+        Route::get('create', [AssetController::class, 'create'])->name('create');
+        Route::post('/', [AssetController::class, 'store'])->name('store');
+
+        Route::get('{asset}/overview', [AssetController::class, 'show'])
+            ->whereNumber('asset')
+            ->name('overview');
+
+        Route::get('{asset}/activity', [AssetController::class, 'activity'])
+            ->whereNumber('asset')
+            ->name('activity');
+
+        Route::get('{asset}/reminders', [AssetController::class, 'reminders'])
+            ->whereNumber('asset')
+            ->name('reminders');
+
+        // compatibility: redirect legacy `/assets/{asset}` GET to the overview route
+        Route::get('{asset}', function (Asset $asset) {
+            return redirect()->route('assets.overview', $asset);
+        })->whereNumber('asset');
+
+        Route::get('{asset}/edit', [AssetController::class, 'edit'])
+            ->whereNumber('asset')
+            ->name('edit');
+
+        Route::match(['put', 'patch'], '{asset}', [AssetController::class, 'update'])
+            ->whereNumber('asset')
+            ->name('update');
+
+        Route::delete('{asset}', [AssetController::class, 'destroy'])
+            ->whereNumber('asset')
+            ->name('destroy');
     });
 
-    Route::get('assets/{asset}/overview', [AssetController::class, 'show'])->name('assets.overview');
-    Route::get('assets/{asset}/analytics', [AssetController::class, 'analytics'])->name('assets.analytics');
-    Route::get('assets/{asset}/reports', [AssetController::class, 'reports'])->name('assets.reports');
-    Route::resource('assets', AssetController::class)->except(['show']);
     Route::resource('kits', KitController::class);
 
     Route::resource('categories', CategoryController::class)->except(['create', 'edit']);

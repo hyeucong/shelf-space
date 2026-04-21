@@ -9,57 +9,43 @@ export default function AssetOverview() {
     return (
         <>
             <Head title={`${asset?.name || 'Asset'} - Overview`} />
-
             <div className="p-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="rounded border bg-background p-4">
-                        <h3 className="mb-2 text-sm font-medium text-muted-foreground">Summary</h3>
-                        <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Status</span>
-                                <span><Badge variant="outline" className="capitalize">{asset?.status || '-'}</Badge></span>
+                <div className="max-w-3xl">
+                    <div className="rounded border bg-background">
+                        <dl className="divide-y">
+                            <div className="flex items-center justify-between px-6 py-4">
+                                <dt className="text-sm text-muted-foreground">ID</dt>
+                                <dd className="text-sm text-foreground wrap-break-word ml-4">{asset?.id ?? '-'}</dd>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Category</span>
-                                <span>{asset?.category?.name || '-'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Location</span>
-                                <span>{asset?.location?.name || '-'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Value</span>
-                                <span>{asset?.value ?? '-'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Created</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Updated</span>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="rounded border bg-background p-4">
-                        <h3 className="mb-2 text-sm font-medium text-muted-foreground">Details</h3>
-                        <div className="space-y-3 text-sm text-muted-foreground">
-                            <div>
-                                <div className="text-xs text-muted-foreground">Description</div>
-                                <div className="mt-1 text-foreground">{asset?.description || '-'}</div>
+                            <div className="flex items-center justify-between px-6 py-4">
+                                <dt className="text-sm text-muted-foreground">Asset ID</dt>
+                                <dd className="text-sm text-foreground ml-4">{asset?.asset_id ?? '-'}</dd>
                             </div>
-                            <div>
-                                <div className="text-xs text-muted-foreground">Tags</div>
-                                <div className="mt-1 flex flex-wrap gap-2">
-                                    {asset?.tags && asset.tags.length > 0 ? (
-                                        asset.tags.map((tag) => (
-                                            <Badge key={tag.id} variant="outline">{tag.name}</Badge>
-                                        ))
+
+                            {(asset?.shelf_qr_id || asset?.qr_id || asset?.shelf_qr) && (
+                                <div className="flex items-center justify-between px-6 py-4">
+                                    <dt className="text-sm text-muted-foreground">Shelf QR ID</dt>
+                                    <dd className="text-sm text-foreground ml-4">{asset?.shelf_qr_id ?? asset?.qr_id ?? asset?.shelf_qr}</dd>
+                                </div>
+                            )}
+
+                            <div className="flex items-center justify-between px-6 py-4">
+                                <dt className="text-sm text-muted-foreground">Created</dt>
+                                <dd className="text-sm text-foreground ml-4">{asset?.created_at ? new Date(asset.created_at).toLocaleString() : '-'}</dd>
+                            </div>
+
+                            <div className="flex items-center justify-between px-6 py-4">
+                                <dt className="text-sm text-muted-foreground">Category</dt>
+                                <dd className="text-sm ml-4">
+                                    {asset?.category?.name ? (
+                                        <Badge variant="outline">{asset.category.name}</Badge>
                                     ) : (
                                         <span className="text-muted-foreground">-</span>
                                     )}
-                                </div>
+                                </dd>
                             </div>
-                        </div>
+                        </dl>
                     </div>
                 </div>
             </div>

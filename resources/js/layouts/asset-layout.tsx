@@ -16,6 +16,9 @@ export interface AssetResource {
     tags?: Array<{ id: number; name: string }>;
     created_at?: string | null;
     updated_at?: string | null;
+    shelf_qr_id?: string | null;
+    qr_id?: string | null;
+    shelf_qr?: string | null;
 }
 
 export interface AssetPageProps {
@@ -25,7 +28,7 @@ export interface AssetPageProps {
 
 type AssetLayoutProps = {
     children: ReactNode;
-    activeTab: 'overview' | 'analytics' | 'reports';
+    activeTab: 'overview' | 'activity' | 'reminders';
 };
 
 export default function AssetLayout({ children, activeTab }: AssetLayoutProps) {
@@ -61,14 +64,14 @@ export default function AssetLayout({ children, activeTab }: AssetLayoutProps) {
                                     Overview
                                 </Link>
                             </TabsTrigger>
-                            <TabsTrigger value="analytics" asChild>
-                                <Link href={`/assets/${asset.id}/analytics`} preserveState className="block">
-                                    Analytics
+                            <TabsTrigger value="activity" asChild>
+                                <Link href={`/assets/${asset.id}/activity`} preserveState className="block">
+                                    Activity
                                 </Link>
                             </TabsTrigger>
-                            <TabsTrigger value="reports" asChild>
-                                <Link href={`/assets/${asset.id}/reports`} preserveState className="block">
-                                    Reports
+                            <TabsTrigger value="reminders" asChild>
+                                <Link href={`/assets/${asset.id}/reminders`} preserveState className="block">
+                                    Reminders
                                 </Link>
                             </TabsTrigger>
                         </TabsList>

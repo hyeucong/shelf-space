@@ -438,9 +438,9 @@ class AssetController extends Controller
     }
 
     /**
-     * Display analytics for the specified asset (temporary page).
+     * Display activity for the specified asset (temporary page).
      */
-    public function analytics(Asset $asset)
+    public function activity(Asset $asset)
     {
         $asset->load([
             'category:id,name',
@@ -448,15 +448,17 @@ class AssetController extends Controller
             'tags:id,name',
         ]);
 
-        return Inertia::render('assets/analytics', [
+        return Inertia::render('assets/activity', [
             'asset' => $asset,
         ]);
     }
 
+    // booking removed
+
     /**
-     * Display reports for the specified asset (temporary page).
+     * Display reminders for the specified asset (temporary page).
      */
-    public function reports(Asset $asset)
+    public function reminders(Asset $asset)
     {
         $asset->load([
             'category:id,name',
@@ -464,7 +466,7 @@ class AssetController extends Controller
             'tags:id,name',
         ]);
 
-        return Inertia::render('assets/reports', [
+        return Inertia::render('assets/reminders', [
             'asset' => $asset,
         ]);
     }
