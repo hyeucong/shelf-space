@@ -16,6 +16,10 @@ use Inertia\Inertia;
 
 class AssetController extends Controller
 {
+    private const RESOURCE_KEY = 'assets.index';
+
+    private const COLUMNS_PREFERENCE_KEY = 'columns';
+
     /**
      * Display a listing of the resource.
      */
@@ -44,7 +48,7 @@ class AssetController extends Controller
 
         UserViewPreference::create([
             'user_id' => $request->user()->id,
-            'resource' => 'assets.index',
+            'resource' => self::RESOURCE_KEY,
             'key' => $key,
             'name' => trim($validated['name']),
             'settings' => [
@@ -69,6 +73,33 @@ class AssetController extends Controller
             'name' => $name,
             'key' => $this->generateSavedFilterKey($request, $name, $savedFilter->id),
         ]);
+
+        return back();
+    }
+
+    public function storeLayout(Request $request)
+    {
+        $validated = $request->validate([
+            'columns' => ['required', 'array'],
+            'columns.*.key' => ['required', 'string', Rule::in(['id', 'asset_id', 'status', 'category', 'location', 'tags', 'description', 'value', 'created_at', 'updated_at'])],
+            'columns.*.visible' => ['required', 'boolean'],
+        ]);
+
+        $columns = $this->normalizeAssetColumnPreferences($validated['columns']);
+
+        UserViewPreference::updateOrCreate(
+            [
+                'user_id' => $request->user()->id,
+                'resource' => self::RESOURCE_KEY,
+                'key' => self::COLUMNS_PREFERENCE_KEY,
+            ],
+            [
+                'name' => 'Layout',
+                'settings' => [
+                    'columns' => $columns,
+                ],
+            ],
+        );
 
         return back();
     }
@@ -99,7 +130,8 @@ class AssetController extends Controller
     {
         abort_unless(
             $savedFilter->user_id === $request->user()->id
-                && $savedFilter->resource === 'assets.index',
+                && $savedFilter->resource === self::RESOURCE_KEY
+                && $savedFilter->key !== self::COLUMNS_PREFERENCE_KEY,
             404,
         );
 
@@ -114,8 +146,9 @@ class AssetController extends Controller
 
         while (UserViewPreference::query()
             ->where('user_id', $request->user()->id)
-            ->where('resource', 'assets.index')
+            ->where('resource', self::RESOURCE_KEY)
             ->when($ignoreId !== null, fn (Builder $query) => $query->whereKeyNot($ignoreId))
+            ->where('key', '!=', self::COLUMNS_PREFERENCE_KEY)
             ->where('key', $key)
             ->exists()) {
             $key = $baseKey.'-'.$counter++;
@@ -252,7 +285,8 @@ class AssetController extends Controller
     {
         return $request->user()
             ->viewPreferences()
-            ->where('resource', 'assets.index')
+            ->where('resource', self::RESOURCE_KEY)
+            ->where('key', '!=', self::COLUMNS_PREFERENCE_KEY)
             ->orderByDesc('is_default')
             ->orderBy('name')
             ->get()
@@ -264,6 +298,74 @@ class AssetController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * @return array<int, array{key: string, visible: bool}>
+     */
+    private function loadColumnPreference(Request $request): array
+    {
+        $preference = $request->user()
+            ->viewPreferences()
+            ->where('resource', self::RESOURCE_KEY)
+            ->where('key', self::COLUMNS_PREFERENCE_KEY)
+            ->first();
+
+        return $this->normalizeAssetColumnPreferences($preference?->settings['columns'] ?? []);
+    }
+
+    /**
+     * @param  mixed  $columns
+     * @return array<int, array{key: string, visible: bool}>
+     */
+    private function normalizeAssetColumnPreferences(mixed $columns): array
+    {
+        $defaults = [
+            'id',
+            'asset_id',
+            'status',
+            'category',
+            'location',
+            'tags',
+            'description',
+            'value',
+            'created_at',
+            'updated_at',
+        ];
+
+        if (! is_array($columns)) {
+            return array_map(fn (string $key) => ['key' => $key, 'visible' => true], $defaults);
+        }
+
+        $normalized = [];
+
+        foreach ($columns as $column) {
+            if (! is_array($column)) {
+                continue;
+            }
+
+            $key = $column['key'] ?? null;
+
+            if (! is_string($key) || ! in_array($key, $defaults, true) || array_key_exists($key, $normalized)) {
+                continue;
+            }
+
+            $normalized[$key] = [
+                'key' => $key,
+                'visible' => (bool) ($column['visible'] ?? false),
+            ];
+        }
+
+        foreach ($defaults as $key) {
+            if (! array_key_exists($key, $normalized)) {
+                $normalized[$key] = [
+                    'key' => $key,
+                    'visible' => true,
+                ];
+            }
+        }
+
+        return array_values($normalized);
     }
 
     /**
@@ -293,6 +395,7 @@ class AssetController extends Controller
             'categories' => Category::query()->orderBy('name')->get(['id', 'name']),
             'locations' => Location::query()->orderBy('name')->get(['id', 'name']),
             'savedFilters' => $savedFilters,
+            'columnPreferences' => $this->loadColumnPreference($request),
         ];
     }
 

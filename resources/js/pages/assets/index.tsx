@@ -1,52 +1,36 @@
-import { AssetFilterOption, AssetFiltersQuery, AssetQueryBuilder, AssetQueryValue, AssetSavedFilter, AssetSortDraft } from '@/components/asset-query-builder';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
 import { Head, Link, router } from '@inertiajs/react';
+import { Columns3 } from 'lucide-react';
+import { cloneElement, useEffect, useMemo, useRef, useState } from 'react';
+import { ColumnVisibilityPanel } from '@/components/asset-column-visibility-panel';
+import { AssetQueryBuilder } from '@/components/asset-query-builder';
+import type { AssetFilterOption, AssetFiltersQuery, AssetQueryValue, AssetSavedFilter, AssetSortDraft } from '@/components/asset-query-builder';
 import { DataTablePagination } from '@/components/data-table-pagination';
 import { ResourceDeleteDialog } from '@/components/resource-form-dialog';
+import { SearchInput } from '@/components/search-input';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Table,
     TableBody,
-    TableCell,
     TableHead,
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
-import { Pencil, Trash2, List as ListIcon, Rows3, Camera } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { SearchInput } from '@/components/search-input';
+import {
+    DEFAULT_ASSET_COLUMN_PREFERENCES,
+    cloneColumnPreferences,
+    createAssetTableColumns,
+} from '@/pages/assets/column-config';
+import type { AssetColumnKey, AssetColumnPreference, AssetRecord, AssetTableColumn } from '@/pages/assets/column-config';
 import type { PaginatedData } from '@/types/pagination';
 
-interface Asset {
-    id: number;
-    category_id: number | null;
-    location_id: number | null;
-    asset_id: string;
-    name: string;
-    description: string | null;
-    status: string;
-    value: number | null;
-    created_at: string | null;
-    updated_at: string | null;
-    category?: {
-        id: number;
-        name: string;
-    } | null;
-    location?: {
-        id: number;
-        name: string;
-    } | null;
-    tags?: Array<{
-        id: number;
-        name: string;
-    }>;
-}
-
 interface PageProps {
-    assets: PaginatedData<Asset>;
+    assets: PaginatedData<AssetRecord>;
     categories: AssetFilterOption[];
+    columnPreferences: AssetColumnPreference[];
     locations: AssetFilterOption[];
     savedFilters: AssetSavedFilter[];
     filters: AssetFiltersQuery;
@@ -58,24 +42,88 @@ const sanitizeQuery = (query: Record<string, AssetQueryValue>) => (
         Object.entries(query).filter(([, value]) => value !== undefined && value !== ''),
     ) as Record<string, string | number>
 );
-export default function Assets({ assets, categories, locations, savedFilters, filters, sorts }: PageProps) {
-    const [localAssets, setLocalAssets] = useState<Asset[]>(assets?.data || []);
-    const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null);
+
+export default function Assets({ assets, categories, columnPreferences, locations, savedFilters, filters, sorts }: PageProps) {
+    const persistedColumns = useMemo(
+        () => cloneColumnPreferences(columnPreferences.length > 0 ? columnPreferences : DEFAULT_ASSET_COLUMN_PREFERENCES),
+        [columnPreferences],
+    );
+    const [assetToDelete, setAssetToDelete] = useState<AssetRecord | null>(null);
+    const [deletedAssetIds, setDeletedAssetIds] = useState<number[]>([]);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [tableMode, setTableMode] = useState<'simple' | 'all'>('simple');
-
-    useEffect(() => {
-        setLocalAssets(assets?.data || []);
-    }, [assets]);
-
-    useEffect(() => {
-        setSelectedIds((prev) => prev.filter((id) => localAssets.some((a) => a.id === id)));
-    }, [localAssets]);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [optimisticColumns, setOptimisticColumns] = useState<AssetColumnPreference[] | null>(null);
+    const [draftColumns, setDraftColumns] = useState<AssetColumnPreference[]>(persistedColumns);
+    const [isColumnsPanelOpen, setIsColumnsPanelOpen] = useState(false);
+    const [isSavingColumns, setIsSavingColumns] = useState(false);
+    const columnsPanelRef = useRef<HTMLDivElement | null>(null);
+
+    const visibleColumns = optimisticColumns ?? persistedColumns;
+
+    const localAssets = useMemo(
+        () => (assets?.data || []).filter((asset) => !deletedAssetIds.includes(asset.id)),
+        [assets, deletedAssetIds],
+    );
+    const activeSelectedIds = useMemo(
+        () => selectedIds.filter((id) => localAssets.some((asset) => asset.id === id)),
+        [localAssets, selectedIds],
+    );
+
+    useEffect(() => {
+        if (!isColumnsPanelOpen) {
+            return;
+        }
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setDraftColumns(cloneColumnPreferences(visibleColumns));
+                setIsColumnsPanelOpen(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isColumnsPanelOpen, visibleColumns]);
+
+    useEffect(() => {
+        if (!isColumnsPanelOpen) {
+            return;
+        }
+
+        const handlePointerDown = (event: MouseEvent | PointerEvent | TouchEvent) => {
+            const target = event.target;
+
+            if (!(target instanceof Node)) {
+                return;
+            }
+
+            if (columnsPanelRef.current?.contains(target)) {
+                return;
+            }
+
+            if (
+                target instanceof Element
+                && target.closest('[data-slot="select-content"], [data-slot="dropdown-menu-content"], [data-slot="dialog-content"]')
+            ) {
+                return;
+            }
+
+            setDraftColumns(cloneColumnPreferences(visibleColumns));
+            setIsColumnsPanelOpen(false);
+        };
+
+        document.addEventListener('pointerdown', handlePointerDown);
+
+        return () => document.removeEventListener('pointerdown', handlePointerDown);
+    }, [isColumnsPanelOpen, visibleColumns]);
 
     const toggleOne = (id: number, checked: boolean) => {
         setSelectedIds((prev) => {
-            if (checked) return Array.from(new Set([...prev, id]));
+            if (checked) {
+                return Array.from(new Set([...prev, id]));
+            }
+
             return prev.filter((i) => i !== id);
         });
     };
@@ -88,8 +136,64 @@ export default function Assets({ assets, categories, locations, savedFilters, fi
         }
     };
 
-    const allSelected = localAssets.length > 0 && selectedIds.length === localAssets.length;
-    const someSelected = selectedIds.length > 0 && selectedIds.length < localAssets.length;
+    const handleOpenColumnsPanel = () => {
+        setDraftColumns(cloneColumnPreferences(visibleColumns));
+        setIsColumnsPanelOpen(true);
+    };
+
+    const handleCloseColumnsPanel = () => {
+        setDraftColumns(cloneColumnPreferences(visibleColumns));
+        setIsColumnsPanelOpen(false);
+    };
+
+    const handleApplyColumnsPanel = () => {
+        const previousColumns = cloneColumnPreferences(visibleColumns);
+        const nextColumns = cloneColumnPreferences(draftColumns);
+
+        setOptimisticColumns(nextColumns);
+        setIsSavingColumns(true);
+
+        router.post('/assets/layout', {
+            columns: nextColumns,
+        }, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                setOptimisticColumns(null);
+                setIsColumnsPanelOpen(false);
+            },
+            onError: () => {
+                setOptimisticColumns(previousColumns);
+                setDraftColumns(previousColumns);
+            },
+            onFinish: () => setIsSavingColumns(false),
+        });
+    };
+
+    const handleDraftColumnToggle = (columnKey: AssetColumnKey, checked: boolean) => {
+        setDraftColumns((current) => current.map((column) => (
+            column.key === columnKey
+                ? { ...column, visible: checked }
+                : column
+        )));
+    };
+
+    const handleDraftColumnReorder = ({ active, over }: DragEndEvent) => {
+        if (!over || active.id === over.id) {
+            return;
+        }
+
+        setDraftColumns((current) => {
+            const activeIndex = current.findIndex((column) => column.key === active.id);
+            const overIndex = current.findIndex((column) => column.key === over.id);
+
+            if (activeIndex === -1 || overIndex === -1) {
+                return current;
+            }
+
+            return arrayMove(current, activeIndex, overIndex);
+        });
+    };
 
     const closeDeleteDialog = () => {
         setAssetToDelete(null);
@@ -106,7 +210,7 @@ export default function Assets({ assets, categories, locations, savedFilters, fi
             preserveScroll: true,
             onBefore: () => setIsDeleting(true),
             onSuccess: () => {
-                setLocalAssets((previousAssets) => previousAssets.filter((asset) => asset.id !== assetId));
+                setDeletedAssetIds((previousIds) => previousIds.includes(assetId) ? previousIds : [...previousIds, assetId]);
                 setAssetToDelete(null);
             },
             onFinish: () => setIsDeleting(false),
@@ -124,53 +228,40 @@ export default function Assets({ assets, categories, locations, savedFilters, fi
         });
     };
 
-    const formatCurrency = (value: number | null) => {
-        if (value === null) {
-            return '-';
-        }
+    const allSelected = localAssets.length > 0 && activeSelectedIds.length === localAssets.length;
+    const someSelected = activeSelectedIds.length > 0 && activeSelectedIds.length < localAssets.length;
 
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-        }).format(Number(value));
-    };
+    const tableColumns = useMemo(() => createAssetTableColumns({
+        selectedIds: activeSelectedIds,
+        onToggleOne: toggleOne,
+        onDelete: (asset) => setAssetToDelete(asset),
+    }), [activeSelectedIds]);
 
-    const formatDate = (value: string | null) => {
-        if (!value) {
-            return '-';
-        }
+    const fixedLeadingColumns = tableColumns.filter((column) => column.key === 'select' || column.key === 'name');
+    const fixedTrailingColumns = tableColumns.filter((column) => column.key === 'actions');
+    const optionalColumnMap = useMemo(() => new Map(
+        tableColumns
+            .filter((column) => column.isOptional)
+            .map((column) => [column.key as AssetColumnKey, column]),
+    ), [tableColumns]);
 
-        return new Intl.DateTimeFormat('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-        }).format(new Date(value));
-    };
+    const activeColumns = useMemo(() => ([
+        ...fixedLeadingColumns,
+        ...visibleColumns
+            .filter((column) => column.visible)
+            .map((column) => optionalColumnMap.get(column.key))
+            .filter((column): column is AssetTableColumn => Boolean(column)),
+        ...fixedTrailingColumns,
+    ]), [fixedLeadingColumns, fixedTrailingColumns, optionalColumnMap, visibleColumns]);
 
-    const renderActionButtons = (asset: Asset) => (
-        <div className="flex gap-2">
-            <Button variant="ghost" size="icon" className="h-8 w-8 border" asChild>
-                <Link href={`/assets/${asset.id}/edit`}>
-                    <Pencil className="h-4 w-4" />
-                    <span className="sr-only">Edit</span>
-                </Link>
-            </Button>
-            <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 border text-destructive hover:bg-destructive/10 hover:text-destructive"
-                onClick={() => setAssetToDelete(asset)}
-            >
-                <Trash2 className="h-4 w-4" />
-                <span className="sr-only">Delete</span>
-            </Button>
-        </div>
-    );
-
-    const isAllTable = tableMode === 'all';
+    const hasPendingColumnChanges = JSON.stringify(draftColumns) !== JSON.stringify(visibleColumns);
     const hasAssets = localAssets.length > 0;
-    const baseTableClassName = isAllTable ? 'min-w-[1100px]' : undefined;
-    const selectionColumnClassName = 'w-11 px-3 md:px-4';
+    const visibleColumnCount = activeColumns.length;
+    const baseTableClassName = visibleColumnCount > 8
+        ? 'min-w-[1200px]'
+        : visibleColumnCount > 5
+            ? 'min-w-[960px]'
+            : 'min-w-[720px]';
 
     return (
         <>
@@ -178,30 +269,8 @@ export default function Assets({ assets, categories, locations, savedFilters, fi
 
             <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
                 <div className="shrink-0 mt-4">
-                    <div className="mb-4 mx-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 rounded border bg-background p-2 shadow-sm min-h-12">
-                        <div className="flex flex-1 flex-row flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
-                            <div className="flex items-center rounded border bg-background p-1 gap-1">
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className={tableMode === 'simple' ? 'h-7 px-2 shadow-none bg-muted text-foreground' : 'h-7 px-2 shadow-none text-muted-foreground'}
-                                    onClick={() => setTableMode('simple')}
-                                    title="Simple view"
-                                >
-                                    <ListIcon size={15} />
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className={tableMode === 'all' ? 'h-7 px-2 shadow-none bg-muted text-foreground' : 'h-7 px-2 shadow-none text-muted-foreground'}
-                                    onClick={() => setTableMode('all')}
-                                    title="All data view"
-                                >
-                                    <Rows3 size={15} />
-                                </Button>
-                            </div>
+                    <div className="mb-4 mx-4 flex min-h-12 flex-col items-start justify-between gap-3 rounded border bg-background p-2 shadow-sm md:flex-row md:items-center">
+                        <div className="flex w-full flex-1 flex-row flex-wrap items-center gap-2 md:w-auto md:flex-nowrap">
                             <div className="flex items-center gap-2">
                                 <div className="shrink-0">
                                     <AssetQueryBuilder
@@ -224,8 +293,32 @@ export default function Assets({ assets, categories, locations, savedFilters, fi
                                     />
                                 </div>
                             </div>
+                            <div ref={columnsPanelRef} className="relative shrink-0">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className={isColumnsPanelOpen ? 'h-9 w-9 shrink-0 rounded bg-muted text-foreground shadow-none' : 'h-9 w-9 shrink-0 rounded shadow-none'}
+                                    title="Show or hide columns"
+                                    onClick={() => isColumnsPanelOpen ? handleCloseColumnsPanel() : handleOpenColumnsPanel()}
+                                    aria-expanded={isColumnsPanelOpen}
+                                >
+                                    <Columns3 size={16} />
+                                    <span className="sr-only">Show or hide columns</span>
+                                </Button>
+                                <ColumnVisibilityPanel
+                                    open={isColumnsPanelOpen}
+                                    columns={draftColumns}
+                                    onToggle={handleDraftColumnToggle}
+                                    onReorder={handleDraftColumnReorder}
+                                    onCancel={handleCloseColumnsPanel}
+                                    onSave={handleApplyColumnsPanel}
+                                    isSaving={isSavingColumns}
+                                    hasPendingChanges={hasPendingColumnChanges}
+                                />
+                            </div>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0">
+                        <div className="flex w-full flex-wrap items-center justify-end gap-2 border-t pt-2 md:w-auto md:border-t-0 md:pt-0">
                             <Button type="button" variant="outline" className="h-9 rounded shadow-none shrink-0">
                                 Export selection
                             </Button>
@@ -237,142 +330,28 @@ export default function Assets({ assets, categories, locations, savedFilters, fi
                 </div>
 
                 {hasAssets ? (
-                    <div className="mx-4 mb-4 flex flex-1 min-h-0 flex-col overflow-y-auto rounded border bg-background shadow-none">
+                    <div className="mx-4 mb-4 flex min-h-0 flex-1 flex-col overflow-y-auto rounded border bg-background shadow-none">
                         <Table className={baseTableClassName}>
                             <TableHeader>
                                 <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
-                                    <TableHead className={selectionColumnClassName}>
-                                        <Checkbox
-                                            aria-label="Select all"
-                                            checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                                            onCheckedChange={(val) => toggleAll(!!val)}
-                                        />
-                                    </TableHead>
-                                    {isAllTable ? (
-                                        <>
-                                            <TableHead>ID</TableHead>
-                                            <TableHead>Name</TableHead>
-                                            <TableHead>Asset ID</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Category</TableHead>
-                                            <TableHead>Location</TableHead>
-                                            <TableHead>Tags</TableHead>
-                                            <TableHead>Description</TableHead>
-                                            <TableHead className="text-right">Value</TableHead>
-                                            <TableHead className="hidden xl:table-cell">Created</TableHead>
-                                            <TableHead className="hidden xl:table-cell">Updated</TableHead>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <TableHead className="w-full">Name</TableHead>
-                                            <TableHead className="hidden sm:table-cell sm:w-40">Asset ID</TableHead>
-                                            <TableHead className="hidden md:table-cell md:w-32">Status</TableHead>
-                                            <TableHead className="w-28 text-right">Value</TableHead>
-                                        </>
-                                    )}
-                                    <TableHead className="w-24 text-right">Actions</TableHead>
+                                    {activeColumns.map((column) => (
+                                        <TableHead key={column.key} className={column.headerClassName}>
+                                            {column.key === 'select' ? (
+                                                <Checkbox
+                                                    aria-label="Select all"
+                                                    checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                                                    onCheckedChange={(val) => toggleAll(!!val)}
+                                                />
+                                            ) : column.label}
+                                        </TableHead>
+                                    ))}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {localAssets.map((asset) => (
-                                    isAllTable ? (
-                                        <TableRow key={asset.id}>
-                                            <TableCell className={selectionColumnClassName}>
-                                                <Checkbox
-                                                    aria-label={`Select ${asset.name}`}
-                                                    checked={selectedIds.includes(asset.id)}
-                                                    onCheckedChange={(val) => toggleOne(asset.id, !!val)}
-                                                />
-                                            </TableCell>
-                                            <TableCell className="font-medium text-muted-foreground">{asset.id}</TableCell>
-                                            <TableCell className="min-w-48 whitespace-normal font-semibold text-foreground">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded border bg-muted/10 flex items-center justify-center overflow-hidden">
-                                                        {
-                                                            // If you add an image URL to assets in future, set `asset.image_url`.
-                                                            (asset as any).image_url ? (
-                                                                <img src={(asset as any).image_url} alt={asset.name} className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <Camera className="text-muted-foreground" size={18} />
-                                                            )
-                                                        }
-                                                    </div>
-                                                    <Link href={`/assets/${asset.id}/overview`} className="line-clamp-2 hover:underline">{asset.name}</Link>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="font-medium text-muted-foreground">{asset.asset_id}</TableCell>
-                                            <TableCell>
-                                                <Badge variant="outline" className="capitalize">{asset.status}</Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="min-w-32 whitespace-normal">
-                                                    <div>{asset.category?.name || '-'}</div>
-                                                    {asset.category_id ? (
-                                                        <div className="text-xs text-muted-foreground">{`ID ${asset.category_id}`}</div>
-                                                    ) : null}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="min-w-32 whitespace-normal">
-                                                    <div>{asset.location?.name || '-'}</div>
-                                                    {asset.location_id ? (
-                                                        <div className="text-xs text-muted-foreground">{`ID ${asset.location_id}`}</div>
-                                                    ) : null}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="min-w-40 whitespace-normal">
-                                                {asset.tags && asset.tags.length > 0 ? (
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {asset.tags.map((tag) => (
-                                                            <Badge key={tag.id} variant="outline">{tag.name}</Badge>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-muted-foreground">-</span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="min-w-56 max-w-80 whitespace-normal text-muted-foreground">
-                                                {asset.description || '-'}
-                                            </TableCell>
-                                            <TableCell className="text-right font-medium whitespace-nowrap">{formatCurrency(asset.value)}</TableCell>
-                                            <TableCell className="hidden xl:table-cell whitespace-nowrap">{formatDate(asset.created_at)}</TableCell>
-                                            <TableCell className="hidden xl:table-cell whitespace-nowrap">{formatDate(asset.updated_at)}</TableCell>
-                                            <TableCell className="text-right">{renderActionButtons(asset)}</TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        <TableRow key={asset.id}>
-                                            <TableCell className={selectionColumnClassName}>
-                                                <Checkbox
-                                                    aria-label={`Select ${asset.name}`}
-                                                    checked={selectedIds.includes(asset.id)}
-                                                    onCheckedChange={(val) => toggleOne(asset.id, !!val)}
-                                                />
-                                            </TableCell>
-                                            <TableCell className="w-full min-w-0 font-semibold">
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="w-10 h-10 rounded border bg-muted/10 flex items-center justify-center overflow-hidden">
-                                                        {
-                                                            (asset as any).image_url ? (
-                                                                <img src={(asset as any).image_url} alt={asset.name} className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <Camera className="text-muted-foreground" size={18} />
-                                                            )
-                                                        }
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <Link href={`/assets/${asset.id}/overview`} className="block truncate hover:underline sm:whitespace-normal sm:truncate-none">{asset.name}</Link>
-                                                        <div className="mt-1 text-xs text-muted-foreground sm:hidden">{asset.asset_id}</div>
-                                                    </div>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="hidden sm:table-cell sm:w-40 font-medium text-muted-foreground whitespace-nowrap">{asset.asset_id}</TableCell>
-                                            <TableCell className="hidden md:table-cell md:w-32 whitespace-nowrap">
-                                                <span className="capitalize">{asset.status}</span>
-                                            </TableCell>
-                                            <TableCell className="w-28 text-right font-medium whitespace-nowrap">{formatCurrency(asset.value)}</TableCell>
-                                            <TableCell className="w-24 text-right">{renderActionButtons(asset)}</TableCell>
-                                        </TableRow>
-                                    )
+                                    <TableRow key={asset.id}>
+                                        {activeColumns.map((column) => cloneElement(column.renderCell(asset), { key: column.key }))}
+                                    </TableRow>
                                 ))}
                             </TableBody>
                         </Table>

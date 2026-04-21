@@ -20,6 +20,7 @@ Route::middleware([
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 
     Route::prefix('assets')->name('assets.')->group(function () {
+        Route::post('layout', [AssetController::class, 'storeLayout'])->name('layout.store');
         Route::post('saved-filters', [AssetController::class, 'storeSavedFilter'])->name('saved-filters.store');
         Route::patch('saved-filters/{savedFilter}', [AssetController::class, 'updateSavedFilter'])->name('saved-filters.update');
         Route::delete('saved-filters/{savedFilter}', [AssetController::class, 'destroySavedFilter'])->name('saved-filters.destroy');

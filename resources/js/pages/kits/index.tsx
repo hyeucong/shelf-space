@@ -64,10 +64,6 @@ export default function Kits({ kits, filters }: PageProps) {
                     title: 'No kits yet',
                     description: 'Kits help you group multiple assets together for easier assignment.',
                 }}
-                sort={{
-                    value: `${filters?.sort || 'created_at'}:${filters?.order || 'desc'}`,
-                    options: sortOptions,
-                }}
             />
         </>
     );
