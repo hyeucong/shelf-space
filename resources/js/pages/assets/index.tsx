@@ -2,22 +2,13 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { Head, Link, router } from '@inertiajs/react';
 import { Columns3 } from 'lucide-react';
-import { cloneElement, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ColumnVisibilityPanel } from '@/components/asset-column-visibility-panel';
 import { AssetQueryBuilder } from '@/components/asset-query-builder';
 import type { AssetFilterOption, AssetFiltersQuery, AssetQueryValue, AssetSavedFilter, AssetSortDraft } from '@/components/asset-query-builder';
-import { DataTablePagination } from '@/components/data-table-pagination';
 import { ResourceDeleteDialog } from '@/components/resource-form-dialog';
-import { SearchInput } from '@/components/search-input';
+import { ResourceIndexTable } from '@/components/resource-index-table';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-    Table,
-    TableBody,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import {
     DEFAULT_ASSET_COLUMN_PREFERENCES,
@@ -217,27 +208,11 @@ export default function Assets({ assets, categories, columnPreferences, location
         });
     };
 
-    const handlePerPageChange = (value: string) => {
-        router.get('/assets', sanitizeQuery({
-            ...filters,
-            per_page: value,
-            page: 1,
-        }), {
-            preserveState: true,
-            replace: true,
-        });
-    };
-
-    const allSelected = localAssets.length > 0 && activeSelectedIds.length === localAssets.length;
-    const someSelected = activeSelectedIds.length > 0 && activeSelectedIds.length < localAssets.length;
-
-    const tableColumns = useMemo(() => createAssetTableColumns({
-        selectedIds: activeSelectedIds,
-        onToggleOne: toggleOne,
+    const tableColumns = createAssetTableColumns({
         onDelete: (asset) => setAssetToDelete(asset),
-    }), [activeSelectedIds]);
+    });
 
-    const fixedLeadingColumns = tableColumns.filter((column) => column.key === 'select' || column.key === 'name');
+    const fixedLeadingColumns = tableColumns.filter((column) => column.key === 'name');
     const fixedTrailingColumns = tableColumns.filter((column) => column.key === 'actions');
     const optionalColumnMap = useMemo(() => new Map(
         tableColumns
@@ -255,7 +230,6 @@ export default function Assets({ assets, categories, columnPreferences, location
     ]), [fixedLeadingColumns, fixedTrailingColumns, optionalColumnMap, visibleColumns]);
 
     const hasPendingColumnChanges = JSON.stringify(draftColumns) !== JSON.stringify(visibleColumns);
-    const hasAssets = localAssets.length > 0;
     const visibleColumnCount = activeColumns.length;
     const baseTableClassName = visibleColumnCount > 8
         ? 'min-w-[1200px]'
@@ -267,111 +241,75 @@ export default function Assets({ assets, categories, columnPreferences, location
         <>
             <Head title="Assets" />
 
-            <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
-                <div className="shrink-0 mt-4">
-                    <div className="mb-4 mx-4 flex min-h-12 flex-col items-start justify-between gap-3 rounded border bg-background p-2 shadow-sm md:flex-row md:items-center">
-                        <div className="flex w-full flex-1 flex-row flex-wrap items-center gap-2 md:w-auto md:flex-nowrap">
-                            <div className="flex items-center gap-2">
-                                <div className="shrink-0">
-                                    <AssetQueryBuilder
-                                        categories={categories}
-                                        locations={locations}
-                                        savedFilters={savedFilters}
-                                        filters={filters}
-                                        sorts={sorts}
-                                    />
-                                </div>
-                                <div className="flex flex-1">
-                                    <SearchInput
-                                        url="/assets"
-                                        placeholder="Search assets..."
-                                        initialValue={filters?.search}
-                                        query={sanitizeQuery({
-                                            ...filters,
-                                            page: undefined,
-                                        })}
-                                    />
-                                </div>
-                            </div>
-                            <div ref={columnsPanelRef} className="relative shrink-0">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="icon"
-                                    className={isColumnsPanelOpen ? 'h-9 w-9 shrink-0 rounded bg-muted text-foreground shadow-none' : 'h-9 w-9 shrink-0 rounded shadow-none'}
-                                    title="Show or hide columns"
-                                    onClick={() => isColumnsPanelOpen ? handleCloseColumnsPanel() : handleOpenColumnsPanel()}
-                                    aria-expanded={isColumnsPanelOpen}
-                                >
-                                    <Columns3 size={16} />
-                                    <span className="sr-only">Show or hide columns</span>
-                                </Button>
-                                <ColumnVisibilityPanel
-                                    open={isColumnsPanelOpen}
-                                    columns={draftColumns}
-                                    onToggle={handleDraftColumnToggle}
-                                    onReorder={handleDraftColumnReorder}
-                                    onCancel={handleCloseColumnsPanel}
-                                    onSave={handleApplyColumnsPanel}
-                                    isSaving={isSavingColumns}
-                                    hasPendingChanges={hasPendingColumnChanges}
-                                />
-                            </div>
+            <ResourceIndexTable
+                resourcePath="/assets"
+                searchPlaceholder="Search assets..."
+                pagination={{ ...assets, data: localAssets }}
+                filters={filters}
+                searchQuery={sanitizeQuery({
+                    ...filters,
+                    page: undefined,
+                })}
+                columns={activeColumns}
+                selection={{
+                    selectedIds: activeSelectedIds,
+                    onToggleAll: toggleAll,
+                    onToggleOne: (asset, checked) => toggleOne(asset.id, checked),
+                    getLabel: (asset) => `Select ${asset.name}`,
+                }}
+                tableClassName={baseTableClassName}
+                toolbarStart={(
+                    <>
+                        <div className="shrink-0">
+                            <AssetQueryBuilder
+                                categories={categories}
+                                locations={locations}
+                                savedFilters={savedFilters}
+                                filters={filters}
+                                sorts={sorts}
+                            />
                         </div>
-                        <div className="flex w-full flex-wrap items-center justify-end gap-2 border-t pt-2 md:w-auto md:border-t-0 md:pt-0">
-                            <Button type="button" variant="outline" className="h-9 rounded shadow-none shrink-0">
-                                Export selection
+                        <div ref={columnsPanelRef} className="relative shrink-0">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className={isColumnsPanelOpen ? 'h-9 w-9 shrink-0 rounded bg-muted text-foreground shadow-none' : 'h-9 w-9 shrink-0 rounded shadow-none'}
+                                title="Show or hide columns"
+                                onClick={() => isColumnsPanelOpen ? handleCloseColumnsPanel() : handleOpenColumnsPanel()}
+                                aria-expanded={isColumnsPanelOpen}
+                            >
+                                <Columns3 size={16} />
+                                <span className="sr-only">Show or hide columns</span>
                             </Button>
-                            <Button type="button" variant="outline" className="h-9 rounded shadow-none shrink-0">
-                                Actions
-                            </Button>
+                            <ColumnVisibilityPanel
+                                open={isColumnsPanelOpen}
+                                columns={draftColumns}
+                                onToggle={handleDraftColumnToggle}
+                                onReorder={handleDraftColumnReorder}
+                                onCancel={handleCloseColumnsPanel}
+                                onSave={handleApplyColumnsPanel}
+                                isSaving={isSavingColumns}
+                                hasPendingChanges={hasPendingColumnChanges}
+                            />
                         </div>
-                    </div>
-                </div>
-
-                {hasAssets ? (
-                    <div className="mx-4 mb-4 flex min-h-0 flex-1 flex-col overflow-y-auto rounded border bg-background shadow-none">
-                        <Table className={baseTableClassName}>
-                            <TableHeader>
-                                <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
-                                    {activeColumns.map((column) => (
-                                        <TableHead key={column.key} className={column.headerClassName}>
-                                            {column.key === 'select' ? (
-                                                <Checkbox
-                                                    aria-label="Select all"
-                                                    checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                                                    onCheckedChange={(val) => toggleAll(!!val)}
-                                                />
-                                            ) : column.label}
-                                        </TableHead>
-                                    ))}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {localAssets.map((asset) => (
-                                    <TableRow key={asset.id}>
-                                        {activeColumns.map((column) => cloneElement(column.renderCell(asset), { key: column.key }))}
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                ) : (
-                    <div className="mx-4 mb-4 flex flex-1 items-center justify-center rounded border border-dashed bg-background p-6 text-center shadow-sm">
-                        <div className="mx-auto max-w-lg space-y-1">
-                            <h3 className="text-2xl font-bold tracking-tight">No assets yet</h3>
-                            <p className="text-sm text-muted-foreground">You don't have any assets yet. Create your first asset to get started.</p>
-                        </div>
-                    </div>
+                    </>
                 )}
-
-                {hasAssets && (
-                    <DataTablePagination
-                        pagination={assets}
-                        onPerPageChange={handlePerPageChange}
-                    />
+                toolbarEnd={(
+                    <>
+                        <Button type="button" variant="outline" className="h-9 shrink-0 rounded shadow-none">
+                            Export selection
+                        </Button>
+                        <Button type="button" variant="outline" className="h-9 shrink-0 rounded shadow-none">
+                            Actions
+                        </Button>
+                    </>
                 )}
-            </div>
+                emptyState={{
+                    title: 'No assets yet',
+                    description: 'You don\'t have any assets yet. Create your first asset to get started.',
+                }}
+            />
 
             <ResourceDeleteDialog
                 open={!!assetToDelete}

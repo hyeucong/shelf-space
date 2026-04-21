@@ -1,10 +1,11 @@
 import { Head, router } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
+import { MapPin, Pencil, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { ResourceDeleteDialog, ResourceHeaderAction } from '@/components/resource-form-dialog';
+import { ResourceIndexTable } from '@/components/resource-index-table';
+import type { ResourceIndexColumn, ResourceIndexSortOption } from '@/components/resource-index-table';
+import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
-import { ResourceIndexTable, type ResourceIndexColumn, type ResourceIndexSortOption } from '@/components/resource-index-table';
-import { Pencil, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import { LOCATION_CREATE_EVENT, LocationFormDialog, dispatchLocationCreateEvent } from '@/pages/locations/create';
 import type { PaginatedData } from '@/types/pagination';
 
@@ -25,12 +26,22 @@ interface PageProps {
 }
 
 export default function Locations({ locations, filters }: PageProps) {
-    const [localLocations, setLocalLocations] = useState<Location[]>(locations?.data || []);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
     const [activeLocation, setActiveLocation] = useState<Location | null>(null);
     const [locationToDelete, setLocationToDelete] = useState<Location | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [deletedLocationIds, setDeletedLocationIds] = useState<number[]>([]);
+
+    const localLocations = useMemo(
+        () => (locations?.data || []).filter((location) => !deletedLocationIds.includes(location.id)),
+        [deletedLocationIds, locations],
+    );
+    const activeSelectedIds = useMemo(
+        () => selectedIds.filter((id) => localLocations.some((location) => location.id === id)),
+        [localLocations, selectedIds],
+    );
 
     useEffect(() => {
         const handleOpen = () => {
@@ -44,10 +55,6 @@ export default function Locations({ locations, filters }: PageProps) {
         return () => window.removeEventListener(LOCATION_CREATE_EVENT, handleOpen);
     }, []);
 
-    useEffect(() => {
-        setLocalLocations(locations?.data || []);
-    }, [locations]);
-
     const closeFormDialog = () => {
         setIsDialogOpen(false);
         setActiveLocation(null);
@@ -56,7 +63,9 @@ export default function Locations({ locations, filters }: PageProps) {
     const closeDeleteDialog = () => setLocationToDelete(null);
 
     const handleDelete = () => {
-        if (!locationToDelete || isDeleting) return;
+        if (!locationToDelete || isDeleting) {
+            return;
+        }
 
         const id = locationToDelete.id;
 
@@ -64,11 +73,32 @@ export default function Locations({ locations, filters }: PageProps) {
             preserveScroll: true,
             onBefore: () => setIsDeleting(true),
             onSuccess: () => {
-                setLocalLocations((prev) => prev.filter((l) => l.id !== id));
+                setDeletedLocationIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+                setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
                 setLocationToDelete(null);
             },
             onFinish: () => setIsDeleting(false),
         });
+    };
+
+    const toggleOne = (id: number, checked: boolean) => {
+        setSelectedIds((prev) => {
+            if (checked) {
+                return Array.from(new Set([...prev, id]));
+            }
+
+            return prev.filter((currentId) => currentId !== id);
+        });
+    };
+
+    const toggleAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedIds(localLocations.map((location) => location.id));
+
+            return;
+        }
+
+        setSelectedIds([]);
     };
 
     const sortOptions: ResourceIndexSortOption[] = [
@@ -82,23 +112,37 @@ export default function Locations({ locations, filters }: PageProps) {
         {
             key: 'name',
             header: 'Name',
-            render: (location) => location.name,
+            headerClassName: 'min-w-56',
+            cellClassName: 'min-w-56 font-medium text-foreground',
+            render: (location) => (
+                <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded border bg-muted/10">
+                        <MapPin className="text-muted-foreground" size={18} />
+                    </div>
+                    <div className="min-w-0">
+                        <div className="block line-clamp-2">{location.name}</div>
+                    </div>
+                </div>
+            ),
         },
         {
             key: 'description',
             header: 'Description',
-            cellClassName: 'max-w-120 whitespace-normal text-muted-foreground',
+            headerClassName: 'hidden lg:table-cell',
+            cellClassName: 'hidden max-w-120 whitespace-normal text-muted-foreground lg:table-cell',
             render: (location) => location.description || '-',
         },
         {
             key: 'actions',
             header: 'Actions',
-            headerClassName: 'w-31.25',
+            headerClassName: 'w-24 text-right',
+            cellClassName: 'w-24 text-right',
             render: (location) => (
                 <div className="flex justify-end gap-2">
                     <Button
                         variant="ghost"
                         size="icon"
+                        className="h-8 w-8 border"
                         onClick={() => {
                             setDialogMode('edit');
                             setActiveLocation(location);
@@ -112,7 +156,7 @@ export default function Locations({ locations, filters }: PageProps) {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="border text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        className="h-8 w-8 border text-destructive hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => setLocationToDelete(location)}
                         disabled={isDeleting}
                     >
@@ -141,6 +185,12 @@ export default function Locations({ locations, filters }: PageProps) {
                 sort={{
                     value: `${filters?.sort || 'created_at'}:${filters?.order || 'desc'}`,
                     options: sortOptions,
+                }}
+                selection={{
+                    selectedIds: activeSelectedIds,
+                    onToggleAll: toggleAll,
+                    onToggleOne: (location, checked) => toggleOne(location.id, checked),
+                    getLabel: (location) => `Select ${location.name}`,
                 }}
             />
             <LocationFormDialog

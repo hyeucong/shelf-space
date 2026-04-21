@@ -1,8 +1,10 @@
 import { router } from '@inertiajs/react';
-import { SearchInput } from '@/components/search-input';
+import { ArrowUpDown } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { DataTablePagination } from '@/components/data-table-pagination';
-import { Checkbox } from '@/components/ui/checkbox';
+import { SearchInput } from '@/components/search-input';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -21,8 +23,6 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import type { PaginatedData } from '@/types/pagination';
-import { ArrowUpDown } from 'lucide-react';
-import type { ReactNode } from 'react';
 
 type FilterValue = string | number | undefined;
 
@@ -65,7 +65,10 @@ interface ResourceIndexTableProps<T extends { id: number }> {
     emptyState: ResourceIndexEmptyState;
     sort?: ResourceIndexSortConfig;
     selection?: ResourceIndexSelection<T>;
+    searchQuery?: Record<string, FilterValue>;
     tableClassName?: string;
+    toolbarStart?: ReactNode;
+    toolbarEnd?: ReactNode;
 }
 
 export function ResourceIndexTable<T extends { id: number }>({
@@ -77,7 +80,10 @@ export function ResourceIndexTable<T extends { id: number }>({
     emptyState,
     sort,
     selection,
+    searchQuery,
     tableClassName,
+    toolbarStart,
+    toolbarEnd,
 }: ResourceIndexTableProps<T>) {
     const items = pagination?.data || [];
     const hasItems = items.length > 0;
@@ -109,13 +115,14 @@ export function ResourceIndexTable<T extends { id: number }>({
         });
     };
 
-    const searchQuery = {
+    const resolvedSearchQuery = searchQuery ?? {
         ...filters,
         page: undefined,
     };
+
     return (
         <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
-            <div className="shrink-0 mb-4 mx-4 mt-4 flex min-h-12 flex-col items-start justify-between gap-3 rounded border bg-background p-2 shadow-sm md:flex-row md:items-center">
+            <div className="mx-4 mb-4 mt-4 flex min-h-12 shrink-0 flex-col items-start justify-between gap-3 rounded border bg-background p-2 shadow-sm md:flex-row md:items-center">
                 <div className="flex w-full flex-1 flex-row flex-wrap items-center gap-2 md:w-auto md:flex-nowrap">
                     {sort ? (
                         <DropdownMenu>
@@ -138,13 +145,23 @@ export function ResourceIndexTable<T extends { id: number }>({
                         </DropdownMenu>
                     ) : null}
 
-                    <SearchInput
-                        url={resourcePath}
-                        placeholder={searchPlaceholder}
-                        initialValue={typeof filters.search === 'string' ? filters.search : ''}
-                        query={searchQuery}
-                    />
+                    {toolbarStart}
+
+                    <div className="flex flex-1">
+                        <SearchInput
+                            url={resourcePath}
+                            placeholder={searchPlaceholder}
+                            initialValue={typeof filters.search === 'string' ? filters.search : ''}
+                            query={resolvedSearchQuery}
+                        />
+                    </div>
                 </div>
+
+                {toolbarEnd ? (
+                    <div className="flex w-full flex-wrap items-center justify-end gap-2 border-t pt-2 md:w-auto md:border-t-0 md:pt-0">
+                        {toolbarEnd}
+                    </div>
+                ) : null}
             </div>
 
             {hasItems ? (

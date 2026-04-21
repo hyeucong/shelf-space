@@ -1,11 +1,11 @@
 import { Head, router } from '@inertiajs/react';
-
-import { Button } from '@/components/ui/button';
-import { ResourceDeleteDialog, ResourceHeaderAction } from '@/components/resource-form-dialog';
-import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
-import { ResourceIndexTable, type ResourceIndexColumn } from '@/components/resource-index-table';
 import { Pencil, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { ResourceDeleteDialog, ResourceHeaderAction } from '@/components/resource-form-dialog';
+import { ResourceIndexTable } from '@/components/resource-index-table';
+import type { ResourceIndexColumn } from '@/components/resource-index-table';
+import { Button } from '@/components/ui/button';
+import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { CATEGORY_CREATE_EVENT, CategoryFormDialog, dispatchCategoryCreateEvent } from '@/pages/categories/create';
 import type { PaginatedData } from '@/types/pagination';
 
@@ -30,11 +30,19 @@ export default function Categories({ categories, filters }: PageProps) {
     const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
     const [activeCategory, setActiveCategory] = useState<Category | null>(null);
 
-    // Local optimistic state and delete modal
-    const [localCategories, setLocalCategories] = useState<Category[]>(categories?.data || []);
     const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [deletedCategoryIds, setDeletedCategoryIds] = useState<number[]>([]);
+
+    const localCategories = useMemo(
+        () => (categories?.data || []).filter((category) => !deletedCategoryIds.includes(category.id)),
+        [categories, deletedCategoryIds],
+    );
+    const activeSelectedIds = useMemo(
+        () => selectedIds.filter((id) => localCategories.some((category) => category.id === id)),
+        [localCategories, selectedIds],
+    );
 
     useEffect(() => {
         const handleOpen = () => {
@@ -47,15 +55,6 @@ export default function Categories({ categories, filters }: PageProps) {
 
         return () => window.removeEventListener(CATEGORY_CREATE_EVENT, handleOpen);
     }, []);
-
-    // Keep local list in sync with server props
-    useEffect(() => {
-        setLocalCategories(categories?.data || []);
-    }, [categories]);
-
-    useEffect(() => {
-        setSelectedIds((prev) => prev.filter((id) => localCategories.some((category) => category.id === id)));
-    }, [localCategories]);
 
     const toggleOne = (id: number, checked: boolean) => {
         setSelectedIds((prev) => {
@@ -70,6 +69,7 @@ export default function Categories({ categories, filters }: PageProps) {
     const toggleAll = (checked: boolean) => {
         if (checked) {
             setSelectedIds(localCategories.map((category) => category.id));
+
             return;
         }
 
@@ -90,7 +90,9 @@ export default function Categories({ categories, filters }: PageProps) {
     const closeDeleteDialog = () => setCategoryToDelete(null);
 
     const handleDelete = () => {
-        if (!categoryToDelete || isDeleting) return;
+        if (!categoryToDelete || isDeleting) {
+            return;
+        }
 
         const id = categoryToDelete.id;
 
@@ -98,7 +100,7 @@ export default function Categories({ categories, filters }: PageProps) {
             preserveScroll: true,
             onBefore: () => setIsDeleting(true),
             onSuccess: () => {
-                setLocalCategories((prev) => prev.filter((c) => c.id !== id));
+                setDeletedCategoryIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
                 setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
                 setCategoryToDelete(null);
             },
@@ -110,24 +112,29 @@ export default function Categories({ categories, filters }: PageProps) {
         {
             key: 'name',
             header: 'Name',
-            cellClassName: 'font-medium text-foreground',
+            headerClassName: 'min-w-56',
+            cellClassName: 'min-w-56 font-medium text-foreground',
             render: (category) => category.name,
         },
         {
             key: 'description',
             header: 'Description',
-            cellClassName: 'max-w-120 whitespace-normal text-muted-foreground',
+            headerClassName: 'hidden lg:table-cell',
+            cellClassName: 'hidden max-w-120 whitespace-normal text-muted-foreground lg:table-cell',
             render: (category) => category.description || 'No description yet.',
         },
         {
             key: 'assets',
             header: 'Assets',
-            cellClassName: 'font-medium text-muted-foreground',
+            headerClassName: 'hidden sm:table-cell',
+            cellClassName: 'hidden whitespace-nowrap font-medium text-muted-foreground sm:table-cell',
             render: (category) => `${category.assets_count} asset${category.assets_count === 1 ? '' : 's'}`,
         },
         {
             key: 'color',
             header: 'Color',
+            headerClassName: 'hidden md:table-cell',
+            cellClassName: 'hidden md:table-cell',
             render: (category) => (
                 <div className="flex items-center gap-2">
                     <span
@@ -143,8 +150,10 @@ export default function Categories({ categories, filters }: PageProps) {
         {
             key: 'actions',
             header: 'Actions',
+            headerClassName: 'w-24 text-right',
+            cellClassName: 'w-24 text-right',
             render: (category) => (
-                <div className="flex gap-2">
+                <div className="flex justify-end gap-2">
                     <Button
                         variant="ghost"
                         size="icon"
@@ -185,7 +194,7 @@ export default function Categories({ categories, filters }: PageProps) {
                     description: 'Categories help organize assets into clear groups so your inventory stays easier to manage.',
                 }}
                 selection={{
-                    selectedIds,
+                    selectedIds: activeSelectedIds,
                     onToggleAll: toggleAll,
                     onToggleOne: (category, checked) => toggleOne(category.id, checked),
                     getLabel: (category) => `Select ${category.name}`,

@@ -1,10 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { Camera, Pencil, Trash2 } from 'lucide-react';
-import type { ReactElement } from 'react';
+import type { ResourceIndexColumn } from '@/components/resource-index-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { TableCell } from '@/components/ui/table';
 
 export interface AssetRecord {
     id: number;
@@ -34,24 +32,16 @@ export interface AssetRecord {
 
 export type AssetColumnKey = 'id' | 'asset_id' | 'status' | 'category' | 'location' | 'tags' | 'description' | 'value' | 'created_at' | 'updated_at';
 
-export type AssetTableColumnKey = 'select' | 'name' | 'actions' | AssetColumnKey;
-
 export interface AssetColumnPreference {
     key: AssetColumnKey;
     visible: boolean;
 }
 
-export interface AssetTableColumn {
-    key: AssetTableColumnKey;
-    label: string;
+export interface AssetTableColumn extends ResourceIndexColumn<AssetRecord> {
     isOptional: boolean;
-    headerClassName?: string;
-    renderCell: (asset: AssetRecord) => ReactElement;
 }
 
 interface AssetTableColumnFactoryOptions {
-    selectedIds: number[];
-    onToggleOne: (id: number, checked: boolean) => void;
     onDelete: (asset: AssetRecord) => void;
 }
 
@@ -103,184 +93,162 @@ export const formatDate = (value: string | null) => {
 };
 
 export function createAssetTableColumns({
-    selectedIds,
-    onToggleOne,
     onDelete,
 }: AssetTableColumnFactoryOptions): AssetTableColumn[] {
     return [
         {
-            key: 'select',
-            label: '',
-            isOptional: false,
-            headerClassName: 'w-11 px-3 md:px-4',
-            renderCell: (asset) => (
-                <TableCell className="w-11 px-3 md:px-4">
-                    <Checkbox
-                        aria-label={`Select ${asset.name}`}
-                        checked={selectedIds.includes(asset.id)}
-                        onCheckedChange={(value) => onToggleOne(asset.id, !!value)}
-                    />
-                </TableCell>
-            ),
-        },
-        {
             key: 'name',
-            label: 'Name',
+            header: 'Name',
             isOptional: false,
             headerClassName: 'w-full min-w-64',
-            renderCell: (asset) => (
-                <TableCell className="w-full min-w-64 font-semibold">
-                    <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded border bg-muted/10">
-                            {asset.image_url ? (
-                                <img src={asset.image_url} alt={asset.name} className="h-full w-full object-cover" />
-                            ) : (
-                                <Camera className="text-muted-foreground" size={18} />
-                            )}
-                        </div>
-                        <div className="min-w-0">
-                            <Link href={`/assets/${asset.id}/overview`} className="block line-clamp-2 hover:underline">
-                                {asset.name}
-                            </Link>
-                        </div>
+            cellClassName: 'w-full min-w-64 font-semibold',
+            render: (asset) => (
+                <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded border bg-muted/10">
+                        {asset.image_url ? (
+                            <img src={asset.image_url} alt={asset.name} className="h-full w-full object-cover" />
+                        ) : (
+                            <Camera className="text-muted-foreground" size={18} />
+                        )}
                     </div>
-                </TableCell>
+                    <div className="min-w-0">
+                        <Link href={`/assets/${asset.id}/overview`} className="block line-clamp-2 hover:underline">
+                            {asset.name}
+                        </Link>
+                    </div>
+                </div>
             ),
         },
         {
             key: 'id',
-            label: 'ID',
+            header: 'ID',
             isOptional: true,
-            renderCell: (asset) => (
-                <TableCell className="font-medium whitespace-nowrap text-muted-foreground">{asset.id}</TableCell>
-            ),
+            headerClassName: 'hidden sm:table-cell',
+            cellClassName: 'hidden whitespace-nowrap font-medium text-muted-foreground sm:table-cell',
+            render: (asset) => asset.id,
         },
         {
             key: 'asset_id',
-            label: 'Asset ID',
+            header: 'Asset ID',
             isOptional: true,
-            renderCell: (asset) => (
-                <TableCell className="font-medium whitespace-nowrap text-muted-foreground">{asset.asset_id}</TableCell>
-            ),
+            headerClassName: 'hidden md:table-cell',
+            cellClassName: 'hidden whitespace-nowrap font-medium text-muted-foreground md:table-cell',
+            render: (asset) => asset.asset_id,
         },
         {
             key: 'status',
-            label: 'Status',
+            header: 'Status',
             isOptional: true,
-            renderCell: (asset) => (
-                <TableCell>
-                    <Badge variant="outline" className="capitalize">{asset.status}</Badge>
-                </TableCell>
+            cellClassName: 'hidden sm:table-cell',
+            headerClassName: 'hidden sm:table-cell',
+            render: (asset) => (
+                <Badge variant="outline" className="capitalize">{asset.status}</Badge>
             ),
         },
         {
             key: 'category',
-            label: 'Category',
+            header: 'Category',
             isOptional: true,
-            renderCell: (asset) => (
-                <TableCell>
-                    <div className="min-w-32 whitespace-normal">
-                        <div>{asset.category?.name || '-'}</div>
-                        {asset.category_id ? (
-                            <div className="text-xs text-muted-foreground">{`ID ${asset.category_id}`}</div>
-                        ) : null}
-                    </div>
-                </TableCell>
+            headerClassName: 'hidden lg:table-cell',
+            cellClassName: 'hidden lg:table-cell',
+            render: (asset) => (
+                <div className="min-w-32 whitespace-normal">
+                    <div>{asset.category?.name || '-'}</div>
+                    {asset.category_id ? (
+                        <div className="text-xs text-muted-foreground">{`ID ${asset.category_id}`}</div>
+                    ) : null}
+                </div>
             ),
         },
         {
             key: 'location',
-            label: 'Location',
+            header: 'Location',
             isOptional: true,
-            renderCell: (asset) => (
-                <TableCell>
-                    <div className="min-w-32 whitespace-normal">
-                        <div>{asset.location?.name || '-'}</div>
-                        {asset.location_id ? (
-                            <div className="text-xs text-muted-foreground">{`ID ${asset.location_id}`}</div>
-                        ) : null}
-                    </div>
-                </TableCell>
+            headerClassName: 'hidden lg:table-cell',
+            cellClassName: 'hidden lg:table-cell',
+            render: (asset) => (
+                <div className="min-w-32 whitespace-normal">
+                    <div>{asset.location?.name || '-'}</div>
+                    {asset.location_id ? (
+                        <div className="text-xs text-muted-foreground">{`ID ${asset.location_id}`}</div>
+                    ) : null}
+                </div>
             ),
         },
         {
             key: 'tags',
-            label: 'Tags',
+            header: 'Tags',
             isOptional: true,
-            renderCell: (asset) => (
-                <TableCell className="min-w-40 whitespace-normal">
-                    {asset.tags && asset.tags.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                            {asset.tags.map((tag) => (
-                                <Badge key={tag.id} variant="outline">{tag.name}</Badge>
-                            ))}
-                        </div>
-                    ) : (
-                        <span className="text-muted-foreground">-</span>
-                    )}
-                </TableCell>
+            headerClassName: 'hidden xl:table-cell',
+            cellClassName: 'hidden min-w-40 whitespace-normal xl:table-cell',
+            render: (asset) => (
+                asset.tags && asset.tags.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                        {asset.tags.map((tag) => (
+                            <Badge key={tag.id} variant="outline">{tag.name}</Badge>
+                        ))}
+                    </div>
+                ) : (
+                    <span className="text-muted-foreground">-</span>
+                )
             ),
         },
         {
             key: 'description',
-            label: 'Description',
+            header: 'Description',
             isOptional: true,
-            renderCell: (asset) => (
-                <TableCell className="min-w-56 max-w-80 whitespace-normal text-muted-foreground">
-                    {asset.description || '-'}
-                </TableCell>
-            ),
+            headerClassName: 'hidden xl:table-cell',
+            cellClassName: 'hidden min-w-56 max-w-80 whitespace-normal text-muted-foreground xl:table-cell',
+            render: (asset) => asset.description || '-',
         },
         {
             key: 'value',
-            label: 'Value',
+            header: 'Value',
             isOptional: true,
-            headerClassName: 'text-right',
-            renderCell: (asset) => (
-                <TableCell className="text-right font-medium whitespace-nowrap">{formatCurrency(asset.value)}</TableCell>
-            ),
+            headerClassName: 'hidden text-right md:table-cell',
+            cellClassName: 'hidden whitespace-nowrap text-right font-medium md:table-cell',
+            render: (asset) => formatCurrency(asset.value),
         },
         {
             key: 'created_at',
-            label: 'Created',
+            header: 'Created',
             isOptional: true,
-            renderCell: (asset) => (
-                <TableCell className="whitespace-nowrap">{formatDate(asset.created_at)}</TableCell>
-            ),
+            headerClassName: 'hidden xl:table-cell',
+            cellClassName: 'hidden whitespace-nowrap xl:table-cell',
+            render: (asset) => formatDate(asset.created_at),
         },
         {
             key: 'updated_at',
-            label: 'Updated',
+            header: 'Updated',
             isOptional: true,
-            renderCell: (asset) => (
-                <TableCell className="whitespace-nowrap">{formatDate(asset.updated_at)}</TableCell>
-            ),
+            headerClassName: 'hidden xl:table-cell',
+            cellClassName: 'hidden whitespace-nowrap xl:table-cell',
+            render: (asset) => formatDate(asset.updated_at),
         },
         {
             key: 'actions',
-            label: 'Actions',
+            header: 'Actions',
             isOptional: false,
             headerClassName: 'w-24 text-right',
-            renderCell: (asset) => (
-                <TableCell className="w-24 text-right">
-                    <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 border" asChild>
-                            <Link href={`/assets/${asset.id}/edit`}>
-                                <Pencil className="h-4 w-4" />
-                                <span className="sr-only">Edit</span>
-                            </Link>
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 border text-destructive hover:bg-destructive/10 hover:text-destructive"
-                            onClick={() => onDelete(asset)}
-                        >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
-                        </Button>
-                    </div>
-                </TableCell>
+            cellClassName: 'w-24 text-right',
+            render: (asset) => (
+                <div className="flex gap-2">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 border" asChild>
+                        <Link href={`/assets/${asset.id}/edit`}>
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                        </Link>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 border text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => onDelete(asset)}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                    </Button>
+                </div>
             ),
         },
     ];

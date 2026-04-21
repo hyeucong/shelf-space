@@ -1,11 +1,11 @@
 import { Head, router } from '@inertiajs/react';
-
-import { Button } from '@/components/ui/button';
-import { ResourceDeleteDialog, ResourceHeaderAction } from '@/components/resource-form-dialog';
-import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
-import { ResourceIndexTable, type ResourceIndexColumn, type ResourceIndexSortOption } from '@/components/resource-index-table';
 import { Pencil, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { ResourceDeleteDialog, ResourceHeaderAction } from '@/components/resource-form-dialog';
+import { ResourceIndexTable } from '@/components/resource-index-table';
+import type { ResourceIndexColumn, ResourceIndexSortOption } from '@/components/resource-index-table';
+import { Button } from '@/components/ui/button';
+import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { TAG_CREATE_EVENT, TagFormDialog, dispatchTagCreateEvent } from '@/pages/tags/create';
 import type { PaginatedData } from '@/types/pagination';
 
@@ -28,9 +28,19 @@ export default function Tags({ tags, filters }: PageProps) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
     const [activeTag, setActiveTag] = useState<Tag | null>(null);
-    const [localTags, setLocalTags] = useState<Tag[]>(tags?.data || []);
     const [tagToDelete, setTagToDelete] = useState<Tag | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [deletedTagIds, setDeletedTagIds] = useState<number[]>([]);
+
+    const localTags = useMemo(
+        () => (tags?.data || []).filter((tag) => !deletedTagIds.includes(tag.id)),
+        [deletedTagIds, tags],
+    );
+    const activeSelectedIds = useMemo(
+        () => selectedIds.filter((id) => localTags.some((tag) => tag.id === id)),
+        [localTags, selectedIds],
+    );
 
     useEffect(() => {
         const handleOpen = () => {
@@ -43,10 +53,6 @@ export default function Tags({ tags, filters }: PageProps) {
 
         return () => window.removeEventListener(TAG_CREATE_EVENT, handleOpen);
     }, []);
-
-    useEffect(() => {
-        setLocalTags(tags?.data || []);
-    }, [tags]);
 
     const closeFormDialog = () => {
         setIsDialogOpen(false);
@@ -62,7 +68,9 @@ export default function Tags({ tags, filters }: PageProps) {
     const closeDeleteDialog = () => setTagToDelete(null);
 
     const handleDelete = () => {
-        if (!tagToDelete || isDeleting) return;
+        if (!tagToDelete || isDeleting) {
+            return;
+        }
 
         const id = tagToDelete.id;
 
@@ -70,11 +78,32 @@ export default function Tags({ tags, filters }: PageProps) {
             preserveScroll: true,
             onBefore: () => setIsDeleting(true),
             onSuccess: () => {
-                setLocalTags((prev) => prev.filter((t) => t.id !== id));
+                setDeletedTagIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+                setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
                 setTagToDelete(null);
             },
             onFinish: () => setIsDeleting(false),
         });
+    };
+
+    const toggleOne = (id: number, checked: boolean) => {
+        setSelectedIds((prev) => {
+            if (checked) {
+                return Array.from(new Set([...prev, id]));
+            }
+
+            return prev.filter((currentId) => currentId !== id);
+        });
+    };
+
+    const toggleAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedIds(localTags.map((tag) => tag.id));
+
+            return;
+        }
+
+        setSelectedIds([]);
     };
 
     const sortOptions: ResourceIndexSortOption[] = [
@@ -88,22 +117,25 @@ export default function Tags({ tags, filters }: PageProps) {
         {
             key: 'name',
             header: 'Name',
+            headerClassName: 'min-w-56',
+            cellClassName: 'min-w-56 font-medium text-foreground',
             render: (tag) => tag.name,
         },
         {
             key: 'actions',
             header: 'Actions',
-            headerClassName: 'w-31.25',
+            headerClassName: 'w-24 text-right',
+            cellClassName: 'w-24 text-right',
             render: (tag) => (
                 <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleEditClick(tag)} disabled={isDeleting}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 border" onClick={() => handleEditClick(tag)} disabled={isDeleting}>
                         <Pencil className="h-4 w-4" />
                         <span className="sr-only">Edit</span>
                     </Button>
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="border text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        className="h-8 w-8 border text-destructive hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => setTagToDelete(tag)}
                         disabled={isDeleting}
                     >
@@ -132,6 +164,12 @@ export default function Tags({ tags, filters }: PageProps) {
                 sort={{
                     value: `${filters?.sort || 'created_at'}:${filters?.order || 'desc'}`,
                     options: sortOptions,
+                }}
+                selection={{
+                    selectedIds: activeSelectedIds,
+                    onToggleAll: toggleAll,
+                    onToggleOne: (tag, checked) => toggleOne(tag.id, checked),
+                    getLabel: (tag) => `Select ${tag.name}`,
                 }}
             />
 
