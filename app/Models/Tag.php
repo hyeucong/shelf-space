@@ -13,6 +13,8 @@ class Tag extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'description',
+        'hex_color',
     ];
 
     public function assets(): BelongsToMany

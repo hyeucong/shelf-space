@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
-import { Pipette } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -109,7 +109,7 @@ export function CategoryFormDialog({
             processing={processing}
             submitLabel={mode === 'edit' ? 'Update' : 'Save'}
             submitPendingLabel={mode === 'edit' ? 'Updating...' : 'Saving...'}
-            contentClassName="sm:max-w-180 rounded-lg"
+            contentClassName="sm:max-w-180 rounded"
         >
             <div className="grid gap-2">
                 <Label htmlFor="category_name">Name <span className="text-red-500">*</span></Label>
@@ -158,7 +158,7 @@ export function CategoryFormDialog({
                         className="h-10 shrink-0 items-center justify-center gap-2 rounded border-2 border-border px-3 text-sm font-semibold text-white transition-shadow hover:shadow-md"
                         title="Click to generate random color"
                     >
-                        <Pipette size={16} className="drop-shadow-md" />
+                        <RotateCcw size={16} className="drop-shadow-md" />
                     </Button>
                 </div>
                 {errors.hex_color && <span className="text-sm text-red-500">{errors.hex_color}</span>}

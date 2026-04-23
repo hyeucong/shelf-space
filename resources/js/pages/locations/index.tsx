@@ -209,7 +209,6 @@ export default function Locations({ locations, filters }: PageProps) {
                 onOpenChange={(open) => !open && closeDeleteDialog()}
                 title="Delete Location"
                 itemName={locationToDelete?.name}
-                warning="Delete this location only if you are sure it should no longer exist and won't break any asset associations."
                 processing={isDeleting}
                 onConfirm={handleDelete}
                 confirmLabel="Delete location"

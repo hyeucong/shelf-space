@@ -105,7 +105,7 @@ export function LocationFormDialog({
             processing={processing}
             submitLabel={mode === 'edit' ? 'Update' : 'Save'}
             submitPendingLabel={mode === 'edit' ? 'Updating...' : 'Saving...'}
-            contentClassName="sm:max-w-180 rounded-lg"
+            contentClassName="sm:max-w-180 rounded"
         >
             <div className="grid gap-2">
                 <Label htmlFor="location_name">Name <span className="text-red-500">*</span></Label>

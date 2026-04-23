@@ -12,6 +12,9 @@ import type { PaginatedData } from '@/types/pagination';
 interface Tag {
     id: number;
     name: string;
+    description: string | null;
+    hex_color?: string | null;
+    assets_count: number;
 }
 
 interface PageProps {
@@ -122,6 +125,37 @@ export default function Tags({ tags, filters }: PageProps) {
             render: (tag) => tag.name,
         },
         {
+            key: 'description',
+            header: 'Description',
+            headerClassName: 'hidden lg:table-cell',
+            cellClassName: 'hidden max-w-120 whitespace-normal text-muted-foreground lg:table-cell',
+            render: (tag) => tag.description || 'No description yet.',
+        },
+        {
+            key: 'assets',
+            header: 'Assets',
+            headerClassName: 'hidden sm:table-cell',
+            cellClassName: 'hidden whitespace-nowrap font-medium text-muted-foreground sm:table-cell',
+            render: (tag) => `${tag.assets_count} asset${tag.assets_count === 1 ? '' : 's'}`,
+        },
+        {
+            key: 'color',
+            header: 'Color',
+            headerClassName: 'hidden md:table-cell',
+            cellClassName: 'hidden md:table-cell',
+            render: (tag) => (
+                <div className="flex items-center gap-2">
+                    <span
+                        className="h-4 w-4 rounded-full border border-border"
+                        style={{ backgroundColor: tag.hex_color || '#d1d5db' }}
+                    />
+                    <span className="text-sm text-muted-foreground">
+                        {tag.hex_color || '-'}
+                    </span>
+                </div>
+            ),
+        },
+        {
             key: 'actions',
             header: 'Actions',
             headerClassName: 'w-24 text-right',
@@ -178,7 +212,11 @@ export default function Tags({ tags, filters }: PageProps) {
                 onOpenChange={setIsDialogOpen}
                 mode={dialogMode}
                 tagId={activeTag?.id ?? null}
-                initialValues={activeTag ? { name: activeTag.name } : undefined}
+                initialValues={activeTag ? {
+                    name: activeTag.name,
+                    description: activeTag.description ?? '',
+                    hex_color: activeTag.hex_color ?? '#ab339f',
+                } : undefined}
                 onSuccess={closeFormDialog}
             />
 
@@ -187,7 +225,6 @@ export default function Tags({ tags, filters }: PageProps) {
                 onOpenChange={(open) => !open && closeDeleteDialog()}
                 title="Delete Tag"
                 itemName={tagToDelete?.name}
-                warning="Delete this tag only if you are sure it should no longer exist and won't break any asset associations."
                 processing={isDeleting}
                 onConfirm={handleDelete}
                 confirmLabel="Delete tag"

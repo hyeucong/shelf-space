@@ -33,6 +33,7 @@ class TagController extends Controller
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
+            ->withCount('assets')
             ->orderBy($sort, $order)
             ->paginate($perPage)
             ->withQueryString();
@@ -114,6 +115,8 @@ class TagController extends Controller
                     ->where(fn ($query) => $query->where('user_id', $request->user()->id))
                     ->ignore($tag?->id),
             ],
+            'description' => ['nullable', 'string'],
+            'hex_color' => ['nullable', 'string', 'max:7'],
         ]);
     }
 }

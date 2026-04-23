@@ -16,6 +16,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, X } from 'lucide-react';
 import type { CSSProperties } from 'react';
+import type { Modifier } from '@dnd-kit/core';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ASSET_OPTIONAL_COLUMN_LABELS } from '@/pages/assets/column-config';
@@ -83,6 +84,11 @@ function SortableColumnItem({ column, onToggle }: SortableColumnItemProps) {
     );
 }
 
+const restrictToVerticalAxis: Modifier = ({ transform }) => ({
+    ...transform,
+    x: 0,
+});
+
 export function ColumnVisibilityPanel({
     open,
     columns,
@@ -128,7 +134,7 @@ export function ColumnVisibilityPanel({
             </div>
             <div className="p-4 pb-3">
                 <div className="max-h-90 overflow-y-auto pr-1">
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onReorder}>
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onReorder} modifiers={[restrictToVerticalAxis]}>
                         <SortableContext items={columns.map((column) => column.key)} strategy={verticalListSortingStrategy}>
                             <div className="space-y-2">
                                 {columns.map((column) => (

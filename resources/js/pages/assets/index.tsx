@@ -317,12 +317,11 @@ export default function Assets({ assets, categories, columnPreferences, location
                 title="Delete Asset"
                 itemName={assetToDelete?.name}
                 itemMeta={assetToDelete?.asset_id}
-                warning="Delete this asset only if you are sure it should no longer exist in your inventory records."
                 processing={isDeleting}
                 onConfirm={handleDelete}
                 confirmLabel="Delete asset"
                 confirmPendingLabel="Deleting asset..."
-                contentClassName="sm:max-w-106.25 rounded-lg"
+                contentClassName="sm:max-w-106.25 rounded"
             />
         </>
     );

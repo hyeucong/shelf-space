@@ -1,9 +1,8 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { Package2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { ResourceIndexTable } from '@/components/resource-index-table';
-import type { ResourceIndexColumn, ResourceIndexSortOption } from '@/components/resource-index-table';
-import { Button } from '@/components/ui/button';
+import type { ResourceIndexColumn } from '@/components/resource-index-table';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import type { PaginatedData } from '@/types/pagination';
 
@@ -32,12 +31,6 @@ export default function Kits({ kits, filters }: PageProps) {
         [localKits, selectedIds],
     );
 
-    const sortOptions: ResourceIndexSortOption[] = [
-        { value: 'created_at:desc', label: 'Newest' },
-        { value: 'created_at:asc', label: 'Oldest' },
-        { value: 'name:asc', label: 'Name (A-Z)' },
-        { value: 'name:desc', label: 'Name (Z-A)' },
-    ];
 
     const toggleOne = (id: number, checked: boolean) => {
         setSelectedIds((prev) => {
@@ -112,10 +105,7 @@ export default function Kits({ kits, filters }: PageProps) {
                     title: 'No kits yet',
                     description: 'Kits help you group multiple assets together for easier assignment.',
                 }}
-                sort={{
-                    value: `${filters?.sort || 'created_at'}:${filters?.order || 'desc'}`,
-                    options: sortOptions,
-                }}
+            // Sorting removed for Kits index
             />
         </>
     );
@@ -127,12 +117,6 @@ Kits.layout = (page: React.ReactNode) => (
         breadcrumbs={[
             { title: 'Kits', href: '/kits' }
         ]}
-        headerAction={
-            <Button className="rounded border-none" asChild>
-                <Link href="/kits/create">
-                    New kit
-                </Link>
-            </Button>
-        }
+
     />
 );

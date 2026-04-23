@@ -40,7 +40,7 @@ interface ResourceDeleteDialogProps {
     title: string;
     itemName?: string | null;
     itemMeta?: string | null;
-    warning: ReactNode;
+    warning?: ReactNode;
     processing?: boolean;
     onConfirm: () => void;
     confirmLabel: string;
@@ -119,12 +119,11 @@ export function ResourceDeleteDialog({
     title,
     itemName,
     itemMeta,
-    warning,
     processing = false,
     onConfirm,
     confirmLabel,
     confirmPendingLabel = 'Deleting...',
-    contentClassName = 'sm:max-w-106.25 rounded-lg',
+    contentClassName = 'sm:max-w-106.25 rounded',
     footerClassName,
 }: ResourceDeleteDialogProps) {
     const [snapshot, setSnapshot] = useState({
@@ -157,10 +156,7 @@ export function ResourceDeleteDialog({
                         This action cannot be undone.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-muted-foreground">
-                    {warning}
-                </div>
-                <DialogFooter className={cn('gap-2 sm:gap-0', footerClassName)}>
+                <DialogFooter className={cn('gap-2', footerClassName)}>
                     <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded">
                         Cancel
                     </Button>

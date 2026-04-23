@@ -219,7 +219,6 @@ export default function Categories({ categories, filters }: PageProps) {
                 onOpenChange={(open) => !open && closeDeleteDialog()}
                 title="Delete Category"
                 itemName={categoryToDelete?.name}
-                warning="Delete this category only if you are sure it should no longer exist and won't break any asset associations."
                 processing={isDeleting}
                 onConfirm={handleDelete}
                 confirmLabel="Delete category"
