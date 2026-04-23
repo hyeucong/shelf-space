@@ -52,7 +52,7 @@ const mainNavItems: NavItem[] = [
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Reminder',
+        title: 'Reminders',
         href: '/reminders',
         icon: Bell,
     },

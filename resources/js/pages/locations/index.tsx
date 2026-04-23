@@ -1,22 +1,32 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { MapPin, Pencil, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { ResourceDeleteDialog, ResourceHeaderAction } from '@/components/resource-form-dialog';
+import { useMemo, useState } from 'react';
+import { ResourceDeleteDialog } from '@/components/resource-form-dialog';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import type { ResourceIndexColumn, ResourceIndexSortOption } from '@/components/resource-index-table';
 import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
-import { LOCATION_CREATE_EVENT, LocationFormDialog, dispatchLocationCreateEvent } from '@/pages/locations/create';
 import type { PaginatedData } from '@/types/pagination';
 
 interface Location {
     id: number;
     name: string;
     description: string | null;
+    parent_location_id?: number | null;
+    parent?: {
+        id: number;
+        name: string;
+    } | null;
+    assets_count: number;
+    children_count: number;
 }
 
 interface PageProps {
     locations: PaginatedData<Location>;
+    parentOptions: Array<{
+        id: number;
+        name: string;
+    }>;
     filters: {
         search?: string;
         per_page?: string | number;
@@ -26,9 +36,6 @@ interface PageProps {
 }
 
 export default function Locations({ locations, filters }: PageProps) {
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
-    const [activeLocation, setActiveLocation] = useState<Location | null>(null);
     const [locationToDelete, setLocationToDelete] = useState<Location | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -42,23 +49,6 @@ export default function Locations({ locations, filters }: PageProps) {
         () => selectedIds.filter((id) => localLocations.some((location) => location.id === id)),
         [localLocations, selectedIds],
     );
-
-    useEffect(() => {
-        const handleOpen = () => {
-            setDialogMode('create');
-            setActiveLocation(null);
-            setIsDialogOpen(true);
-        };
-
-        window.addEventListener(LOCATION_CREATE_EVENT, handleOpen);
-
-        return () => window.removeEventListener(LOCATION_CREATE_EVENT, handleOpen);
-    }, []);
-
-    const closeFormDialog = () => {
-        setIsDialogOpen(false);
-        setActiveLocation(null);
-    };
 
     const closeDeleteDialog = () => setLocationToDelete(null);
 
@@ -133,6 +123,27 @@ export default function Locations({ locations, filters }: PageProps) {
             render: (location) => location.description || '-',
         },
         {
+            key: 'assets',
+            header: 'Assets',
+            headerClassName: 'hidden md:table-cell',
+            cellClassName: 'hidden whitespace-nowrap font-medium text-muted-foreground md:table-cell',
+            render: (location) => String(location.assets_count),
+        },
+        {
+            key: 'parent',
+            header: 'Parent location',
+            headerClassName: 'hidden lg:table-cell',
+            cellClassName: 'hidden whitespace-normal text-muted-foreground lg:table-cell',
+            render: (location) => location.parent?.name || '-',
+        },
+        {
+            key: 'children',
+            header: 'Child locations',
+            headerClassName: 'hidden md:table-cell',
+            cellClassName: 'hidden whitespace-nowrap font-medium text-muted-foreground md:table-cell',
+            render: (location) => String(location.children_count),
+        },
+        {
             key: 'actions',
             header: 'Actions',
             headerClassName: 'w-24 text-right',
@@ -143,15 +154,12 @@ export default function Locations({ locations, filters }: PageProps) {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 border"
-                        onClick={() => {
-                            setDialogMode('edit');
-                            setActiveLocation(location);
-                            setIsDialogOpen(true);
-                        }}
-                        disabled={isDeleting}
+                        asChild
                     >
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
+                        <Link href={`/locations/${location.id}/edit`}>
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                        </Link>
                     </Button>
                     <Button
                         variant="ghost"
@@ -193,17 +201,6 @@ export default function Locations({ locations, filters }: PageProps) {
                     getLabel: (location) => `Select ${location.name}`,
                 }}
             />
-            <LocationFormDialog
-                open={isDialogOpen}
-                onOpenChange={setIsDialogOpen}
-                mode={dialogMode}
-                locationId={activeLocation?.id ?? null}
-                initialValues={activeLocation ? {
-                    name: activeLocation.name,
-                    description: activeLocation.description ?? '',
-                } : undefined}
-                onSuccess={closeFormDialog}
-            />
             <ResourceDeleteDialog
                 open={!!locationToDelete}
                 onOpenChange={(open) => !open && closeDeleteDialog()}
@@ -224,7 +221,9 @@ Locations.layout = (page: React.ReactNode) => (
             { title: 'Locations', href: '/locations' }
         ]}
         headerAction={
-            <ResourceHeaderAction label="New location" onClick={dispatchLocationCreateEvent} />
+            <Button className="rounded border-none" asChild>
+                <Link href="/locations/create">New location</Link>
+            </Button>
         }
     />
 );

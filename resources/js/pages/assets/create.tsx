@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CategoryFormDialog } from '@/pages/categories/create';
 import { TagFormDialog } from '@/pages/tags/create';
-import { LocationFormDialog } from '@/pages/locations/create';
+import { LocationFormDialog } from '@/pages/locations/form-dialog';
 
 interface CategoryOption {
     id: number;
@@ -393,6 +393,7 @@ export default function Create() {
             <LocationFormDialog
                 open={isLocationDialogOpen}
                 onOpenChange={setIsLocationDialogOpen}
+                parentOptions={locations}
                 redirectTo="/assets/create"
                 preserveState={true}
             />

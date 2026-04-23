@@ -18,6 +18,8 @@ interface AssetSelectFieldProps {
     emptyLabel: string;
     createValue: string;
     createLabel: string;
+    clearValue?: string;
+    clearLabel?: string;
 }
 
 export function AssetSelectField({
@@ -32,6 +34,8 @@ export function AssetSelectField({
     emptyLabel,
     createValue,
     createLabel,
+    clearValue,
+    clearLabel,
 }: AssetSelectFieldProps) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
@@ -45,6 +49,13 @@ export function AssetSelectField({
                         <SelectValue placeholder={placeholder} />
                     </SelectTrigger>
                     <SelectContent side="top">
+                        {clearValue && clearLabel ? (
+                            <>
+                                <SelectItem value={clearValue}>{clearLabel}</SelectItem>
+                                <SelectSeparator />
+                            </>
+                        ) : null}
+
                         {options.length ? (
                             options.map((option) => (
                                 <SelectItem key={option.id} value={String(option.id)}>

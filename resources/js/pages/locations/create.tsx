@@ -1,231 +1,284 @@
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
-import { Head, useForm } from '@inertiajs/react';
-import { useEffect } from 'react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
+
+import { AssetSelectField } from '@/components/asset-select-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ResourceFormDialog } from '@/components/resource-form-dialog';
-
-export const LOCATION_CREATE_EVENT = 'locations:create:open';
-
-export function dispatchLocationCreateEvent() {
-    window.dispatchEvent(new CustomEvent(LOCATION_CREATE_EVENT));
-}
+import { LocationFormDialog } from '@/pages/locations/form-dialog';
 
 export interface LocationFormValues {
     name: string;
     description: string;
+    address: string;
+    parent_location_id: string;
 }
 
-interface LocationFormDialogProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    mode?: 'create' | 'edit';
-    locationId?: number | null;
-    initialValues?: Partial<LocationFormValues>;
-    redirectTo?: string;
-    preserveState?: boolean;
-    onSuccess?: () => void;
+interface LocationOption {
+    id: number;
+    name: string;
 }
 
-function buildFormValues(initialValues?: Partial<LocationFormValues>, redirectTo = '') {
+interface SharedPageProps extends Record<string, unknown> {
+    location?: {
+        id: number;
+        name: string;
+        description: string | null;
+        address: string | null;
+        parent_location_id: number | null;
+    } | null;
+    parentOptions?: LocationOption[];
+    locations?: LocationOption[];
+    flash?: {
+        createdLocation?: LocationOption;
+    };
+}
+
+function buildFormValues(initialValues?: Partial<LocationFormValues>) {
     return {
         name: initialValues?.name ?? '',
         description: initialValues?.description ?? '',
-        redirect_to: redirectTo,
+        address: initialValues?.address ?? '',
+        parent_location_id: initialValues?.parent_location_id ?? '',
     };
-}
-
-export function LocationFormDialog({
-    open,
-    onOpenChange,
-    mode = 'create',
-    locationId = null,
-    initialValues,
-    redirectTo = '',
-    preserveState = false,
-    onSuccess,
-}: LocationFormDialogProps) {
-    const initialName = initialValues?.name ?? '';
-    const initialDescription = initialValues?.description ?? '';
-    const { data, setData, post, put, processing, errors, clearErrors } = useForm(buildFormValues(initialValues, redirectTo));
-
-    useEffect(() => {
-        if (!open) {
-            return;
-        }
-
-        setData(buildFormValues({
-            name: initialName,
-            description: initialDescription,
-        }, redirectTo));
-        clearErrors();
-    }, [clearErrors, initialDescription, initialName, open, redirectTo, setData]);
-
-    const closeDialog = () => {
-        onOpenChange(false);
-    };
-
-    const submitDialog = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-
-        const requestOptions = {
-            preserveScroll: true,
-            preserveState,
-            onSuccess: () => {
-                onSuccess?.();
-                closeDialog();
-            },
-        };
-
-        if (mode === 'edit' && locationId !== null) {
-            put(`/locations/${locationId}`, requestOptions);
-
-            return;
-        }
-
-        post('/locations', requestOptions);
-    };
-
-    return (
-        <ResourceFormDialog
-            open={open}
-            onOpenChange={(nextOpen) => {
-                if (!nextOpen) {
-                    closeDialog();
-                    return;
-                }
-
-                onOpenChange(true);
-            }}
-            onSubmit={submitDialog}
-            title={mode === 'edit' ? (data.name || 'Edit location') : (data.name || 'New location')}
-            description={mode === 'edit' ? 'Update the selected location.' : 'Basic information about your location.'}
-            processing={processing}
-            submitLabel={mode === 'edit' ? 'Update' : 'Save'}
-            submitPendingLabel={mode === 'edit' ? 'Updating...' : 'Saving...'}
-            contentClassName="sm:max-w-180 rounded"
-        >
-            <div className="grid gap-2">
-                <Label htmlFor="location_name">Name <span className="text-red-500">*</span></Label>
-                <Input
-                    id="location_name"
-                    value={data.name}
-                    onChange={(event) => setData('name', event.target.value)}
-                    className="rounded"
-                    placeholder="e.g. Main Warehouse"
-                />
-                {errors.name && <span className="text-sm text-red-500">{errors.name}</span>}
-            </div>
-
-            <div className="grid gap-2">
-                <Label htmlFor="location_description">Description</Label>
-                <Input
-                    id="location_description"
-                    value={data.description}
-                    onChange={(event) => setData('description', event.target.value)}
-                    className="rounded"
-                    placeholder="Add a short description"
-                />
-                {errors.description && <span className="text-sm text-red-500">{errors.description}</span>}
-            </div>
-        </ResourceFormDialog>
-    );
 }
 
 export default function Create() {
-    const { data, setData, post, processing, errors } = useForm({
-        name: '',
-        description: '',
+    const page = usePage<SharedPageProps>();
+    const location = page.props.location;
+    const isEditing = !!location;
+    const parentOptions = (page.props.parentOptions ?? []).filter((option) => option.id !== location?.id);
+    const flash = page.props.flash;
+    const [isParentSelectOpen, setIsParentSelectOpen] = useState(false);
+    const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
+    const [pendingDialog, setPendingDialog] = useState<'location' | null>(null);
+    const [submitMode, setSubmitMode] = useState<'save' | 'add-another'>('save');
+    const handledCreatedLocationId = useRef<number | null>(null);
+    const initialValues = buildFormValues({
+        name: location?.name ?? '',
+        description: location?.description ?? '',
+        address: location?.address ?? '',
+        parent_location_id: location?.parent_location_id ? String(location.parent_location_id) : '',
     });
+    const { data, setData, post, put, processing, errors, reset } = useForm(initialValues);
+    const redirectTo = isEditing && location ? `/locations/${location.id}/edit` : '/locations/create';
+
+    useEffect(() => {
+        if (!flash?.createdLocation) {
+            return;
+        }
+
+        if (handledCreatedLocationId.current === flash.createdLocation.id) {
+            return;
+        }
+
+        handledCreatedLocationId.current = flash.createdLocation.id;
+        setData('parent_location_id', String(flash.createdLocation.id));
+        setIsParentSelectOpen(false);
+        setIsLocationDialogOpen(false);
+        setPendingDialog(null);
+    }, [flash?.createdLocation, setData]);
+
+    useEffect(() => {
+        if (pendingDialog !== 'location' || isParentSelectOpen) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            setPendingDialog(null);
+            setIsLocationDialogOpen(true);
+        }, 0);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [isParentSelectOpen, pendingDialog]);
 
     const submit = (e: React.SyntheticEvent) => {
         e.preventDefault();
-        post('/locations');
+
+        if (isEditing && location) {
+            put(`/locations/${location.id}`);
+
+            return;
+        }
+
+        post('/locations', {
+            preserveScroll: true,
+            onSuccess: () => {
+                if (submitMode !== 'add-another') {
+                    return;
+                }
+
+                reset();
+                setSubmitMode('save');
+            },
+        });
     };
 
     return (
         <div className="w-full">
-            <Head title="New location" />
+            <Head title={isEditing ? 'Edit location' : 'New location'} />
 
             <div className="w-full border-b px-6 py-4 mb-6">
                 <h1 className="text-2xl font-bold tracking-tight">
-                    {data.name || 'Untitled Location'}
+                    {data.name || (isEditing ? 'Edit location' : 'New location')}
                 </h1>
             </div>
 
             <form onSubmit={submit} className="px-6 space-y-6 max-w-4xl pb-10">
                 <Card className="rounded border shadow-none">
-                    <div className="flex items-center justify-between pr-6 border-b border-border/50">
-                        <CardHeader>
-                            <CardTitle className="text-lg">Basic fields</CardTitle>
-                            <CardDescription>
-                                Basic information about your location.
-                            </CardDescription>
-                        </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="flex justify-between border-b border-border/50 pb-6">
+                            <CardHeader>
+                                <CardTitle className="text-lg">Basic fields</CardTitle>
+                                <CardDescription>
+                                    {isEditing ? 'Update the selected location.' : 'Basic information about your new location.'}
+                                </CardDescription>
+                            </CardHeader>
 
-                        <div className="flex items-center gap-2">
-                            <div className="flex -space-x-px">
+                            <div className="flex gap-2">
+                                <div className="flex -space-x-px">
+                                    <Button
+                                        variant="outline"
+                                        className="rounded-l rounded-r-none border-r-0"
+                                        asChild
+                                    >
+                                        <Link href="/locations">Cancel</Link>
+                                    </Button>
+
+                                    {!isEditing ? (
+                                        <Button
+                                            type="submit"
+                                            variant="outline"
+                                            className="rounded-l-none rounded-r"
+                                            onClick={() => setSubmitMode('add-another')}
+                                        >
+                                            Add another
+                                        </Button>
+                                    ) : null}
+                                </div>
+
                                 <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="rounded-l rounded-r-none border-r-0"
-                                    onClick={() => window.history.back()}
+                                    type="submit"
+                                    disabled={processing}
+                                    onClick={() => setSubmitMode('save')}
+                                    className="rounded border-none bg-[#f0642d] text-white hover:bg-[#d95627]"
                                 >
-                                    Cancel
+                                    {isEditing ? 'Update' : 'Save'}
                                 </Button>
                             </div>
-
-                            <Button
-                                type="submit"
-                                disabled={processing}
-                                className={`rounded bg-[#f0642d] hover:bg-[#d95627] text-white border-none`}
-                            >
-                                Save
-                            </Button>
-                        </div>
-                    </div>
-
-                    <CardContent className="space-y-6 pt-6">
-                        {/* Name Input */}
-                        <div className="grid gap-2">
-                            <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
-                            <Input
-                                id="name"
-                                value={data.name}
-                                onChange={e => setData('name', e.target.value)}
-                                className="rounded"
-                                placeholder="e.g. Main Warehouse"
-                            />
-                            {errors.name && <span className="text-sm text-red-500">{errors.name}</span>}
                         </div>
 
-                        {/* Description Input */}
-                        <div className="grid gap-2">
-                            <Label htmlFor="description">Description</Label>
-                            <Input
-                                id="description"
-                                value={data.description}
-                                onChange={e => setData('description', e.target.value)}
-                                className="rounded"
-                                placeholder="Add a short description"
-                            />
-                            {errors.description && <span className="text-sm text-red-500">{errors.description}</span>}
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:items-start">
+                            <div>
+                                <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
+                            </div>
+                            <div className="md:col-span-2">
+                                <Input
+                                    id="name"
+                                    value={data.name}
+                                    onChange={e => setData('name', e.target.value)}
+                                    className="rounded"
+                                    placeholder="e.g. Main Warehouse"
+                                />
+                                {errors.name && <span className="text-sm text-red-500">{errors.name}</span>}
+                            </div>
+                        </div>
+
+                        <AssetSelectField
+                            label="Parent location"
+                            description="Use a parent location to organize spaces into a clear hierarchy, like building, floor, and room."
+                            open={isParentSelectOpen}
+                            onOpenChange={setIsParentSelectOpen}
+                            value={data.parent_location_id || ''}
+                            onValueChange={(value) => {
+                                if (value === 'none') {
+                                    setData('parent_location_id', '');
+                                    setIsParentSelectOpen(false);
+
+                                    return;
+                                }
+
+                                if (value === 'create_location') {
+                                    setPendingDialog('location');
+                                    setIsParentSelectOpen(false);
+
+                                    return;
+                                }
+
+                                setData('parent_location_id', value);
+                                setIsParentSelectOpen(false);
+                            }}
+                            placeholder="Select parent location"
+                            options={parentOptions}
+                            emptyLabel="No parent locations yet."
+                            clearValue="none"
+                            clearLabel="No parent"
+                            createValue="create_location"
+                            createLabel="Create new location"
+                        />
+                        {errors.parent_location_id && <div className="text-sm text-red-500">{errors.parent_location_id}</div>}
+
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:items-start">
+                            <div>
+                                <Label htmlFor="address">Address</Label>
+                                <p className="mt-1 text-sm text-muted-foreground">Store the street or mailing address for this location.</p>
+                            </div>
+                            <div className="md:col-span-2">
+                                <Input
+                                    id="address"
+                                    value={data.address}
+                                    onChange={e => setData('address', e.target.value)}
+                                    className="rounded"
+                                    placeholder="Street, City, State, ZIP"
+                                />
+                                {errors.address && <span className="text-sm text-red-500">{errors.address}</span>}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:items-start">
+                            <div>
+                                <Label htmlFor="description">Description</Label>
+                                <p className="mt-1 text-sm text-muted-foreground">Add context to help teammates understand what is stored here.</p>
+                            </div>
+                            <div className="md:col-span-2">
+                                <Input
+                                    id="description"
+                                    value={data.description}
+                                    onChange={e => setData('description', e.target.value)}
+                                    className="rounded"
+                                    placeholder="Add a short description"
+                                />
+                                {errors.description && <span className="text-sm text-red-500">{errors.description}</span>}
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
             </form>
+
+            <LocationFormDialog
+                open={isLocationDialogOpen}
+                onOpenChange={setIsLocationDialogOpen}
+                parentOptions={parentOptions}
+                redirectTo={redirectTo}
+                preserveState
+            />
         </div>
     );
 }
 
-Create.layout = (page: React.ReactNode) => (
-    <AppSidebarLayout
-        children={page}
-        breadcrumbs={[
-            { title: 'Locations', href: '/locations' },
-            { title: 'New Location', href: '' }
-        ]}
-    />
-);
+Create.layout = (page: React.ReactNode) => {
+    const locationPage = page as React.ReactElement<{ location?: unknown }>;
+    const isEditing = Boolean(locationPage.props?.location);
+
+    return (
+        <AppSidebarLayout
+            children={page}
+            breadcrumbs={[
+                { title: 'Locations', href: '/locations' },
+                { title: isEditing ? 'Edit location' : 'New location', href: '' },
+            ]}
+        />
+    );
+};

@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('parent_location_id')->nullable()->constrained('locations')->nullOnDelete();
             $table->string('name');
             $table->text('description')->nullable();
+            $table->text('address')->nullable();
             $table->timestamps();
         });
     }

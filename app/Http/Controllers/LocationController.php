@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Location;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class LocationController extends Controller
@@ -30,14 +32,23 @@ class LocationController extends Controller
 
         $locations = Location::query()
             ->when($request->input('search'), function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%");
+                $query->where(function ($nestedQuery) use ($search) {
+                    $nestedQuery
+                        ->where('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('address', 'like', "%{$search}%");
+                });
             })
+            ->with('parent:id,name')
+            ->withCount('assets')
+            ->withCount('children')
             ->orderBy($sort, $order)
             ->paginate($perPage)
             ->withQueryString();
 
         return Inertia::render('locations/index', [
             'locations' => $locations,
+            'parentOptions' => $this->parentOptions(),
             'filters' => [
                 'search' => $request->input('search'),
                 'per_page' => $perPage,
@@ -52,7 +63,9 @@ class LocationController extends Controller
      */
     public function create()
     {
-        return Inertia::render('locations/create');
+        return Inertia::render('locations/create', [
+            'parentOptions' => $this->parentOptions(),
+        ]);
     }
 
     /**
@@ -90,6 +103,7 @@ class LocationController extends Controller
     {
         return Inertia::render('locations/create', [
             'location' => $location,
+            'parentOptions' => $this->parentOptions($location),
         ]);
     }
 
@@ -98,7 +112,7 @@ class LocationController extends Controller
      */
     public function update(Request $request, Location $location)
     {
-        $location->update($this->validatedData($request));
+        $location->update($this->validatedData($request, $location));
 
         return redirect()->route('locations.index');
     }
@@ -118,18 +132,71 @@ class LocationController extends Controller
      *
      * @return array<string, mixed>
      */
-    private function validatedData(Request $request): array
+    private function validatedData(Request $request, ?Location $location = null): array
     {
         $description = $request->input('description');
+        $address = $request->input('address');
+        $parentLocationId = $request->input('parent_location_id');
 
         $request->merge([
             'name' => trim((string) $request->input('name', '')),
             'description' => is_string($description) ? trim($description) ?: null : null,
+            'address' => is_string($address) ? trim($address) ?: null : null,
+            'parent_location_id' => is_numeric($parentLocationId) ? (int) $parentLocationId : null,
         ]);
 
-        return $request->validate([
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'address' => ['nullable', 'string'],
+            'parent_location_id' => [
+                'nullable',
+                'integer',
+                ...($location ? [Rule::notIn([$location->id])] : []),
+                Rule::exists('locations', 'id')->where(fn ($query) => $query->where('user_id', $request->user()->id)),
+            ],
+        ], [
+            'parent_location_id.not_in' => 'A location cannot be its own parent.',
         ]);
+
+        if ($location && isset($validated['parent_location_id'])) {
+            $candidateParentId = (int) $validated['parent_location_id'];
+
+            if ($candidateParentId !== 0 && $this->createsHierarchyCycle($location, $candidateParentId)) {
+                throw ValidationException::withMessages([
+                    'parent_location_id' => 'The selected parent would create a circular location hierarchy.',
+                ]);
+            }
+        }
+
+        return $validated;
+    }
+
+    private function createsHierarchyCycle(Location $location, int $candidateParentId): bool
+    {
+        $currentParent = Location::query()
+            ->select(['id', 'parent_location_id'])
+            ->find($candidateParentId);
+
+        while ($currentParent) {
+            if ($currentParent->id === $location->id) {
+                return true;
+            }
+
+            $nextParentId = $currentParent->parent_location_id;
+            $currentParent = $nextParentId
+                ? Location::query()->select(['id', 'parent_location_id'])->find($nextParentId)
+                : null;
+        }
+
+        return false;
+    }
+
+    private function parentOptions(?Location $excludeLocation = null)
+    {
+        return Location::query()
+            ->when($excludeLocation, fn ($query) => $query->whereKeyNot($excludeLocation->id))
+            ->orderBy('name')
+            ->get(['id', 'name']);
     }
 }

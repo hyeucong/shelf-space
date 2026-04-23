@@ -1,5 +1,5 @@
 import { CategoryFormDialog } from '@/pages/categories/create';
-import { LocationFormDialog } from '@/pages/locations/create';
+import { LocationFormDialog } from '@/pages/locations/form-dialog';
 import { router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUpDown, Bookmark, Filter, Pencil, Plus, Trash2, X } from 'lucide-react';
@@ -1228,6 +1228,7 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
             <LocationFormDialog
                 open={isLocationDialogOpen}
                 onOpenChange={setIsLocationDialogOpen}
+                parentOptions={locations}
                 redirectTo="/assets"
                 preserveState
             />
