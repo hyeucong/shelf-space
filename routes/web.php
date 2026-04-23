@@ -7,6 +7,7 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\TagController;
 use App\Models\Asset;
+use App\Models\Location;
 use Illuminate\Support\Facades\Route;
 use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
 
@@ -62,7 +63,27 @@ Route::middleware([
 
     Route::resource('categories', CategoryController::class)->except(['create', 'edit']);
     Route::resource('tags', TagController::class)->except(['create', 'edit']);
-    Route::resource('locations', LocationController::class);
+    Route::prefix('locations')->name('locations.')->group(function () {
+        Route::get('{location}/overview', [LocationController::class, 'show'])
+            ->whereNumber('location')
+            ->name('overview');
+        Route::get('{location}/assets', [LocationController::class, 'assets'])
+            ->whereNumber('location')
+            ->name('assets');
+        Route::get('{location}/kits', [LocationController::class, 'kits'])
+            ->whereNumber('location')
+            ->name('kits');
+
+        Route::get('{location}/activity', [LocationController::class, 'activity'])
+            ->whereNumber('location')
+            ->name('activity');
+
+        Route::get('{location}', function (Location $location) {
+            return redirect()->route('locations.overview', $location);
+        })->whereNumber('location');
+    });
+
+    Route::resource('locations', LocationController::class)->except(['show']);
     Route::resource('reminders', ReminderController::class);
 });
 

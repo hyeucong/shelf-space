@@ -20,7 +20,7 @@ class LocationController extends Controller
         $perPage = $request->integer('per_page', 20);
 
         $allowedSorts = ['name', 'created_at'];
-        if (!in_array($sort, $allowedSorts)) {
+        if (! in_array($sort, $allowedSorts)) {
             $sort = 'created_at';
         }
 
@@ -93,7 +93,41 @@ class LocationController extends Controller
      */
     public function show(Location $location)
     {
-        //
+        $location->load('parent:id,name')
+            ->loadCount(['assets', 'children']);
+
+        return Inertia::render('locations/overview', [
+            'location' => $location,
+        ]);
+    }
+
+    public function assets(Location $location)
+    {
+        $assets = $location->assets()
+            ->with('category:id,name')
+            ->paginate(20);
+
+        return Inertia::render('locations/assets', [
+            'location' => $location,
+            'assets' => $assets,
+        ]);
+    }
+
+    public function kits(Location $location)
+    {
+        // Kits are not currently scoped to a location in the schema.
+        // Render the kits placeholder page; frontend can fetch kits later if needed.
+        return Inertia::render('locations/kits', [
+            'location' => $location,
+        ]);
+    }
+
+    public function activity(Location $location)
+    {
+        // Placeholder: no activity model yet; render the activity tab page.
+        return Inertia::render('locations/activity', [
+            'location' => $location,
+        ]);
     }
 
     /**

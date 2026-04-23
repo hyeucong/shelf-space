@@ -141,7 +141,7 @@ export default function Create() {
                                 <div className="flex -space-x-px">
                                     <Button
                                         variant="outline"
-                                        className="rounded-l rounded-r-none border-r-0"
+                                        className={isEditing ? 'rounded' : 'rounded-l rounded-r-none border-r-0'}
                                         asChild
                                     >
                                         <Link href="/locations">Cancel</Link>

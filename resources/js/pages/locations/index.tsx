@@ -110,7 +110,9 @@ export default function Locations({ locations, filters }: PageProps) {
                         <MapPin className="text-muted-foreground" size={18} />
                     </div>
                     <div className="min-w-0">
-                        <div className="block line-clamp-2">{location.name}</div>
+                        <Link href={`/locations/${location.id}/overview`} className="block line-clamp-2 transition-colors hover:text-primary">
+                            {location.name}
+                        </Link>
                     </div>
                 </div>
             ),
