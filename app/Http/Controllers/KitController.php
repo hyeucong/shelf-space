@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Kit;
 use App\Models\Category;
+use App\Models\Kit;
 use App\Models\Location;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -68,7 +68,18 @@ class KitController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        $kit = Kit::create([
+            'user_id' => $request->user()->id,
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+        ]);
+
+        return redirect()->route('kits.index');
     }
 
     /**
@@ -76,7 +87,17 @@ class KitController extends Controller
      */
     public function show(Kit $kit)
     {
-        //
+        return Inertia::render('kits/overview', [
+            'kit' => $kit,
+        ]);
+    }
+
+    public function assets(Kit $kit)
+    {
+
+        return Inertia::render('kits/assets', [
+            'kit' => $kit,
+        ]);
     }
 
     /**

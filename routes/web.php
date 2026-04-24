@@ -59,6 +59,15 @@ Route::middleware([
             ->name('destroy');
     });
 
+    Route::prefix('kits')->name('kits.')->group(function () {
+        Route::get('{kit}/overview', [KitController::class, 'show'])
+            ->whereNumber('kit')
+            ->name('overview');
+        Route::get('{kit}/assets', [KitController::class, 'assets'])
+            ->whereNumber('kit')
+            ->name('assets');
+    });
+
     Route::resource('kits', KitController::class);
 
     Route::resource('categories', CategoryController::class)->except(['create', 'edit']);
