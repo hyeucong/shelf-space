@@ -69,6 +69,7 @@ interface ResourceIndexTableProps<T extends { id: number }> {
     tableClassName?: string;
     toolbarStart?: ReactNode;
     toolbarEnd?: ReactNode;
+    showSearch?: boolean;
 }
 
 export function ResourceIndexTable<T extends { id: number }>({
@@ -84,6 +85,7 @@ export function ResourceIndexTable<T extends { id: number }>({
     tableClassName,
     toolbarStart,
     toolbarEnd,
+    showSearch = true,
 }: ResourceIndexTableProps<T>) {
     const items = pagination?.data || [];
     const hasItems = items.length > 0;
@@ -122,50 +124,54 @@ export function ResourceIndexTable<T extends { id: number }>({
 
     return (
         <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
-            <div className="mx-4 mb-4 mt-4 flex min-h-12 shrink-0 flex-col items-start justify-between gap-3 rounded border bg-background p-2 shadow-sm md:flex-row md:items-center">
-                <div className="flex w-full flex-1 flex-row flex-wrap items-center gap-2 md:w-auto md:flex-nowrap">
-                    {sort ? (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="h-9 shrink-0 gap-2 font-normal text-muted-foreground shadow-none">
-                                    <ArrowUpDown size={16} /> Sort
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-48">
-                                <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuRadioGroup value={sort.value} onValueChange={handleSortChange}>
-                                    {sort.options.map((option) => (
-                                        <DropdownMenuRadioItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+            {(showSearch || toolbarStart || toolbarEnd || sort) ? (
+                <div className="mx-4 mt-4 flex min-h-12 shrink-0 flex-col items-start justify-between gap-3 rounded border bg-background p-2 shadow-sm md:flex-row md:items-center">
+                    <div className="flex w-full flex-1 flex-row flex-wrap items-center gap-2 md:w-auto md:flex-nowrap">
+                        {sort ? (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="h-9 shrink-0 gap-2 font-normal text-muted-foreground shadow-none">
+                                        <ArrowUpDown size={16} /> Sort
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start" className="w-48">
+                                    <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuRadioGroup value={sort.value} onValueChange={handleSortChange}>
+                                        {sort.options.map((option) => (
+                                            <DropdownMenuRadioItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </DropdownMenuRadioItem>
+                                        ))}
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : null}
+
+                        {toolbarStart}
+
+                        {showSearch ? (
+                            <div className="flex flex-1">
+                                <SearchInput
+                                    url={resourcePath}
+                                    placeholder={searchPlaceholder}
+                                    initialValue={typeof filters.search === 'string' ? filters.search : ''}
+                                    query={resolvedSearchQuery}
+                                />
+                            </div>
+                        ) : null}
+                    </div>
+
+                    {toolbarEnd ? (
+                        <div className="flex w-full flex-wrap items-center justify-end gap-2 border-t pt-2 md:w-auto md:border-t-0 md:pt-0">
+                            {toolbarEnd}
+                        </div>
                     ) : null}
-
-                    {toolbarStart}
-
-                    <div className="flex flex-1">
-                        <SearchInput
-                            url={resourcePath}
-                            placeholder={searchPlaceholder}
-                            initialValue={typeof filters.search === 'string' ? filters.search : ''}
-                            query={resolvedSearchQuery}
-                        />
-                    </div>
                 </div>
-
-                {toolbarEnd ? (
-                    <div className="flex w-full flex-wrap items-center justify-end gap-2 border-t pt-2 md:w-auto md:border-t-0 md:pt-0">
-                        {toolbarEnd}
-                    </div>
-                ) : null}
-            </div>
+            ) : null}
 
             {hasItems ? (
-                <div className="mx-4 mb-4 flex flex-1 min-h-0 flex-col overflow-y-auto rounded border bg-background shadow-sm">
+                <div className="mx-4 mt-4 mb-4 flex flex-1 min-h-0 flex-col overflow-y-auto rounded border bg-background shadow-sm">
                     <Table className={tableClassName}>
                         <TableHeader>
                             <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
@@ -216,7 +222,7 @@ export function ResourceIndexTable<T extends { id: number }>({
                     </Table>
                 </div>
             ) : (
-                <div className="mx-4 mb-4 flex flex-1 items-center justify-center rounded border border-dashed bg-background p-6 text-center shadow-sm">
+                <div className="mx-4 mb-4 mt-4 flex flex-1 items-center justify-center rounded border border-dashed bg-background p-6 text-center shadow-sm">
                     <div className="mx-auto max-w-lg space-y-1">
                         <h3 className="text-2xl font-bold tracking-tight">{emptyState.title}</h3>
                         {emptyState.description ? (

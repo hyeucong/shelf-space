@@ -29,9 +29,10 @@ export interface AssetPageProps {
 type AssetLayoutProps = {
     children: ReactNode;
     activeTab: 'overview' | 'activity' | 'reminders';
+    headerAction?: ReactNode;
 };
 
-export default function AssetLayout({ children, activeTab }: AssetLayoutProps) {
+export default function AssetLayout({ children, activeTab, headerAction }: AssetLayoutProps) {
     const { asset } = usePage<AssetPageProps>().props;
 
     return (
@@ -40,6 +41,7 @@ export default function AssetLayout({ children, activeTab }: AssetLayoutProps) {
                 { title: 'Assets', href: '/assets' },
                 { title: asset?.name || 'Asset', href: '#' },
             ]}
+            headerAction={headerAction}
             children={
                 <>
                     <div className="flex items-start p-4">
