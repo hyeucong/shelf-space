@@ -1,8 +1,10 @@
 import { Head } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { Package2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import type { ResourceIndexColumn } from '@/components/resource-index-table';
+import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import type { PaginatedData } from '@/types/pagination';
 
@@ -12,7 +14,6 @@ interface Kit {
     description: string | null;
     status: string;
 }
-
 interface PageProps {
     kits: PaginatedData<Kit>;
     filters: {
@@ -117,6 +118,12 @@ Kits.layout = (page: React.ReactNode) => (
         breadcrumbs={[
             { title: 'Kits', href: '/kits' }
         ]}
+
+        headerAction={
+            <Button className="rounded border-none" asChild>
+                <Link href="/kits/create">New kit</Link>
+            </Button>
+        }
 
     />
 );

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kit;
+use App\Models\Category;
+use App\Models\Location;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -52,7 +54,13 @@ class KitController extends Controller
      */
     public function create()
     {
-        return Inertia::render('kits/create', []);
+        $categories = Category::orderBy('name')->get(['id', 'name']);
+        $locations = Location::orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('kits/create', [
+            'categories' => $categories,
+            'locations' => $locations,
+        ]);
     }
 
     /**

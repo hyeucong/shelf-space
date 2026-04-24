@@ -47,26 +47,15 @@ const mainNavItems: NavItem[] = [
         href: '/locations',
         icon: MapPin,
     },
-
-];
-
-const footerNavItems: NavItem[] = [
     {
         title: 'Reminders',
         href: '/reminders',
         icon: Bell,
     },
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
+
 ];
+
+const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
     return (
