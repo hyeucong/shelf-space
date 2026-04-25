@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
 import LocationLayout, { type LocationPageProps } from '@/layouts/location-layout';
+import { Badge } from '@/components/ui/badge';
 
 export default function LocationActivity() {
     const { location } = usePage<LocationPageProps>().props;
@@ -11,13 +12,9 @@ export default function LocationActivity() {
 
             <div className="p-4">
                 <div className="max-w-3xl">
-                    <div className="rounded border bg-background p-6">
-                        <h2 className="text-lg font-semibold mb-2">Activity (temporary)</h2>
-                        <p className="text-sm text-muted-foreground">This is a placeholder page for location activity.</p>
-
-                        <div className="mt-4">
-                            <Link href={`/locations/${location?.id}/activity`} className="text-primary">Open activity URL</Link>
-                        </div>
+                    <div className="rounded border bg-background p-2 flex items-center gap-2">
+                        <Badge variant="outline">Activity</Badge>
+                        <p className='text-sm'>John Doe removed Vlog Compact Sony ZV-E10 from 12321.</p>
                     </div>
                 </div>
             </div>

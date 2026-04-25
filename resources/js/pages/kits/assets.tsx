@@ -1,49 +1,95 @@
 import type { ReactNode } from 'react';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
 import KitLayout, { type KitPageProps } from '@/layouts/kit-layout';
+import { ResourceIndexTable } from '@/components/resource-index-table';
+import type { PaginatedData } from '@/types/pagination';
+import { Badge } from '@/components/ui/badge';
+
+interface AssetRecord {
+    id: number;
+    name: string;
+    asset_id?: string | null;
+    description?: string | null;
+    status?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+}
 
 export default function KitAssets() {
-    const { kit } = usePage<KitPageProps>().props;
+    const { kit, assets } = usePage<KitPageProps & { assets?: PaginatedData<AssetRecord> }>().props;
+
+    const pagination: PaginatedData<AssetRecord> = assets ?? {
+        data: [],
+        links: [],
+        current_page: 1,
+        last_page: 1,
+        per_page: 20,
+        first_page_url: '',
+        last_page_url: '',
+        from: 0,
+        to: 0,
+        total: 0,
+    };
+
+    const columns = [
+        {
+            key: 'name',
+            header: 'Asset',
+            render: (a: AssetRecord) => (
+                <Link href={`/assets/${a.id}/overview`} className="block line-clamp-1">
+                    {a.name}
+                </Link>
+            ),
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            render: (a: AssetRecord) => (
+                <Badge variant="outline" className="capitalize">{a.status || 'unknown'}</Badge>
+            ),
+        },
+        {
+            key: 'description',
+            header: 'Description',
+            render: (a: AssetRecord) => a.description || '—',
+        },
+        {
+            key: 'updated_at',
+            header: 'Last updated',
+            headerClassName: 'hidden sm:table-cell',
+            cellClassName: 'hidden sm:table-cell text-muted-foreground whitespace-nowrap',
+            render: (a: AssetRecord) => (a.updated_at ?? a.created_at) ? new Date((a.updated_at ?? a.created_at) as string).toLocaleDateString() : '—',
+        },
+    ];
 
     return (
         <>
             <Head title={`${kit?.name || 'Kit'} - Assets`} />
-            <div className="p-4">
-                <div className="max-w-3xl">
-                    <div className="rounded border bg-background">
-                        <dl className="divide-y">
-                            <div className="flex items-center justify-between px-6 py-4">
-                                <dt className="text-sm text-muted-foreground">ID</dt>
-                                <dd className="ml-4 text-sm text-foreground wrap-break-word">{kit?.id ?? '-'}</dd>
-                            </div>
 
-                            <div className="flex items-center justify-between px-6 py-4">
-                                <dt className="text-sm text-muted-foreground">Status</dt>
-                                <dd className="ml-4 text-sm text-foreground">{kit?.status ?? '-'}</dd>
-                            </div>
-
-                            <div className="flex items-center justify-between px-6 py-4">
-                                <dt className="text-sm text-muted-foreground">Description</dt>
-                                <dd className="ml-4 text-sm text-foreground">{kit?.description || '-'}</dd>
-                            </div>
-
-                            <div className="flex items-center justify-between px-6 py-4">
-                                <dt className="text-sm text-muted-foreground">Created</dt>
-                                <dd className="ml-4 text-sm text-foreground">{kit?.created_at ? new Date(kit.created_at).toLocaleString() : '-'}</dd>
-                            </div>
-
-                            <div className="flex items-center justify-between px-6 py-4">
-                                <dt className="text-sm text-muted-foreground">Updated</dt>
-                                <dd className="ml-4 text-sm text-foreground">{kit?.updated_at ? new Date(kit.updated_at).toLocaleString() : '-'}</dd>
-                            </div>
-                        </dl>
-                    </div>
-                </div>
-            </div>
+            <ResourceIndexTable
+                resourcePath={kit ? `/kits/${kit.id}/assets` : '/kits/assets'}
+                searchPlaceholder="Search assets..."
+                pagination={pagination}
+                showSearch={true}
+                filters={{}}
+                columns={columns}
+                emptyState={{ title: 'No assets in this kit', description: 'There are no assets assigned to this kit.' }}
+            />
         </>
     );
 }
 
 KitAssets.layout = (page: ReactNode) => (
-    <KitLayout activeTab="assets" children={page} />
+    <KitLayout
+        activeTab="assets"
+        headerAction={
+            <Button asChild>
+                <Link href="#">
+                    Add asset
+                </Link>
+            </Button>
+        }
+        children={page}
+    />
 );

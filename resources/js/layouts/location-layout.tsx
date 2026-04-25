@@ -24,9 +24,10 @@ export interface LocationPageProps {
 type LocationLayoutProps = {
     children: ReactNode;
     activeTab: 'overview' | 'assets' | 'kits' | 'activity';
+    headerAction?: ReactNode;
 };
 
-export default function LocationLayout({ children, activeTab }: LocationLayoutProps) {
+export default function LocationLayout({ children, activeTab, headerAction }: LocationLayoutProps) {
     const { location } = usePage<LocationPageProps>().props;
 
     return (
@@ -35,6 +36,7 @@ export default function LocationLayout({ children, activeTab }: LocationLayoutPr
                 { title: 'Locations', href: '/locations' },
                 { title: location?.name || 'Location', href: '#' },
             ]}
+            headerAction={headerAction}
             children={
                 <>
                     <div className="flex items-start p-4">

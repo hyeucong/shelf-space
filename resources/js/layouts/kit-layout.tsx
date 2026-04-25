@@ -21,9 +21,10 @@ export interface KitPageProps {
 type KitLayoutProps = {
     children: ReactNode;
     activeTab: 'overview' | 'assets' | 'kits' | 'activity';
+    headerAction?: ReactNode;
 };
 
-export default function KitLayout({ children, activeTab }: KitLayoutProps) {
+export default function KitLayout({ children, activeTab, headerAction }: KitLayoutProps) {
     const { kit } = usePage<KitPageProps>().props;
 
     return (
@@ -32,6 +33,7 @@ export default function KitLayout({ children, activeTab }: KitLayoutProps) {
                 { title: 'Kits', href: '/kits' },
                 { title: kit?.name || 'Kit', href: '#' },
             ]}
+            headerAction={headerAction}
             children={
                 <>
                     <div className="flex items-start p-4">
