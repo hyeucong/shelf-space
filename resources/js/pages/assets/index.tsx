@@ -1,11 +1,12 @@
 import type { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { Head, Link, router } from '@inertiajs/react';
-import { Columns3 } from 'lucide-react';
+import { Columns3, Copy, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ColumnVisibilityPanel } from '@/components/asset-column-visibility-panel';
 import { AssetQueryBuilder } from '@/components/asset-query-builder';
 import type { AssetFilterOption, AssetFiltersQuery, AssetQueryValue, AssetSavedFilter, AssetSortDraft } from '@/components/asset-query-builder';
+import { AssetSelectionActions } from '@/components/asset-selection-actions';
 import { ResourceDeleteDialog } from '@/components/resource-form-dialog';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import { Button } from '@/components/ui/button';
@@ -59,6 +60,13 @@ export default function Assets({ assets, categories, columnPreferences, location
         () => selectedIds.filter((id) => localAssets.some((asset) => asset.id === id)),
         [localAssets, selectedIds],
     );
+    const selectedAssets = useMemo(
+        () => localAssets.filter((asset) => activeSelectedIds.includes(asset.id)),
+        [activeSelectedIds, localAssets],
+    );
+    const primarySelectedAsset = activeSelectedIds.length === 1
+        ? selectedAssets[0] ?? null
+        : null;
 
     useEffect(() => {
         if (!isColumnsPanelOpen) {
@@ -208,6 +216,39 @@ export default function Assets({ assets, categories, columnPreferences, location
         });
     };
 
+    const handleExportSelection = () => {
+        if (selectedAssets.length === 0) {
+            return;
+        }
+
+        const rows = [
+            ['ID', 'Asset ID', 'Name', 'Status', 'Category', 'Location', 'Value'],
+            ...selectedAssets.map((asset) => [
+                String(asset.id),
+                asset.asset_id,
+                asset.name,
+                asset.status,
+                asset.category?.name ?? '',
+                asset.location?.name ?? '',
+                asset.value === null ? '' : String(asset.value),
+            ]),
+        ];
+
+        const csv = rows
+            .map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(','))
+            .join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const objectUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.href = objectUrl;
+        link.download = `assets-selection-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(objectUrl);
+    };
+
     const tableColumns = createAssetTableColumns({
         onDelete: (asset) => setAssetToDelete(asset),
     });
@@ -296,14 +337,37 @@ export default function Assets({ assets, categories, columnPreferences, location
                     </>
                 )}
                 toolbarEnd={(
-                    <>
-                        <Button type="button" variant="outline" className="h-9 shrink-0 rounded shadow-none">
-                            Export selection
-                        </Button>
-                        <Button type="button" variant="outline" className="h-9 shrink-0 rounded shadow-none">
-                            Actions
-                        </Button>
-                    </>
+                    <AssetSelectionActions
+                        actions={[
+                            {
+                                key: 'export',
+                                label: 'Export selection',
+                                icon: <Copy className="h-4 w-4" />,
+                                onClick: () => handleExportSelection(),
+                                disabled: selectedAssets.length === 0,
+                            },
+                            {
+                                key: 'duplicate',
+                                label: 'Duplicate',
+                                icon: <Copy className="h-4 w-4" />,
+                                disabled: true,
+                            },
+                            {
+                                key: 'delete',
+                                label: 'Delete',
+                                icon: <Trash2 className="h-4 w-4" />,
+                                onClick: () => {
+                                    if (!primarySelectedAsset) {
+                                        return;
+                                    }
+
+                                    setAssetToDelete(primarySelectedAsset);
+                                },
+                                disabled: !primarySelectedAsset,
+                                destructive: true,
+                            },
+                        ]}
+                    />
                 )}
                 emptyState={{
                     title: 'No assets yet',

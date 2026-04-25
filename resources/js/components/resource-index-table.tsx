@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { ArrowUpDown } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 import { DataTablePagination } from '@/components/data-table-pagination';
 import { SearchInput } from '@/components/search-input';
 import { Button } from '@/components/ui/button';
@@ -177,16 +178,18 @@ export function ResourceIndexTable<T extends { id: number }>({
                             <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
                                 {selection ? (
                                     <TableHead className="w-11 px-3 md:px-4">
-                                        <Checkbox
-                                            aria-label="Select all"
-                                            checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                                            onCheckedChange={(value) => selection.onToggleAll(!!value)}
-                                        />
+                                        <div className="flex items-center justify-center">
+                                            <Checkbox
+                                                aria-label="Select all"
+                                                checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                                                onCheckedChange={(value) => selection.onToggleAll(!!value)}
+                                            />
+                                        </div>
                                     </TableHead>
                                 ) : null}
 
-                                {columns.map((column) => (
-                                    <TableHead key={column.key} className={column.headerClassName}>
+                                {columns.map((column, index) => (
+                                    <TableHead key={column.key} className={cn(index === 0 && 'pl-0 md:pl-0 lg:pl-0', column.headerClassName)}>
                                         {column.header}
                                     </TableHead>
                                 ))}
@@ -197,21 +200,23 @@ export function ResourceIndexTable<T extends { id: number }>({
                                 <TableRow key={item.id}>
                                     {selection ? (
                                         <TableCell className="w-11 px-3 md:px-4">
-                                            <Checkbox
-                                                aria-label={selection.getLabel(item)}
-                                                checked={selection.selectedIds.includes(item.id)}
-                                                onCheckedChange={(value) => selection.onToggleOne(item, !!value)}
-                                            />
+                                            <div className="flex items-center justify-center">
+                                                <Checkbox
+                                                    aria-label={selection.getLabel(item)}
+                                                    checked={selection.selectedIds.includes(item.id)}
+                                                    onCheckedChange={(value) => selection.onToggleOne(item, !!value)}
+                                                />
+                                            </div>
                                         </TableCell>
                                     ) : null}
 
-                                    {columns.map((column) => {
+                                    {columns.map((column, index) => {
                                         const cellClassName = typeof column.cellClassName === 'function'
                                             ? column.cellClassName(item)
                                             : column.cellClassName;
 
                                         return (
-                                            <TableCell key={column.key} className={cellClassName}>
+                                            <TableCell key={column.key} className={cn(index === 0 && 'pl-0 md:pl-0 lg:pl-0', cellClassName)}>
                                                 {column.render(item)}
                                             </TableCell>
                                         );
