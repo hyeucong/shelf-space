@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('reminders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('asset_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name');
             $table->text('description')->nullable();
+            $table->date('remind_at')->nullable();
             $table->string('status')->default('pending');
             $table->timestamps();
         });

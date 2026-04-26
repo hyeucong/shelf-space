@@ -41,6 +41,10 @@ Route::middleware([
             ->whereNumber('asset')
             ->name('reminders');
 
+        Route::post('{asset}/reminders', [AssetController::class, 'storeReminder'])
+            ->whereNumber('asset')
+            ->name('reminders.store');
+
         // compatibility: redirect legacy `/assets/{asset}` GET to the overview route
         Route::get('{asset}', function (Asset $asset) {
             return redirect()->route('assets.overview', $asset);

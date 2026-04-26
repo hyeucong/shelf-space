@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Asset;
 use App\Models\Category;
 use App\Models\Location;
+use App\Models\Reminder;
 use App\Models\Tag;
 use App\Models\UserViewPreference;
 use Illuminate\Database\Eloquent\Builder;
@@ -569,9 +570,35 @@ class AssetController extends Controller
             'tags:id,name',
         ]);
 
+        $reminders = $asset->reminders()
+            ->latest('remind_at')
+            ->latest('id')
+            ->paginate(20)
+            ->withQueryString();
+
         return Inertia::render('assets/reminders', [
             'asset' => $asset,
+            'reminders' => $reminders,
         ]);
+    }
+
+    public function storeReminder(Request $request, Asset $asset)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string'],
+            'remind_at' => ['required', 'date'],
+        ]);
+
+        $asset->reminders()->create([
+            'user_id' => $request->user()->id,
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+            'remind_at' => $validated['remind_at'],
+            'status' => 'pending',
+        ]);
+
+        return redirect()->route('assets.reminders', $asset);
     }
 
     /**

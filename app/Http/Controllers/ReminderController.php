@@ -29,6 +29,7 @@ class ReminderController extends Controller
         $order = in_array(strtolower($order), ['asc', 'desc']) ? $order : 'desc';
 
         $reminders = Reminder::query()
+            ->with('asset:id,name')
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
                       ->orWhere('description', 'like', "%{$search}%");

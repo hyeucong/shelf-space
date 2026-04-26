@@ -1,42 +1,28 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
+import { useState } from 'react';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from '@/components/ui/button';
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { ResourceIndexTable } from '@/components/resource-index-table';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
-import { ArrowUpDown } from 'lucide-react';
-import { SearchInput } from '@/components/search-input';
+import type { PaginatedData } from '@/types/pagination';
 
 interface Reminder {
     id: number;
     name: string;
     description: string;
-    status: string;
-}
-
-interface PaginationLinkType {
-    url: string | null;
-    label: string;
-    active: boolean;
-}
-
-interface PaginatedData<T> {
-    data: T[];
-    links: PaginationLinkType[];
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    first_page_url: string;
-    last_page_url: string;
-    from: number;
-    to: number;
-    total: number;
+    asset?: {
+        id: number;
+        name: string;
+    } | null;
+    remind_at?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
 }
 
 interface PageProps {
@@ -50,72 +36,65 @@ interface PageProps {
 }
 
 export default function Reminders({ reminders, filters }: PageProps) {
-    const handleSortChange = (value: string) => {
-        const [sort, order] = value.split(':');
-        router.get('/reminders', {
-            ...filters,
-            sort,
-            order,
-            page: 1
-        }, {
-            preserveState: true,
-            replace: true
-        });
-    };
+    const [selectedSort, setSelectedSort] = useState('date-created-desc');
+
+    const columns = [
+        {
+            key: 'name',
+            header: 'Name',
+            headerClassName: 'pl-4',
+            cellClassName: 'pl-4',
+            render: (reminder: Reminder) => reminder.name,
+        },
+        {
+            key: 'description',
+            header: 'Message',
+            render: (reminder: Reminder) => reminder.description,
+        },
+        {
+            key: 'asset',
+            header: 'Asset',
+            render: (reminder: Reminder) => reminder.asset?.name || '—',
+        },
+        {
+            key: 'remind_at',
+            header: 'Alert date',
+            cellClassName: 'whitespace-nowrap',
+            render: (reminder: Reminder) => reminder.remind_at ? new Date(reminder.remind_at).toLocaleDateString() : '—',
+        },
+    ];
 
     return (
         <>
             <Head title="Reminders" />
 
-            <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto p-4">
-                    {/* Toolbar */}
-                    <div className="mb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 rounded border bg-background p-2 shadow-sm min-h-12">
-                        <div className="flex flex-1 flex-row flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0">
-                                        <ArrowUpDown size={16} /> Sort
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start" className="w-48">
-                                    <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuRadioGroup
-                                        value={`${filters?.sort || 'created_at'}:${filters?.order || 'desc'}`}
-                                        onValueChange={handleSortChange}
-                                    >
-                                        <DropdownMenuRadioItem value="created_at:desc">Newest</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="created_at:asc">Oldest</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="name:asc">Name (A-Z)</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="name:desc">Name (Z-A)</DropdownMenuRadioItem>
-                                    </DropdownMenuRadioGroup>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-
-                            <div className="flex">
-                                <SearchInput
-                                    url="/reminders"
-                                    placeholder="Search reminders..."
-                                    initialValue={filters?.search}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Content Area */}
-                    <div className="flex flex-1 items-center justify-center rounded border border-dashed bg-background h-[300px]">
-                        <div className="flex flex-col items-center gap-1 text-center">
-                            <h3 className="text-2xl font-bold tracking-tight">
-                                No reminders yet
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                                Reminders will appear here when assets are due for return or maintenance.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <ResourceIndexTable
+                resourcePath="/reminders"
+                searchPlaceholder="Search reminders..."
+                pagination={reminders}
+                filters={filters}
+                columns={columns}
+                toolbarStart={
+                    <Select value={selectedSort} onValueChange={setSelectedSort}>
+                        <SelectTrigger className="w-full max-w-48 border bg-transparent dark:bg-transparent">
+                            <SelectValue placeholder="Sort reminders" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectItem value="ascending">Ascending</SelectItem>
+                                <SelectItem value="descending">Descending</SelectItem>
+                                <SelectItem value="date-created-desc">Date created</SelectItem>
+                                <SelectItem value="date-updated-desc">Date updated</SelectItem>
+                                <SelectItem value="alert-time-asc">Alert time</SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                }
+                emptyState={{
+                    title: 'No reminders yet',
+                    description: 'Reminders will appear here when assets are due for return or maintenance.',
+                }}
+            />
         </>
     );
 }

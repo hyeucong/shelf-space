@@ -57,6 +57,13 @@ interface ResourceIndexEmptyState {
     description?: string;
 }
 
+interface ResourceIndexRowActions<T> {
+    header?: ReactNode;
+    render: (item: T) => ReactNode;
+    headerClassName?: string;
+    cellClassName?: string;
+}
+
 interface ResourceIndexTableProps<T extends { id: number }> {
     resourcePath: string;
     searchPlaceholder: string;
@@ -71,6 +78,7 @@ interface ResourceIndexTableProps<T extends { id: number }> {
     toolbarStart?: ReactNode;
     toolbarEnd?: ReactNode;
     showSearch?: boolean;
+    rowActions?: ResourceIndexRowActions<T>;
 }
 
 export function ResourceIndexTable<T extends { id: number }>({
@@ -87,6 +95,7 @@ export function ResourceIndexTable<T extends { id: number }>({
     toolbarStart,
     toolbarEnd,
     showSearch = true,
+    rowActions,
 }: ResourceIndexTableProps<T>) {
     const items = pagination?.data || [];
     const hasItems = items.length > 0;
@@ -177,7 +186,7 @@ export function ResourceIndexTable<T extends { id: number }>({
                         <TableHeader>
                             <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
                                 {selection ? (
-                                    <TableHead className="w-11 px-3 md:px-4">
+                                    <TableHead className="w-11 px-3">
                                         <div className="flex items-center justify-center">
                                             <Checkbox
                                                 aria-label="Select all"
@@ -189,17 +198,23 @@ export function ResourceIndexTable<T extends { id: number }>({
                                 ) : null}
 
                                 {columns.map((column, index) => (
-                                    <TableHead key={column.key} className={cn(index === 0 && 'pl-0 md:pl-0 lg:pl-0', column.headerClassName)}>
+                                    <TableHead key={column.key} className={cn(index === 0 && 'pl-0', column.headerClassName)}>
                                         {column.header}
                                     </TableHead>
                                 ))}
+
+                                {rowActions ? (
+                                    <TableHead className={cn('w-1 whitespace-nowrap text-right', rowActions.headerClassName)}>
+                                        {rowActions.header ?? 'Actions'}
+                                    </TableHead>
+                                ) : null}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {items.map((item) => (
                                 <TableRow key={item.id}>
                                     {selection ? (
-                                        <TableCell className="w-11 px-3 md:px-4">
+                                        <TableCell className="w-11 px-3">
                                             <div className="flex items-center justify-center">
                                                 <Checkbox
                                                     aria-label={selection.getLabel(item)}
@@ -216,11 +231,17 @@ export function ResourceIndexTable<T extends { id: number }>({
                                             : column.cellClassName;
 
                                         return (
-                                            <TableCell key={column.key} className={cn(index === 0 && 'pl-0 md:pl-0 lg:pl-0', cellClassName)}>
+                                            <TableCell key={column.key} className={cn(index === 0 && 'pl-0', cellClassName)}>
                                                 {column.render(item)}
                                             </TableCell>
                                         );
                                     })}
+
+                                    {rowActions ? (
+                                        <TableCell className={cn('text-right', rowActions.cellClassName)}>
+                                            {rowActions.render(item)}
+                                        </TableCell>
+                                    ) : null}
                                 </TableRow>
                             ))}
                         </TableBody>
