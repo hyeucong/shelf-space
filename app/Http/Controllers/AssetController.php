@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Asset;
 use App\Models\Category;
 use App\Models\Location;
-use App\Models\Reminder;
 use App\Models\Tag;
 use App\Models\UserViewPreference;
+use App\Queries\AssetQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -24,13 +24,13 @@ class AssetController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, AssetQuery $assetQuery)
     {
-        $indexState = $this->resolveIndexState($request);
-        $assets = $this->buildAssetIndexQuery($request, $indexState['filters'], $indexState['sorts'])
+        $indexState = $assetQuery->resolveIndexState($request);
+        $assets = $assetQuery->handle($request)
             ->paginate($indexState['perPage'])
             ->withQueryString();
-        $savedFilters = $this->loadSavedFilters($request);
+        $savedFilters = $this->loadSavedFilters($request, $assetQuery);
 
         return Inertia::render('assets/index', $this->buildAssetIndexProps(
             $request,
@@ -40,11 +40,11 @@ class AssetController extends Controller
         ));
     }
 
-    public function storeSavedFilter(Request $request)
+    public function storeSavedFilter(Request $request, AssetQuery $assetQuery)
     {
         $validated = $this->validateSavedFilterPayload($request);
 
-        $filters = $this->normalizeAssetFilters($validated['filters']);
+        $filters = $assetQuery->normalizeFilters($validated['filters']);
         $key = $this->generateSavedFilterKey($request, trim($validated['name']));
 
         UserViewPreference::create([
@@ -159,130 +159,9 @@ class AssetController extends Controller
     }
 
     /**
-     * @param  array<string, mixed>  $filters
-     * @return array<string, string|null>
-     */
-    private function normalizeAssetFilters(array $filters): array
-    {
-        $valueMin = $filters['value_min'] ?? null;
-        $valueMax = $filters['value_max'] ?? null;
-
-        return [
-            'status' => $this->normalizeStringFilter($filters['status'] ?? null),
-            'category_id' => $this->normalizeIdFilter($filters['category_id'] ?? null),
-            'location_id' => $this->normalizeIdFilter($filters['location_id'] ?? null),
-            'asset_id' => $this->normalizeStringFilter($filters['asset_id'] ?? null),
-            'value_min' => is_numeric($valueMin) ? (string) $valueMin : null,
-            'value_max' => is_numeric($valueMax) ? (string) $valueMax : null,
-        ];
-    }
-
-    private function normalizeStringFilter(mixed $value): ?string
-    {
-        if (! is_string($value)) {
-            return null;
-        }
-
-        $normalized = trim($value);
-
-        return $normalized !== '' ? $normalized : null;
-    }
-
-    private function normalizeIdFilter(mixed $value): ?string
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        if (! is_numeric($value)) {
-            return null;
-        }
-
-        return (string) (int) $value;
-    }
-
-    /**
-     * @return array{
-     *     sort: string,
-     *     order: string,
-     *     perPage: int,
-     *     filters: array<string, string|null>,
-     *     sorts: array<int, array{field: string, order: string}>
-     * }
-     */
-    private function resolveIndexState(Request $request): array
-    {
-        $sort = $request->input('sort', 'created_at');
-        $order = strtolower($request->input('order', 'desc'));
-        $perPage = $request->integer('per_page', 20);
-        $filters = $this->normalizeAssetFilters($request->only([
-            'status',
-            'category_id',
-            'location_id',
-            'asset_id',
-            'value_min',
-            'value_max',
-        ]));
-
-        $allowedSorts = ['name', 'asset_id', 'status', 'value', 'created_at'];
-
-        if (! in_array($sort, $allowedSorts, true)) {
-            $sort = 'created_at';
-        }
-
-        if (! in_array($perPage, [20, 50, 100], true)) {
-            $perPage = 20;
-        }
-
-        if (! in_array($order, ['asc', 'desc'], true)) {
-            $order = 'desc';
-        }
-
-        return [
-            'sort' => $sort,
-            'order' => $order,
-            'perPage' => $perPage,
-            'filters' => $filters,
-            'sorts' => $this->normalizeAssetSorts((string) $request->input('sorts', ''), $sort, $order, $allowedSorts),
-        ];
-    }
-
-    /**
-     * @param  array<string, string|null>  $filters
-     * @param  array<int, array{field: string, order: string}>  $sorts
-     */
-    private function buildAssetIndexQuery(Request $request, array $filters, array $sorts): Builder
-    {
-        $query = Asset::query()
-            ->with([
-                'category:id,name',
-                'location:id,name',
-                'tags:id,name',
-            ])
-            ->when($request->input('search'), function (Builder $query, string $search): void {
-                $query->where(function (Builder $searchQuery) use ($search): void {
-                    $searchQuery->where('name', 'like', "%{$search}%")
-                        ->orWhere('asset_id', 'like', "%{$search}%");
-                });
-            })
-            ->when($filters['status'], fn (Builder $query, string $status) => $query->where('status', '=', $status))
-            ->when($filters['category_id'], fn (Builder $query, string $categoryId) => $query->where('category_id', '=', $categoryId))
-            ->when($filters['location_id'], fn (Builder $query, string $locationId) => $query->where('location_id', '=', $locationId))
-            ->when($filters['asset_id'], fn (Builder $query, string $assetId) => $query->where('asset_id', 'like', "%{$assetId}%"))
-            ->when($filters['value_min'], fn (Builder $query, string $valueMin) => $query->where('value', '>=', $valueMin))
-            ->when($filters['value_max'], fn (Builder $query, string $valueMax) => $query->where('value', '<=', $valueMax));
-
-        foreach ($sorts as $sortConfig) {
-            $query->orderBy($sortConfig['field'], $sortConfig['order']);
-        }
-
-        return $query;
-    }
-
-    /**
      * @return array<int, array{id: int, key: string, name: string, filters: array<string, string|null>}>
      */
-    private function loadSavedFilters(Request $request): array
+    private function loadSavedFilters(Request $request, AssetQuery $assetQuery): array
     {
         return $request->user()
             ->viewPreferences()
@@ -295,7 +174,7 @@ class AssetController extends Controller
                 'id' => $preference->id,
                 'key' => $preference->key,
                 'name' => $preference->name,
-                'filters' => $this->normalizeAssetFilters($preference->settings['filters'] ?? []),
+                'filters' => $assetQuery->normalizeFilters($preference->settings['filters'] ?? []),
             ])
             ->values()
             ->all();
@@ -316,7 +195,6 @@ class AssetController extends Controller
     }
 
     /**
-     * @param  mixed  $columns
      * @return array<int, array{key: string, visible: bool}>
      */
     private function normalizeAssetColumnPreferences(mixed $columns): array
@@ -398,41 +276,6 @@ class AssetController extends Controller
             'savedFilters' => $savedFilters,
             'columnPreferences' => $this->loadColumnPreference($request),
         ];
-    }
-
-    /**
-     * @param  array<int, string>  $allowedSorts
-     * @return array<int, array{field: string, order: string}>
-     */
-    private function normalizeAssetSorts(string $sorts, string $fallbackSort, string $fallbackOrder, array $allowedSorts): array
-    {
-        $normalizedSorts = [];
-
-        foreach (array_filter(array_map('trim', explode(',', $sorts))) as $sortEntry) {
-            [$field, $direction] = array_pad(explode(':', $sortEntry, 2), 2, null);
-
-            if (! is_string($field) || ! in_array($field, $allowedSorts, true)) {
-                continue;
-            }
-
-            $direction = is_string($direction) && in_array(strtolower($direction), ['asc', 'desc'], true)
-                ? strtolower($direction)
-                : 'desc';
-
-            $normalizedSorts[] = [
-                'field' => $field,
-                'order' => $direction,
-            ];
-        }
-
-        if ($normalizedSorts !== []) {
-            return $normalizedSorts;
-        }
-
-        return [[
-            'field' => $fallbackSort,
-            'order' => $fallbackOrder,
-        ]];
     }
 
     /**

@@ -18,11 +18,11 @@ class ReminderController extends Controller
         $perPage = $request->integer('per_page', 20);
 
         $allowedSorts = ['name', 'status', 'created_at'];
-        if (!in_array($sort, $allowedSorts)) {
+        if (! in_array($sort, $allowedSorts)) {
             $sort = 'created_at';
         }
 
-        if (!in_array($perPage, [20, 50, 100], true)) {
+        if (! in_array($perPage, [20, 50, 100], true)) {
             $perPage = 20;
         }
 
@@ -32,7 +32,7 @@ class ReminderController extends Controller
             ->with('asset:id,name')
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             })
             ->orderBy($sort, $order)
             ->paginate($perPage)

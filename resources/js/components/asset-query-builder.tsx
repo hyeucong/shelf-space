@@ -176,6 +176,7 @@ const DEFAULT_SORT: AssetSortDraft = {
     field: 'created_at',
     order: 'desc',
 };
+const NESTED_OVERLAY_SELECTOR = '[data-slot="select-content"], [data-slot="dropdown-menu-content"], [data-slot="dialog-content"]';
 const SORT_DEFINITIONS: SortDefinition[] = [
     { key: 'created_at', label: 'Created Date' },
     { key: 'name', label: 'Name' },
@@ -443,6 +444,10 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
 
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
+                if (document.querySelector(NESTED_OVERLAY_SELECTOR)) {
+                    return;
+                }
+
                 setBuilderMode(null);
                 setOpenSelectKey(null);
             }
@@ -469,10 +474,11 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
                 return;
             }
 
-            if (
-                target instanceof Element
-                && target.closest('[data-slot="select-content"], [data-slot="dropdown-menu-content"], [data-slot="dialog-content"]')
-            ) {
+            if (target instanceof Element && target.closest(NESTED_OVERLAY_SELECTOR)) {
+                return;
+            }
+
+            if (document.querySelector(NESTED_OVERLAY_SELECTOR)) {
                 return;
             }
 
