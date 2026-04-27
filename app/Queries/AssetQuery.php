@@ -3,6 +3,7 @@
 namespace App\Queries;
 
 use App\Models\Asset;
+use App\Models\UserViewPreference;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -11,6 +12,10 @@ class AssetQuery
     private const DEFAULT_SORT = 'created_at';
 
     private const DEFAULT_ORDER = 'desc';
+
+    private const RESOURCE_KEY = 'assets.index';
+
+    private const COLUMNS_PREFERENCE_KEY = 'columns';
 
     /**
      * @var array<int, string>
@@ -112,6 +117,95 @@ class AssetQuery
             'value_min' => is_numeric($valueMin) ? (string) $valueMin : null,
             'value_max' => is_numeric($valueMax) ? (string) $valueMax : null,
         ];
+    }
+
+    /**
+     * @return array<int, array{id: int, key: string, name: string, filters: array<string, string|null>}>
+     */
+    public function loadSavedFilters(Request $request): array
+    {
+        return $request->user()
+            ->viewPreferences()
+            ->where('resource', self::RESOURCE_KEY)
+            ->where('key', '!=', self::COLUMNS_PREFERENCE_KEY)
+            ->orderByDesc('is_default')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (UserViewPreference $preference) => [
+                'id' => $preference->id,
+                'key' => $preference->key,
+                'name' => $preference->name,
+                'filters' => $this->normalizeFilters($preference->settings['filters'] ?? []),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<int, array{key: string, visible: bool}>
+     */
+    public function loadColumnPreference(Request $request): array
+    {
+        $preference = $request->user()
+            ->viewPreferences()
+            ->where('resource', self::RESOURCE_KEY)
+            ->where('key', self::COLUMNS_PREFERENCE_KEY)
+            ->first();
+
+        return $this->normalizeAssetColumnPreferences($preference?->settings['columns'] ?? []);
+    }
+
+    /**
+     * @return array<int, array{key: string, visible: bool}>
+     */
+    public function normalizeAssetColumnPreferences(mixed $columns): array
+    {
+        $defaults = [
+            'id',
+            'asset_id',
+            'status',
+            'category',
+            'location',
+            'tags',
+            'description',
+            'value',
+            'created_at',
+            'updated_at',
+        ];
+
+        if (! is_array($columns)) {
+            return array_map(fn (string $key) => ['key' => $key, 'visible' => true], $defaults);
+        }
+
+        $normalized = [];
+
+        foreach ($columns as $column) {
+            if (! is_array($column)) {
+                continue;
+            }
+
+            $key = $column['key'] ?? null;
+
+            if (! is_string($key) || ! in_array($key, $defaults, true) || array_key_exists($key, $normalized)) {
+                continue;
+            }
+
+            $normalized[$key] = [
+                'key' => $key,
+                'visible' => (bool) ($column['visible'] ?? false),
+            ];
+        }
+
+        foreach ($defaults as $key) {
+            if (! array_key_exists($key, $normalized)) {
+                $normalized[$key] = [
+                    'key' => $key,
+                    'visible' => true,
+                ];
+            }
+        }
+
+        return array_values($normalized);
     }
 
     private function normalizeStringFilter(mixed $value): ?string

@@ -87,6 +87,102 @@ test('assets cannot be attached to another users related records', function () {
     ]);
 });
 
+test('assets edit renders the same related option lists and selected values as create', function () {
+    $user = User::factory()->create();
+
+    $category = Category::create([
+        'user_id' => $user->id,
+        'name' => 'Computers',
+        'slug' => 'computers',
+    ]);
+
+    $location = Location::create([
+        'user_id' => $user->id,
+        'name' => 'Desk A',
+    ]);
+
+    $tag = Tag::create([
+        'user_id' => $user->id,
+        'name' => 'Portable',
+    ]);
+
+    $asset = Asset::factory()->for($user)->create([
+        'name' => 'Travel Laptop',
+        'asset_id' => 'AST-EDIT-1',
+        'category_id' => $category->id,
+        'location_id' => $location->id,
+    ]);
+
+    $asset->tags()->sync([$tag->id]);
+
+    $response = $this->actingAs($user)->get(route('assets.edit', $asset));
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('assets/edit')
+        ->where('asset.id', $asset->id)
+        ->where('asset.category_id', $category->id)
+        ->where('asset.location_id', $location->id)
+        ->where('asset.tags.0', $tag->id)
+        ->where('categories.0.id', $category->id)
+        ->where('locations.0.id', $location->id)
+        ->where('tags.0.id', $tag->id));
+});
+
+test('assets can be updated with category location and tags from the edit form', function () {
+    $user = User::factory()->create();
+
+    $originalTag = Tag::create([
+        'user_id' => $user->id,
+        'name' => 'Old Tag',
+    ]);
+
+    $newCategory = Category::create([
+        'user_id' => $user->id,
+        'name' => 'Accessories',
+        'slug' => 'accessories',
+    ]);
+
+    $newLocation = Location::create([
+        'user_id' => $user->id,
+        'name' => 'Drawer 2',
+    ]);
+
+    $newTag = Tag::create([
+        'user_id' => $user->id,
+        'name' => 'Checked Out',
+    ]);
+
+    $asset = Asset::factory()->for($user)->create([
+        'name' => 'USB Adapter',
+        'asset_id' => 'AST-EDIT-2',
+        'description' => 'Original',
+    ]);
+
+    $asset->tags()->sync([$originalTag->id]);
+
+    $this->actingAs($user)
+        ->patch(route('assets.update', $asset), [
+            'name' => 'USB-C Adapter',
+            'asset_id' => 'AST-EDIT-2',
+            'description' => 'Updated description',
+            'value' => '49.99',
+            'category_id' => $newCategory->id,
+            'location_id' => $newLocation->id,
+            'tags' => [$newTag->id],
+        ])
+        ->assertRedirect(route('assets.index'));
+
+    $asset->refresh();
+
+    expect($asset->name)->toBe('USB-C Adapter')
+        ->and($asset->description)->toBe('Updated description')
+        ->and($asset->category_id)->toBe($newCategory->id)
+        ->and($asset->location_id)->toBe($newLocation->id)
+        ->and((float) $asset->value)->toBe(49.99)
+        ->and($asset->tags()->pluck('tags.id')->all())->toBe([$newTag->id]);
+});
+
 test('tag names are unique per user instead of globally', function () {
     $user = User::factory()->create();
     $otherUser = User::factory()->create();

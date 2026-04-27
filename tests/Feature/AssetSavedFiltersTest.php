@@ -61,3 +61,48 @@ test('assets index only returns the authenticated users saved filters', function
         ->has('savedFilters', 1)
         ->where('savedFilters.0.name', 'Mine'));
 });
+
+test('users can rename their saved asset filters', function () {
+    $user = User::factory()->create();
+
+    $savedFilter = $user->viewPreferences()->create([
+        'resource' => 'assets.index',
+        'key' => 'available-assets',
+        'name' => 'Available Assets',
+        'settings' => [
+            'filters' => ['status' => 'available'],
+        ],
+    ]);
+
+    $this->actingAs($user)
+        ->patch(route('assets.saved-filters.update', $savedFilter), [
+            'name' => 'Available Inventory',
+        ])
+        ->assertRedirect();
+
+    $savedFilter->refresh();
+
+    expect($savedFilter->name)->toBe('Available Inventory')
+        ->and($savedFilter->key)->toBe('available-inventory');
+});
+
+test('users can delete their saved asset filters', function () {
+    $user = User::factory()->create();
+
+    $savedFilter = $user->viewPreferences()->create([
+        'resource' => 'assets.index',
+        'key' => 'available-assets',
+        'name' => 'Available Assets',
+        'settings' => [
+            'filters' => ['status' => 'available'],
+        ],
+    ]);
+
+    $this->actingAs($user)
+        ->delete(route('assets.saved-filters.destroy', $savedFilter))
+        ->assertRedirect();
+
+    $this->assertDatabaseMissing('user_view_preferences', [
+        'id' => $savedFilter->id,
+    ]);
+});

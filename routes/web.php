@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\AssetController;
+use App\Http\Controllers\Assets\AssetActivityController;
+use App\Http\Controllers\Assets\AssetReminderController;
+use App\Http\Controllers\Assets\LayoutController;
+use App\Http\Controllers\Assets\SavedFilterController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\KitController;
 use App\Http\Controllers\LocationController;
@@ -20,10 +24,10 @@ Route::middleware([
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 
     Route::prefix('assets')->name('assets.')->group(function () {
-        Route::post('layout', [AssetController::class, 'storeLayout'])->name('layout.store');
-        Route::post('saved-filters', [AssetController::class, 'storeSavedFilter'])->name('saved-filters.store');
-        Route::patch('saved-filters/{savedFilter}', [AssetController::class, 'updateSavedFilter'])->name('saved-filters.update');
-        Route::delete('saved-filters/{savedFilter}', [AssetController::class, 'destroySavedFilter'])->name('saved-filters.destroy');
+        Route::post('layout', [LayoutController::class, 'store'])->name('layout.store');
+        Route::post('saved-filters', [SavedFilterController::class, 'store'])->name('saved-filters.store');
+        Route::patch('saved-filters/{savedFilter}', [SavedFilterController::class, 'update'])->name('saved-filters.update');
+        Route::delete('saved-filters/{savedFilter}', [SavedFilterController::class, 'destroy'])->name('saved-filters.destroy');
 
         Route::get('/', [AssetController::class, 'index'])->name('index');
         Route::get('create', [AssetController::class, 'create'])->name('create');
@@ -33,15 +37,15 @@ Route::middleware([
             ->whereNumber('asset')
             ->name('overview');
 
-        Route::get('{asset}/activity', [AssetController::class, 'activity'])
+        Route::get('{asset}/activity', [AssetActivityController::class, 'index'])
             ->whereNumber('asset')
             ->name('activity');
 
-        Route::get('{asset}/reminders', [AssetController::class, 'reminders'])
+        Route::get('{asset}/reminders', [AssetReminderController::class, 'index'])
             ->whereNumber('asset')
             ->name('reminders');
 
-        Route::post('{asset}/reminders', [AssetController::class, 'storeReminder'])
+        Route::post('{asset}/reminders', [AssetReminderController::class, 'store'])
             ->whereNumber('asset')
             ->name('reminders.store');
 
