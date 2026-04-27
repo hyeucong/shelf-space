@@ -100,12 +100,29 @@ export default function LocationActivity() {
                 )}
 
                 {/* 3. The Activity Feed below */}
-                <div className="mt-4 space-y-4">
-                    <div className="rounded border bg-background p-3 flex items-center gap-2 text-sm shadow-sm">
-                        <Badge variant="outline" className="font-normal">Activity</Badge>
-                        <p> John Doe removed Vlog Compact Sony ZV-E10 from 12321</p>
-                    </div>
-                </div>
+                {/* <div className="mt-4 space-y-4">
+                    {activity.length === 0 ? (
+                        <div className="rounded border bg-background p-3 text-sm text-muted-foreground shadow-sm">
+                            No recent activity for this asset.
+                        </div>
+                    ) : (
+                        activity.map((item: any) => (
+                            <div key={item.id} className="rounded border bg-background p-3 flex items-center gap-3 text-sm shadow-sm">
+                                <Badge variant="outline" className="font-normal flex items-center justify-center">
+                                    {item.created_at && (
+                                        <span className="text-xs text-muted-foreground">{item.created_at}</span>
+                                    )}
+                                </Badge>
+                                <div className="flex-1 text-left">
+                                    <p className="leading-tight">
+                                        <span className="font-bold">{item.causer_name ?? 'Someone'}</span>
+                                        {' ' + item.description}
+                                    </p>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div> */}
             </div >
         </>
     );

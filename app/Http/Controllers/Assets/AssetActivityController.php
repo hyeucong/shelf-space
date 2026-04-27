@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Assets;
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
 use Inertia\Inertia;
+use Spatie\Activitylog\Models\Activity;
 
 class AssetActivityController extends Controller
 {
@@ -19,8 +20,26 @@ class AssetActivityController extends Controller
             'tags:id,name',
         ]);
 
+        $activities = Activity::query()
+            ->where('subject_type', Asset::class)
+            ->where('subject_id', $asset->id)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function (Activity $a) {
+                return [
+                    'id' => $a->id,
+                    'description' => $a->description,
+                    'event' => $a->event,
+                    'causer_name' => $a->causer?->name ?? null,
+                    'attribute_changes' => $a->attribute_changes,
+                    'properties' => $a->properties,
+                    'created_at' => $a->created_at?->toDateTimeString(),
+                ];
+            });
+
         return Inertia::render('assets/activity', [
             'asset' => $asset,
+            'activity' => $activities,
         ]);
     }
 }

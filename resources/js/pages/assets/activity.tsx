@@ -14,7 +14,7 @@ import {
 
 export default function AssetActivity() {
     const [isEditing, setIsEditing] = useState(false);
-    const { asset } = usePage<AssetPageProps>().props;
+    const { asset, activity = [] } = usePage<AssetPageProps>().props as any;
 
     const editor = useEditor({
         extensions: [
@@ -39,7 +39,6 @@ export default function AssetActivity() {
             <Head title={`${asset?.name || 'Asset'} - Activity`} />
 
             <div className="p-4 max-w-3xl">
-                {/* 1. The "Leave a Note" Trigger (image_0a07ba.png) */}
                 {!isEditing ? (
                     <div
                         onClick={() => setIsEditing(true)}
@@ -101,10 +100,27 @@ export default function AssetActivity() {
 
                 {/* 3. The Activity Feed below */}
                 <div className="mt-4 space-y-4">
-                    <div className="rounded border bg-background p-3 flex items-center gap-2 text-sm shadow-sm">
-                        <Badge variant="outline" className="font-normal">Activity</Badge>
-                        <p> John Doe removed Vlog Compact Sony ZV-E10 from 12321</p>
-                    </div>
+                    {activity.length === 0 ? (
+                        <div className="rounded border bg-background p-3 text-sm text-muted-foreground shadow-sm">
+                            No recent activity for this asset.
+                        </div>
+                    ) : (
+                        activity.map((item: any) => (
+                            <div key={item.id} className="rounded border bg-background p-3 flex items-center gap-3 text-sm shadow-sm">
+                                <Badge variant="outline" className="font-normal flex items-center justify-center">
+                                    {item.created_at && (
+                                        <span className="text-xs text-muted-foreground">{item.created_at}</span>
+                                    )}
+                                </Badge>
+                                <div className="flex-1 text-left">
+                                    <p className="leading-tight">
+                                        <span className="font-bold">{item.causer_name ?? 'Someone'}</span>
+                                        {' ' + item.description}
+                                    </p>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div >
         </>
