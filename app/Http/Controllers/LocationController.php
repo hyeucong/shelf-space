@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Kit;
 use App\Models\Location;
 use App\Queries\AssetQuery;
 use Illuminate\Http\Request;
@@ -129,12 +130,31 @@ class LocationController extends Controller
         ]);
     }
 
-    public function kits(Location $location)
+    public function kits(Request $request, Location $location)
     {
-        // Kits are not currently scoped to a location in the schema.
-        // Render the kits placeholder page; frontend can fetch kits later if needed.
+        [$sort, $order, $perPage] = $this->resolveKitIndexState($request);
+
+        $kits = $this->buildKitIndexQuery($request, $sort, $order)
+            ->paginate($perPage)
+            ->withQueryString();
+
         return Inertia::render('locations/kits', [
             'location' => $location,
+            ...$this->buildKitIndexProps($request, $kits, $sort, $order, $perPage),
+        ]);
+    }
+
+    public function addKits(Request $request, Location $location)
+    {
+        [$sort, $order, $perPage] = $this->resolveKitIndexState($request);
+
+        $kits = $this->buildKitIndexQuery($request, $sort, $order)
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return Inertia::render('locations/add-kits', [
+            'location' => $location,
+            ...$this->buildKitIndexProps($request, $kits, $sort, $order, $perPage),
         ]);
     }
 
@@ -277,6 +297,55 @@ class LocationController extends Controller
             'locations' => Location::query()->orderBy('name')->get(['id', 'name']),
             'savedFilters' => $assetQuery->loadSavedFilters($request),
             'columnPreferences' => $assetQuery->loadColumnPreference($request),
+        ];
+    }
+
+    private function buildKitIndexQuery(Request $request, string $sort, string $order)
+    {
+        return Kit::query()
+            ->when($request->input('search'), function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%");
+            })
+            ->orderBy($sort, $order);
+    }
+
+    /**
+     * @return array{0: string, 1: string, 2: int}
+     */
+    private function resolveKitIndexState(Request $request): array
+    {
+        $sort = $request->input('sort', 'created_at');
+        $order = $request->input('order', 'desc');
+        $perPage = $request->integer('per_page', 20);
+
+        if (! in_array($sort, ['name', 'status', 'created_at'], true)) {
+            $sort = 'created_at';
+        }
+
+        if (! in_array($perPage, [20, 50, 100], true)) {
+            $perPage = 20;
+        }
+
+        if (! in_array(strtolower($order), ['asc', 'desc'], true)) {
+            $order = 'desc';
+        }
+
+        return [$sort, strtolower($order), $perPage];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildKitIndexProps(Request $request, LengthAwarePaginator $kits, string $sort, string $order, int $perPage): array
+    {
+        return [
+            'kits' => $kits,
+            'filters' => [
+                'search' => $request->input('search'),
+                'per_page' => $perPage,
+                'sort' => $sort,
+                'order' => $order,
+            ],
         ];
     }
 }

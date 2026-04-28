@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { AssetSelectionActions } from '@/components/asset-selection-actions';
 import { ResourceDeleteDialog, ResourceHeaderAction } from '@/components/resource-form-dialog';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import type { ResourceIndexColumn, ResourceIndexSortOption } from '@/components/resource-index-table';
@@ -44,6 +45,13 @@ export default function Tags({ tags, filters }: PageProps) {
         () => selectedIds.filter((id) => localTags.some((tag) => tag.id === id)),
         [localTags, selectedIds],
     );
+    const selectedTags = useMemo(
+        () => localTags.filter((tag) => activeSelectedIds.includes(tag.id)),
+        [activeSelectedIds, localTags],
+    );
+    const primarySelectedTag = activeSelectedIds.length === 1
+        ? selectedTags[0] ?? null
+        : null;
 
     useEffect(() => {
         const handleOpen = () => {
@@ -205,6 +213,39 @@ export default function Tags({ tags, filters }: PageProps) {
                     onToggleOne: (tag, checked) => toggleOne(tag.id, checked),
                     getLabel: (tag) => `Select ${tag.name}`,
                 }}
+                toolbarEnd={(
+                    <AssetSelectionActions
+                        actions={[
+                            {
+                                key: 'edit',
+                                label: 'Edit',
+                                icon: <Pencil className="h-4 w-4" />,
+                                onClick: () => {
+                                    if (!primarySelectedTag) {
+                                        return;
+                                    }
+
+                                    handleEditClick(primarySelectedTag);
+                                },
+                                disabled: !primarySelectedTag,
+                            },
+                            {
+                                key: 'delete',
+                                label: 'Delete',
+                                icon: <Trash2 className="h-4 w-4" />,
+                                onClick: () => {
+                                    if (!primarySelectedTag) {
+                                        return;
+                                    }
+
+                                    setTagToDelete(primarySelectedTag);
+                                },
+                                disabled: !primarySelectedTag,
+                                destructive: true,
+                            },
+                        ]}
+                    />
+                )}
             />
 
             <TagFormDialog

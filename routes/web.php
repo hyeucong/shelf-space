@@ -96,6 +96,9 @@ Route::middleware([
         Route::get('{location}/kits', [LocationController::class, 'kits'])
             ->whereNumber('location')
             ->name('kits');
+        Route::get('{location}/kits/add-kits', [LocationController::class, 'addKits'])
+            ->whereNumber('location')
+            ->name('add-kits');
 
         Route::get('{location}/activity', [LocationController::class, 'activity'])
             ->whereNumber('location')

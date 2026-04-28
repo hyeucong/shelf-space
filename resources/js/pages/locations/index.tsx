@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { MapPin, Pencil, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { AssetSelectionActions } from '@/components/asset-selection-actions';
 import { ResourceDeleteDialog } from '@/components/resource-form-dialog';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import type { ResourceIndexColumn, ResourceIndexSortOption } from '@/components/resource-index-table';
@@ -49,6 +50,13 @@ export default function Locations({ locations, filters }: PageProps) {
         () => selectedIds.filter((id) => localLocations.some((location) => location.id === id)),
         [localLocations, selectedIds],
     );
+    const selectedLocations = useMemo(
+        () => localLocations.filter((location) => activeSelectedIds.includes(location.id)),
+        [activeSelectedIds, localLocations],
+    );
+    const primarySelectedLocation = activeSelectedIds.length === 1
+        ? selectedLocations[0] ?? null
+        : null;
 
     const closeDeleteDialog = () => setLocationToDelete(null);
 
@@ -202,6 +210,33 @@ export default function Locations({ locations, filters }: PageProps) {
                     onToggleOne: (location, checked) => toggleOne(location.id, checked),
                     getLabel: (location) => `Select ${location.name}`,
                 }}
+                toolbarEnd={(
+                    <AssetSelectionActions
+                        actions={[
+                            {
+                                key: 'edit',
+                                label: 'Edit',
+                                icon: <Pencil className="h-4 w-4" />,
+                                href: primarySelectedLocation ? `/locations/${primarySelectedLocation.id}/edit` : undefined,
+                                disabled: !primarySelectedLocation,
+                            },
+                            {
+                                key: 'delete',
+                                label: 'Delete',
+                                icon: <Trash2 className="h-4 w-4" />,
+                                onClick: () => {
+                                    if (!primarySelectedLocation) {
+                                        return;
+                                    }
+
+                                    setLocationToDelete(primarySelectedLocation);
+                                },
+                                disabled: !primarySelectedLocation,
+                                destructive: true,
+                            },
+                        ]}
+                    />
+                )}
             />
             <ResourceDeleteDialog
                 open={!!locationToDelete}

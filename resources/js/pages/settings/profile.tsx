@@ -26,7 +26,7 @@ export default function Profile() {
                 />
 
                 <Form
-                    {...update.form()}
+                    action={update()}
                     options={{
                         preserveScroll: true,
                     }}

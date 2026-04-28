@@ -1,7 +1,8 @@
 import { Head } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
-import { Package2 } from 'lucide-react';
+import { Eye, Package2, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { AssetSelectionActions } from '@/components/asset-selection-actions';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import type { ResourceIndexColumn } from '@/components/resource-index-table';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,13 @@ export default function Kits({ kits, filters }: PageProps) {
         () => selectedIds.filter((id) => localKits.some((kit) => kit.id === id)),
         [localKits, selectedIds],
     );
+    const selectedKits = useMemo(
+        () => localKits.filter((kit) => activeSelectedIds.includes(kit.id)),
+        [activeSelectedIds, localKits],
+    );
+    const primarySelectedKit = activeSelectedIds.length === 1
+        ? selectedKits[0] ?? null
+        : null;
 
 
     const toggleOne = (id: number, checked: boolean) => {
@@ -108,6 +116,26 @@ export default function Kits({ kits, filters }: PageProps) {
                     title: 'No kits yet',
                     description: 'Kits help you group multiple assets together for easier assignment.',
                 }}
+                toolbarEnd={(
+                    <AssetSelectionActions
+                        actions={[
+                            {
+                                key: 'view',
+                                label: 'View kit',
+                                icon: <Eye className="h-4 w-4" />,
+                                href: primarySelectedKit ? `/kits/${primarySelectedKit.id}/assets` : undefined,
+                                disabled: !primarySelectedKit,
+                            },
+                            {
+                                key: 'delete',
+                                label: 'Delete',
+                                icon: <Trash2 className="h-4 w-4" />,
+                                disabled: true,
+                                destructive: true,
+                            },
+                        ]}
+                    />
+                )}
             // Sorting removed for Kits index
             />
         </>

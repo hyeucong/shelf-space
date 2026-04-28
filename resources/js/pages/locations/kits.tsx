@@ -1,15 +1,18 @@
-import type { ReactNode } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import LocationLayout, { type LocationPageProps } from '@/layouts/location-layout';
+import { Package2 } from 'lucide-react';
+import { isValidElement } from 'react';
+import type { ReactNode } from 'react';
 import { ResourceIndexTable } from '@/components/resource-index-table';
-import type { PaginatedData } from '@/types/pagination';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import LocationLayout from '@/layouts/location-layout';
+import type { LocationPageProps } from '@/layouts/location-layout';
+import { addKits, kits as locationKits } from '@/routes/locations';
+import type { PaginatedData } from '@/types/pagination';
 
-interface AssetRecord {
+interface KitRecord {
     id: number;
     name: string;
-    asset_id?: string | null;
     description?: string | null;
     status?: string | null;
     created_at?: string | null;
@@ -17,49 +20,57 @@ interface AssetRecord {
 }
 
 export default function LocationKits() {
-    const { location, assets } = usePage<LocationPageProps & { assets?: PaginatedData<AssetRecord> }>().props;
-
-    const pagination: PaginatedData<AssetRecord> = assets ?? {
-        data: [],
-        links: [],
-        current_page: 1,
-        last_page: 1,
-        per_page: 20,
-        first_page_url: '',
-        last_page_url: '',
-        from: 0,
-        to: 0,
-        total: 0,
-    };
+    const { location, kits, filters } = usePage<LocationPageProps & {
+        kits: PaginatedData<KitRecord>;
+        filters: {
+            search?: string;
+            per_page?: number | string;
+            sort?: string;
+            order?: 'asc' | 'desc';
+        };
+    }>().props;
 
     const columns = [
         {
             key: 'name',
-            header: 'Asset',
-            render: (a: AssetRecord) => (
-                <Link href={`/assets/${a.id}/overview`} className="block line-clamp-1">
-                    {a.name}
-                </Link>
-            ),
-        },
-        {
-            key: 'status',
-            header: 'Status',
-            render: (a: AssetRecord) => (
-                <Badge variant="outline" className="capitalize">{a.status || 'unknown'}</Badge>
+            header: 'Kit',
+            headerClassName: 'min-w-56 pl-4',
+            cellClassName: 'min-w-56 pl-4 font-medium text-foreground',
+            render: (kit: KitRecord) => (
+                <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded border bg-muted/10">
+                        <Package2 className="text-muted-foreground" size={18} />
+                    </div>
+                    <div className="min-w-0">
+                        <Link href={`/kits/${kit.id}/assets`} className="block line-clamp-2 transition-colors hover:text-primary">
+                            {kit.name}
+                        </Link>
+                    </div>
+                </div>
             ),
         },
         {
             key: 'description',
             header: 'Description',
-            render: (a: AssetRecord) => a.description || '—',
+            headerClassName: 'hidden lg:table-cell',
+            cellClassName: 'hidden max-w-120 whitespace-normal text-muted-foreground lg:table-cell',
+            render: (kit: KitRecord) => kit.description || '—',
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            headerClassName: 'hidden sm:table-cell',
+            cellClassName: 'hidden whitespace-nowrap sm:table-cell',
+            render: (kit: KitRecord) => (
+                <Badge variant="outline" className="capitalize">{kit.status || 'unknown'}</Badge>
+            ),
         },
         {
             key: 'updated_at',
             header: 'Last updated',
             headerClassName: 'hidden sm:table-cell',
             cellClassName: 'hidden sm:table-cell text-muted-foreground whitespace-nowrap',
-            render: (a: AssetRecord) => (a.updated_at ?? a.created_at) ? new Date((a.updated_at ?? a.created_at) as string).toLocaleDateString() : '—',
+            render: (kit: KitRecord) => (kit.updated_at ?? kit.created_at) ? new Date((kit.updated_at ?? kit.created_at) as string).toLocaleDateString() : '—',
         },
     ];
 
@@ -68,27 +79,30 @@ export default function LocationKits() {
             <Head title={`${location?.name || 'Location'} - Kits`} />
 
             <ResourceIndexTable
-                resourcePath={location ? `/locations/${location.id}/kits` : '/locations/kits'}
+                resourcePath={location ? locationKits(location.id).url : '/locations'}
                 searchPlaceholder="Search kits..."
-                pagination={pagination}
-                showSearch={true}
-                filters={{}}
+                pagination={kits}
+                filters={filters}
                 columns={columns}
-                emptyState={{ title: 'No kits in this location', description: 'There are no kits assigned to this location.' }}
+                emptyState={{ title: 'No kits available', description: 'No kits match the current search criteria.' }}
             />
         </>
     );
 }
-LocationKits.layout = (page: ReactNode) => (
-    <LocationLayout
-        activeTab="kits"
-        headerAction={
-            <Button asChild>
-                <Link href="#">
-                    Add kit
-                </Link>
-            </Button>
-        }
-        children={page}
-    />
-);
+LocationKits.layout = (page: ReactNode) => {
+    const location = isValidElement<LocationPageProps>(page) ? page.props.location : null;
+
+    return (
+        <LocationLayout
+            activeTab="kits"
+            headerAction={
+                <Button asChild>
+                    <Link href={location ? addKits(location.id).url : '/locations'}>
+                        Add kit
+                    </Link>
+                </Button>
+            }
+            children={page}
+        />
+    );
+};

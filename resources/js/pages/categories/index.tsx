@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { AssetSelectionActions } from '@/components/asset-selection-actions';
 import { ResourceDeleteDialog, ResourceHeaderAction } from '@/components/resource-form-dialog';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import type { ResourceIndexColumn } from '@/components/resource-index-table';
@@ -43,6 +44,13 @@ export default function Categories({ categories, filters }: PageProps) {
         () => selectedIds.filter((id) => localCategories.some((category) => category.id === id)),
         [localCategories, selectedIds],
     );
+    const selectedCategories = useMemo(
+        () => localCategories.filter((category) => activeSelectedIds.includes(category.id)),
+        [activeSelectedIds, localCategories],
+    );
+    const primarySelectedCategory = activeSelectedIds.length === 1
+        ? selectedCategories[0] ?? null
+        : null;
 
     useEffect(() => {
         const handleOpen = () => {
@@ -199,6 +207,39 @@ export default function Categories({ categories, filters }: PageProps) {
                     onToggleOne: (category, checked) => toggleOne(category.id, checked),
                     getLabel: (category) => `Select ${category.name}`,
                 }}
+                toolbarEnd={(
+                    <AssetSelectionActions
+                        actions={[
+                            {
+                                key: 'edit',
+                                label: 'Edit',
+                                icon: <Pencil className="h-4 w-4" />,
+                                onClick: () => {
+                                    if (!primarySelectedCategory) {
+                                        return;
+                                    }
+
+                                    handleEditClick(primarySelectedCategory);
+                                },
+                                disabled: !primarySelectedCategory,
+                            },
+                            {
+                                key: 'delete',
+                                label: 'Delete',
+                                icon: <Trash2 className="h-4 w-4" />,
+                                onClick: () => {
+                                    if (!primarySelectedCategory) {
+                                        return;
+                                    }
+
+                                    setCategoryToDelete(primarySelectedCategory);
+                                },
+                                disabled: !primarySelectedCategory,
+                                destructive: true,
+                            },
+                        ]}
+                    />
+                )}
             />
 
             <CategoryFormDialog
