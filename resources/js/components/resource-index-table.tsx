@@ -194,7 +194,7 @@ export function ResourceIndexTable<T extends { id: number }>({
                 <div className="mx-4 mt-4 mb-4 flex flex-1 min-h-0 flex-col overflow-y-auto rounded border bg-background shadow-sm">
                     <Table className={tableClassName}>
                         <TableHeader>
-                            <TableRow className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_var(--color-border)] hover:bg-background">
+                            <TableRow className="sticky top-0 z-10 bg-background hover:bg-background">
                                 {selection ? (
                                     <TableHead className="w-11 px-3">
                                         <div className="flex items-center justify-center">

@@ -18,7 +18,7 @@ class Asset extends Model
 {
     use BelongsToUser, HasActivity, HasFactory;
 
-    protected static array $recordEvents = ['updated'];
+    protected static array $recordEvents = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'user_id',
@@ -40,9 +40,14 @@ class Asset extends Model
                 'status',
                 'asset_id',
                 'location_id',
+                'category_id', // Added: Categorization changes are critical
+                'user_id',     // Added: Tracking custody/assignment
+                'value',       // Added: Tracking financial changes
             ])
             ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+            ->dontLogEmptyChanges()
+            // 2. Make the log description human-readable for your UI
+            ->setDescriptionForEvent(fn (string $eventName) => "Asset has been {$eventName}");
     }
 
     public function category(): BelongsTo
