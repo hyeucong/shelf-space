@@ -74,6 +74,9 @@ Route::middleware([
         Route::get('{kit}/assets', [KitController::class, 'assets'])
             ->whereNumber('kit')
             ->name('assets');
+        Route::get('{kit}/assets/add-assets', [KitController::class, 'addAssets'])
+            ->whereNumber('kit')
+            ->name('add-assets');
     });
 
     Route::resource('kits', KitController::class);
@@ -87,6 +90,9 @@ Route::middleware([
         Route::get('{location}/assets', [LocationController::class, 'assets'])
             ->whereNumber('location')
             ->name('assets');
+        Route::get('{location}/assets/add-assets', [LocationController::class, 'addAssets'])
+            ->whereNumber('location')
+            ->name('add-assets');
         Route::get('{location}/kits', [LocationController::class, 'kits'])
             ->whereNumber('location')
             ->name('kits');

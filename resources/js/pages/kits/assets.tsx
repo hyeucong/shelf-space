@@ -1,10 +1,11 @@
-import type { ReactNode } from 'react';
+import { isValidElement, type ReactNode } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import KitLayout, { type KitPageProps } from '@/layouts/kit-layout';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import type { PaginatedData } from '@/types/pagination';
 import { Badge } from '@/components/ui/badge';
+import { addAssets } from '@/routes/kits';
 
 interface AssetRecord {
     id: number;
@@ -80,16 +81,20 @@ export default function KitAssets() {
     );
 }
 
-KitAssets.layout = (page: ReactNode) => (
-    <KitLayout
-        activeTab="assets"
-        headerAction={
-            <Button asChild>
-                <Link href="#">
-                    Add asset
-                </Link>
-            </Button>
-        }
-        children={page}
-    />
-);
+KitAssets.layout = (page: ReactNode) => {
+    const kit = isValidElement<KitPageProps>(page) ? page.props.kit : null;
+
+    return (
+        <KitLayout
+            activeTab="assets"
+            headerAction={
+                <Button asChild>
+                    <Link href={kit ? addAssets(String(kit.id)) : '/kits'}>
+                        Add asset
+                    </Link>
+                </Button>
+            }
+            children={page}
+        />
+    );
+};

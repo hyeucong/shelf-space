@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Location;
+use App\Queries\AssetQuery;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -110,6 +113,19 @@ class LocationController extends Controller
         return Inertia::render('locations/assets', [
             'location' => $location,
             'assets' => $assets,
+        ]);
+    }
+
+    public function addAssets(Request $request, Location $location, AssetQuery $assetQuery)
+    {
+        $indexState = $assetQuery->resolveIndexState($request);
+        $assets = $assetQuery->handle($request)
+            ->paginate($indexState['perPage'])
+            ->withQueryString();
+
+        return Inertia::render('locations/add-assets', [
+            'location' => $location,
+            ...$this->buildAssetIndexProps($request, $assetQuery, $assets, $indexState),
         ]);
     }
 
@@ -232,5 +248,35 @@ class LocationController extends Controller
             ->when($excludeLocation, fn ($query) => $query->whereKeyNot($excludeLocation->id))
             ->orderBy('name')
             ->get(['id', 'name']);
+    }
+
+    /**
+     * @param  array{
+     *     sort: string,
+     *     order: string,
+     *     perPage: int,
+     *     filters: array<string, string|null>,
+     *     sorts: array<int, array{field: string, order: string}>
+     * }  $indexState
+     * @return array<string, mixed>
+     */
+    private function buildAssetIndexProps(Request $request, AssetQuery $assetQuery, LengthAwarePaginator $assets, array $indexState): array
+    {
+        return [
+            'assets' => $assets,
+            'filters' => [
+                'search' => $request->input('search'),
+                'per_page' => $indexState['perPage'],
+                'sort' => $indexState['sort'],
+                'order' => $indexState['order'],
+                'sorts' => $request->input('sorts'),
+                ...$indexState['filters'],
+            ],
+            'sorts' => $indexState['sorts'],
+            'categories' => Category::query()->orderBy('name')->get(['id', 'name']),
+            'locations' => Location::query()->orderBy('name')->get(['id', 'name']),
+            'savedFilters' => $assetQuery->loadSavedFilters($request),
+            'columnPreferences' => $assetQuery->loadColumnPreference($request),
+        ];
     }
 }

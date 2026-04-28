@@ -65,7 +65,7 @@ export default function Kits({ kits, filters }: PageProps) {
                         <Package2 className="text-muted-foreground" size={18} />
                     </div>
                     <div className="min-w-0">
-                        <Link href={`/kits/${kit.id}/overview`} className="block line-clamp-2 transition-colors hover:text-primary">
+                        <Link href={`/kits/${kit.id}/assets`} className="block line-clamp-2 transition-colors hover:text-primary">
                             {kit.name}
                         </Link>
                     </div>

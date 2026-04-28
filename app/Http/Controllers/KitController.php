@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Kit;
 use App\Models\Location;
+use App\Queries\AssetQuery;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 
 class KitController extends Controller
@@ -122,5 +124,48 @@ class KitController extends Controller
     public function destroy(Kit $kit)
     {
         //
+    }
+
+    public function addAssets(Request $request, Kit $kit, AssetQuery $assetQuery)
+    {
+        $indexState = $assetQuery->resolveIndexState($request);
+        $assets = $assetQuery->handle($request)
+            ->paginate($indexState['perPage'])
+            ->withQueryString();
+
+        return Inertia::render('kits/add-assets', [
+            'kit' => $kit,
+            ...$this->buildAssetIndexProps($request, $assetQuery, $assets, $indexState),
+        ]);
+    }
+
+    /**
+     * @param  array{
+     *     sort: string,
+     *     order: string,
+     *     perPage: int,
+     *     filters: array<string, string|null>,
+     *     sorts: array<int, array{field: string, order: string}>
+     * }  $indexState
+     * @return array<string, mixed>
+     */
+    private function buildAssetIndexProps(Request $request, AssetQuery $assetQuery, LengthAwarePaginator $assets, array $indexState): array
+    {
+        return [
+            'assets' => $assets,
+            'filters' => [
+                'search' => $request->input('search'),
+                'per_page' => $indexState['perPage'],
+                'sort' => $indexState['sort'],
+                'order' => $indexState['order'],
+                'sorts' => $request->input('sorts'),
+                ...$indexState['filters'],
+            ],
+            'sorts' => $indexState['sorts'],
+            'categories' => Category::query()->orderBy('name')->get(['id', 'name']),
+            'locations' => Location::query()->orderBy('name')->get(['id', 'name']),
+            'savedFilters' => $assetQuery->loadSavedFilters($request),
+            'columnPreferences' => $assetQuery->loadColumnPreference($request),
+        ];
     }
 }

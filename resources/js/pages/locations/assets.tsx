@@ -1,10 +1,13 @@
-import type { ReactNode } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import LocationLayout, { type LocationPageProps } from '@/layouts/location-layout';
+import { isValidElement } from 'react';
+import type { ReactNode } from 'react';
 import { ResourceIndexTable } from '@/components/resource-index-table';
-import type { PaginatedData } from '@/types/pagination';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import LocationLayout from '@/layouts/location-layout';
+import type { LocationPageProps } from '@/layouts/location-layout';
+import { addAssets } from '@/routes/locations';
+import type { PaginatedData } from '@/types/pagination';
 
 interface AssetRecord {
     id: number;
@@ -80,16 +83,20 @@ export default function LocationAssets() {
     );
 }
 
-LocationAssets.layout = (page: ReactNode) => (
-    <LocationLayout
-        activeTab="assets"
-        headerAction={
-            <Button asChild>
-                <Link href="#">
-                    Add asset
-                </Link>
-            </Button>
-        }
-        children={page}
-    />
-);
+LocationAssets.layout = (page: ReactNode) => {
+    const location = isValidElement<LocationPageProps>(page) ? page.props.location : null;
+
+    return (
+        <LocationLayout
+            activeTab="assets"
+            headerAction={
+                <Button asChild>
+                    <Link href={location ? addAssets(location.id).url : '#'}>
+                        Add asset
+                    </Link>
+                </Button>
+            }
+            children={page}
+        />
+    );
+};

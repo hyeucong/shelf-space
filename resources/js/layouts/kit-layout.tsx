@@ -53,14 +53,14 @@ export default function KitLayout({ children, activeTab, headerAction }: KitLayo
 
                     <Tabs value={activeTab} className="border-y px-4">
                         <TabsList variant="line">
-                            <TabsTrigger value="overview" asChild>
-                                <Link href={`/kits/${kit.id}/overview`} preserveState className="block">
-                                    Overview
-                                </Link>
-                            </TabsTrigger>
                             <TabsTrigger value="assets" asChild>
                                 <Link href={`/kits/${kit.id}/assets`} preserveState className="block">
                                     Assets
+                                </Link>
+                            </TabsTrigger>
+                            <TabsTrigger value="overview" asChild>
+                                <Link href={`/kits/${kit.id}/overview`} preserveState className="block">
+                                    Overview
                                 </Link>
                             </TabsTrigger>
                         </TabsList>

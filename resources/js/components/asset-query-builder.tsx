@@ -1,8 +1,6 @@
-import { CategoryFormDialog } from '@/pages/categories/create';
-import { LocationFormDialog } from '@/pages/locations/form-dialog';
 import { router, usePage } from '@inertiajs/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUpDown, Bookmark, Filter, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +29,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { CategoryFormDialog } from '@/pages/categories/create';
+import { LocationFormDialog } from '@/pages/locations/form-dialog';
 
 export type AssetQueryValue = string | number | undefined;
 export type AssetFilterKey = 'status' | 'category_id' | 'location_id' | 'asset_id' | 'value';
@@ -138,6 +138,11 @@ interface AssetQueryBuilderProps {
     savedFilters: AssetSavedFilter[];
     filters: AssetFiltersQuery;
     sorts: AssetSortDraft[];
+    resourcePath?: string;
+    showFilterButton?: boolean;
+    showSortButton?: boolean;
+    showSavedFiltersButton?: boolean;
+    filterActionLayout?: 'default' | 'confirm';
 }
 
 interface BuilderOptionSelectProps {
@@ -404,7 +409,18 @@ function BuilderOptionSelect({
     );
 }
 
-export function AssetQueryBuilder({ categories, locations, savedFilters, filters, sorts }: AssetQueryBuilderProps) {
+export function AssetQueryBuilder({
+    categories,
+    locations,
+    savedFilters,
+    filters,
+    sorts,
+    resourcePath = '/assets',
+    showFilterButton = true,
+    showSortButton = true,
+    showSavedFiltersButton = true,
+    filterActionLayout = 'default',
+}: AssetQueryBuilderProps) {
     const page = usePage<SharedPageProps>();
     const flash = page.props.flash;
     const overlayWidth = 'min(52rem, calc(100vw - 2rem))';
@@ -594,9 +610,10 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
     const hasDraftFilters = activeFilterCount > 0;
     const hasPendingFilterChanges = draftFiltersSignature !== appliedFiltersSignature;
     const hasPendingSortChanges = sortRowsSignature !== appliedSortSignature;
+    const showConfirmFilterActions = filterActionLayout === 'confirm';
 
     const applyFilters = (nextFilters: AssetFilterState = draftFilters) => {
-        router.get('/assets', sanitizeQuery({
+        router.get(resourcePath, sanitizeQuery({
             ...filters,
             ...nextFilters,
             page: 1,
@@ -607,7 +624,7 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
     };
 
     const applySort = (nextSorts: AssetSortDraft[] = sortDrafts) => {
-        router.get('/assets', sanitizeQuery({
+        router.get(resourcePath, sanitizeQuery({
             ...filters,
             sort: undefined,
             order: undefined,
@@ -684,7 +701,7 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
             preserveScroll: true,
             onSuccess: () => {
                 handleCloseSavedFilterDialog(true);
-                setBuilderMode('saved');
+                setBuilderMode(showSavedFiltersButton ? 'saved' : null);
             },
             onFinish: () => setIsDeletingSavedFilter(false),
         });
@@ -801,11 +818,13 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
                     onValueChange={(value) => {
                         if (value === 'create_category') {
                             handleCreateFromRow('category', filterRow.id);
+
                             return;
                         }
 
                         if (value === 'create_location') {
                             handleCreateFromRow('location', filterRow.id);
+
                             return;
                         }
 
@@ -845,38 +864,49 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
             ? 'Adjust the sort order in an overlay panel.'
             : 'Apply, rename, or remove saved asset filter sets.';
 
+    const closeBuilderPanel = () => {
+        setBuilderMode(null);
+        setOpenSelectKey(null);
+    };
+
     return (
         <>
             <div ref={builderContainerRef} className="relative rounded bg-background shadow-sm">
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className={builderMode === 'filter' ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0'}
-                        onClick={() => setBuilderMode((current) => current === 'filter' ? null : 'filter')}
-                        aria-expanded={builderMode === 'filter'}
-                    >
-                        <Filter size={16} />
-                        {activeFilterCount > 0 ? `Filtered by ${activeFilterCount}` : 'Filter'}
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className={builderMode === 'sort' ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0'}
-                        onClick={() => setBuilderMode((current) => current === 'sort' ? null : 'sort')}
-                        aria-expanded={builderMode === 'sort'}
-                    >
-                        <ArrowUpDown size={16} /> Sort
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className={builderMode === 'saved' ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0'}
-                        onClick={() => setBuilderMode((current) => current === 'saved' ? null : 'saved')}
-                        aria-expanded={builderMode === 'saved'}
-                    >
-                        <Bookmark size={16} /> Saved Filters
-                    </Button>
+                    {showFilterButton ? (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className={builderMode === 'filter' ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0'}
+                            onClick={() => setBuilderMode((current) => current === 'filter' ? null : 'filter')}
+                            aria-expanded={builderMode === 'filter'}
+                        >
+                            <Filter size={16} />
+                            {activeFilterCount > 0 ? `Filtered by ${activeFilterCount}` : 'Filter'}
+                        </Button>
+                    ) : null}
+                    {showSortButton ? (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className={builderMode === 'sort' ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0'}
+                            onClick={() => setBuilderMode((current) => current === 'sort' ? null : 'sort')}
+                            aria-expanded={builderMode === 'sort'}
+                        >
+                            <ArrowUpDown size={16} /> Sort
+                        </Button>
+                    ) : null}
+                    {showSavedFiltersButton ? (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className={builderMode === 'saved' ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0'}
+                            onClick={() => setBuilderMode((current) => current === 'saved' ? null : 'saved')}
+                            aria-expanded={builderMode === 'saved'}
+                        >
+                            <Bookmark size={16} /> Saved Filters
+                        </Button>
+                    ) : null}
                 </div>
                 {builderMode ? (
                     <div
@@ -893,10 +923,7 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 shrink-0"
-                                onClick={() => {
-                                    setBuilderMode(null);
-                                    setOpenSelectKey(null);
-                                }}
+                                onClick={closeBuilderPanel}
                             >
                                 <X className="h-4 w-4" />
                                 <span className="sr-only">Close panel</span>
@@ -983,18 +1010,31 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
                                         <Button type="button" variant="ghost" className="px-2 text-sm text-muted-foreground" onClick={handleClearDraftFilters}>
                                             Clear all
                                         </Button>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            className="gap-2"
-                                            onClick={() => setIsSaveFilterDialogOpen(true)}
-                                            disabled={!hasDraftFilters}
-                                        >
-                                            <Bookmark size={16} /> Save Filter
-                                        </Button>
-                                        <Button type="button" onClick={() => applyFilters()} disabled={!hasPendingFilterChanges}>
-                                            Apply filters
-                                        </Button>
+                                        {!showConfirmFilterActions && showSavedFiltersButton ? (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="gap-2"
+                                                onClick={() => setIsSaveFilterDialogOpen(true)}
+                                                disabled={!hasDraftFilters}
+                                            >
+                                                <Bookmark size={16} /> Save Filter
+                                            </Button>
+                                        ) : null}
+                                        {showConfirmFilterActions ? (
+                                            <>
+                                                <Button type="button" variant="outline" onClick={closeBuilderPanel}>
+                                                    Close
+                                                </Button>
+                                                <Button type="button" onClick={() => applyFilters()}>
+                                                    Confirm
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <Button type="button" onClick={() => applyFilters()} disabled={!hasPendingFilterChanges}>
+                                                Apply filters
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -1228,14 +1268,14 @@ export function AssetQueryBuilder({ categories, locations, savedFilters, filters
             <CategoryFormDialog
                 open={isCategoryDialogOpen}
                 onOpenChange={setIsCategoryDialogOpen}
-                redirectTo="/assets"
+                redirectTo={resourcePath}
                 preserveState
             />
             <LocationFormDialog
                 open={isLocationDialogOpen}
                 onOpenChange={setIsLocationDialogOpen}
                 parentOptions={locations}
-                redirectTo="/assets"
+                redirectTo={resourcePath}
                 preserveState
             />
         </>

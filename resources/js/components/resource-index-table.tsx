@@ -1,7 +1,6 @@
 import { router } from '@inertiajs/react';
 import { ArrowUpDown } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
 import { DataTablePagination } from '@/components/data-table-pagination';
 import { SearchInput } from '@/components/search-input';
 import { Button } from '@/components/ui/button';
@@ -23,6 +22,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 import type { PaginatedData } from '@/types/pagination';
 
 type FilterValue = string | number | undefined;
@@ -79,6 +79,7 @@ interface ResourceIndexTableProps<T extends { id: number }> {
     toolbarEnd?: ReactNode;
     showSearch?: boolean;
     rowActions?: ResourceIndexRowActions<T>;
+    onRowClick?: (item: T) => void;
 }
 
 export function ResourceIndexTable<T extends { id: number }>({
@@ -96,6 +97,7 @@ export function ResourceIndexTable<T extends { id: number }>({
     toolbarEnd,
     showSearch = true,
     rowActions,
+    onRowClick,
 }: ResourceIndexTableProps<T>) {
     const items = pagination?.data || [];
     const hasItems = items.length > 0;
@@ -130,6 +132,14 @@ export function ResourceIndexTable<T extends { id: number }>({
     const resolvedSearchQuery = searchQuery ?? {
         ...filters,
         page: undefined,
+    };
+
+    const isInteractiveTarget = (target: EventTarget | null) => {
+        if (!(target instanceof Element)) {
+            return false;
+        }
+
+        return Boolean(target.closest('a, button, input, [role="checkbox"], [data-row-click-ignore="true"]'));
     };
 
     return (
@@ -212,7 +222,17 @@ export function ResourceIndexTable<T extends { id: number }>({
                         </TableHeader>
                         <TableBody>
                             {items.map((item) => (
-                                <TableRow key={item.id}>
+                                <TableRow
+                                    key={item.id}
+                                    className={onRowClick ? 'cursor-pointer' : undefined}
+                                    onClick={(event) => {
+                                        if (!onRowClick || isInteractiveTarget(event.target)) {
+                                            return;
+                                        }
+
+                                        onRowClick(item);
+                                    }}
+                                >
                                     {selection ? (
                                         <TableCell className="w-11 px-3">
                                             <div className="flex items-center justify-center">
@@ -220,6 +240,7 @@ export function ResourceIndexTable<T extends { id: number }>({
                                                     aria-label={selection.getLabel(item)}
                                                     checked={selection.selectedIds.includes(item.id)}
                                                     onCheckedChange={(value) => selection.onToggleOne(item, !!value)}
+                                                    onClick={(event) => event.stopPropagation()}
                                                 />
                                             </div>
                                         </TableCell>
