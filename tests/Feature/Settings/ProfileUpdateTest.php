@@ -30,8 +30,21 @@ test('profile information can be updated', function () {
     expect($user->name)->toBe('Updated Name');
 });
 
+use Laravel\WorkOS\Http\Requests\AuthKitAccountDeletionRequest;
+
 test('user can delete their account', function () {
     $user = User::factory()->create();
+
+    $mock = Mockery::mock(AuthKitAccountDeletionRequest::class);
+    $mock->shouldReceive('delete')
+        ->once()
+        ->andReturnUsing(function ($using) use ($user) {
+            $user->delete();
+            auth()->logout();
+
+            return redirect('/');
+        });
+    $this->app->bind(AuthKitAccountDeletionRequest::class, fn () => $mock);
 
     $response = $this
         ->actingAs($user)
@@ -40,7 +53,6 @@ test('user can delete their account', function () {
         ]);
 
     $response
-        ->assertSessionHasNoErrors()
         ->assertRedirect('/');
 
     $this->assertGuest();

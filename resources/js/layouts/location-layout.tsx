@@ -9,6 +9,8 @@ export interface LocationResource {
     name: string;
     description?: string | null;
     address?: string | null;
+    latitude?: string | number | null;
+    longitude?: string | number | null;
     created_at?: string | null;
     updated_at?: string | null;
     parent?: { id: number; name: string } | null;

@@ -33,6 +33,8 @@ class AppServiceProvider extends ServiceProvider
         Route::pattern('asset', '[0-9]+');
         Route::pattern('activity', '[0-9]+');
         Route::pattern('location', '[0-9]+');
+        Route::pattern('category', '[0-9]+');
+        Route::pattern('kit', '[0-9]+');
     }
 
     /**
