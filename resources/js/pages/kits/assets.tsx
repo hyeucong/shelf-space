@@ -89,7 +89,7 @@ KitAssets.layout = (page: ReactNode) => {
             activeTab="assets"
             headerAction={
                 <Button asChild>
-                    <Link href={kit ? addAssets(String(kit.id)) : '/kits'}>
+                    <Link href={kit ? addAssets((kit.id)) : '/kits'}>
                         Add asset
                     </Link>
                 </Button>
