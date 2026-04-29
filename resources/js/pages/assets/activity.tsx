@@ -1,27 +1,35 @@
-import { Head, usePage, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import {
-    Bold, Italic, Link as LinkIcon, List, ListOrdered,
-    Undo, Redo, Type, PenLine
+    Bold, Italic, List, ListOrdered,
+    Undo, Redo, PenLine, MoreHorizontal, Trash2
 } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 
+import { destroy, store } from '@/actions/App/Http/Controllers/Assets/AssetActivityController';
+import { ResourceDeleteDialog } from '@/components/resource-form-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import AssetLayout from '@/layouts/asset-layout';
-
 import type { AssetPageProps } from '@/layouts/asset-layout';
 
-// 1. Shared styling for both Editor and Log Output
 const tiptapStyles =
     'text-sm leading-6 [&_p]:m-0 [&_ul]:m-0 [&_ul]:list-outside [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:m-0 [&_ol]:list-outside [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:m-0 [&_li]:pl-1 [&_li]:leading-6 [&_li>p]:m-0 [&_li>p]:inline [&_li>p]:align-baseline [&_li>p]:leading-6';
 
 export default function AssetActivity() {
     const [isEditing, setIsEditing] = useState(false);
+    const [deletingActivityId, setDeletingActivityId] = useState<number | null>(null);
+    const [activityPendingDelete, setActivityPendingDelete] = useState<{ id: number; description: string } | null>(null);
     const { asset, activity = [] } = usePage<AssetPageProps>().props as any;
 
     const { data, setData, post, processing, reset } = useForm({
@@ -50,9 +58,11 @@ export default function AssetActivity() {
     })
 
     const handleSubmit = () => {
-        if (data.note === '<p></p>' || !data.note) return;
+        if (data.note === '<p></p>' || !data.note) {
+            return;
+        }
 
-        post(`/assets/${asset.id}/activity`, {
+        post(store.url(asset.id), {
             onSuccess: () => {
                 setIsEditing(false);
                 reset('note');
@@ -62,11 +72,45 @@ export default function AssetActivity() {
         });
     };
 
-    if (!editor) return null;
+    const handleDeleteNote = () => {
+        if (!activityPendingDelete || deletingActivityId !== null) {
+            return;
+        }
+
+        const activityId = activityPendingDelete.id;
+
+        setDeletingActivityId(activityId);
+
+        router.delete(destroy.url({ asset: asset.id, activity: activityId }), {
+            preserveScroll: true,
+            onSuccess: () => setActivityPendingDelete(null),
+            onFinish: () => setDeletingActivityId(null),
+        });
+    };
+
+    if (!editor) {
+        return null;
+    }
 
     return (
         <>
             <Head title={`${asset?.name || 'Asset'} - Activity`} />
+
+            <ResourceDeleteDialog
+                open={activityPendingDelete !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setActivityPendingDelete(null);
+                    }
+                }}
+                title="Delete note"
+                itemName="this note"
+                itemMeta={activityPendingDelete?.description ?? null}
+                processing={deletingActivityId !== null}
+                onConfirm={handleDeleteNote}
+                confirmLabel="Delete note"
+                contentClassName="rounded sm:max-w-lg"
+            />
 
             <div className="p-4 max-w-3xl">
                 {!isEditing ? (
@@ -127,16 +171,48 @@ export default function AssetActivity() {
                     ) : (
                         activity.map((item: any) => (
                             <div key={item.id} className="rounded border bg-background flex flex-col text-sm shadow-sm">
-                                <div className="flex items-center gap-2 p-4">
-                                    <Badge variant="outline">
-                                        {item.created_at && (
-                                            <span className="text-xs text-muted-foreground">{item.created_at}</span>
-                                        )}
-                                    </Badge>
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-bold text-foreground">{item.causer_name ?? 'Someone'}</span>
-                                        <span className="text-muted-foreground">{item.description}</span>
+                                <div className="flex items-start justify-between gap-3 p-4">
+                                    <div className="flex min-w-0 items-center gap-2">
+                                        <Badge variant="outline">
+                                            {item.created_at && (
+                                                <span className="text-xs text-muted-foreground">{item.created_at}</span>
+                                            )}
+                                        </Badge>
+                                        <div className="flex min-w-0 items-center gap-2">
+                                            <span className="font-bold text-foreground">{item.causer_name ?? 'Someone'}</span>
+                                            <span className="text-muted-foreground">{item.description}</span>
+                                        </div>
                                     </div>
+
+                                    {item.can_delete ? (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 shrink-0 text-foreground hover:bg-muted"
+                                                    disabled={deletingActivityId === item.id}
+                                                    aria-label="Open note actions"
+                                                >
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem
+                                                    variant="destructive"
+                                                    onSelect={() => setActivityPendingDelete({
+                                                        id: item.id,
+                                                        description: item.description,
+                                                    })}
+                                                    disabled={deletingActivityId === item.id}
+                                                >
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Delete note
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    ) : null}
                                 </div>
 
                                 {/* Render HTML content with the EXACT same styling logic as the editor */}

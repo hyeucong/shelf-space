@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Assets;
 
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Spatie\Activitylog\Models\Activity;
@@ -25,12 +26,18 @@ class AssetActivityController extends Controller
             ->where('subject_type', Asset::class)
             ->where('subject_id', $asset->id)
             ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->get()
             ->map(function (Activity $a) {
+                $note = $a->properties?->get('note');
+                $isNote = filled($note);
+
                 return [
                     'id' => $a->id,
                     'description' => $a->description,
                     'event' => $a->event,
+                    'is_note' => $isNote,
+                    'can_delete' => $isNote,
                     'causer_name' => $a->causer?->name ?? null,
                     'attribute_changes' => $a->attribute_changes,
                     'properties' => $a->properties,
@@ -60,5 +67,26 @@ class AssetActivityController extends Controller
             ->log('Added a note');
 
         return back();
+    }
+
+    public function destroy(Asset $asset, Activity $activity): RedirectResponse
+    {
+        $activity = $this->resolveNoteActivity($asset, $activity);
+
+        $activity->delete();
+
+        return to_route('assets.activity', $asset);
+    }
+
+    private function resolveNoteActivity(Asset $asset, Activity $activity): Activity
+    {
+        $matchesAsset = $activity->subject_type === Asset::class
+            && (int) $activity->subject_id === $asset->id;
+
+        if (! $matchesAsset || blank($activity->properties?->get('note'))) {
+            abort(404);
+        }
+
+        return $activity;
     }
 }

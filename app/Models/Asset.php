@@ -40,14 +40,23 @@ class Asset extends Model
                 'status',
                 'asset_id',
                 'location_id',
-                'category_id', // Added: Categorization changes are critical
-                'user_id',     // Added: Tracking custody/assignment
-                'value',       // Added: Tracking financial changes
+                'category_id',
+                'user_id',
+                'value',
             ])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            // 2. Make the log description human-readable for your UI
-            ->setDescriptionForEvent(fn (string $eventName) => "Asset has been {$eventName}");
+            ->setDescriptionForEvent(function (string $eventName) {
+                $user = auth()->user()?->name ?? 'System';
+
+                return match ($eventName) {
+                    'created' => "Initial registration: Asset added to inventory by {$user}",
+                    'updated' => "Asset details or custody updated by {$user}",
+                    'deleted' => "Asset moved to archive/deleted by {$user}",
+                    'restored' => "Asset restored to active inventory by {$user}",
+                    default => "Asset record {$eventName} by {$user}",
+                };
+            });
     }
 
     public function category(): BelongsTo

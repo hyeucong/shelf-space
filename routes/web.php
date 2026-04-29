@@ -69,6 +69,10 @@ Route::middleware([
         Route::post('{asset}/activity', [AssetActivityController::class, 'store'])
             ->whereNumber('asset')
             ->name('activity.store');
+        Route::delete('{asset}/activity/{activity}', [AssetActivityController::class, 'destroy'])
+            ->whereNumber('asset')
+            ->whereNumber('activity')
+            ->name('activity.destroy');
     });
 
     Route::prefix('kits')->name('kits.')->group(function () {
