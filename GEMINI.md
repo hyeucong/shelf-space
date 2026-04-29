@@ -1,6 +1,13 @@
 <laravel-boost-guidelines>
 === foundation rules ===
 
+# Environment Rules
+- OS: Windows 11
+- Shell: PowerShell 7 (pwsh)
+- CRITICAL: Never use bash, sh, or Linux-specific syntax. 
+- All shell commands must be valid PowerShell 7. 
+- Do not use `&&` to chain commands; use `;` or standard PowerShell piping.
+
 # Laravel Boost Guidelines
 
 The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to ensure the best experience when building Laravel applications.

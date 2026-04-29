@@ -8,6 +8,13 @@ metadata:
 
 # Pest Testing 4
 
+## Core Mandates
+
+- **On-Demand Testing ONLY:** NEVER create tests by default. Only write a test if the user explicitly requests it or if you are working on a high-risk logic change where verification is impossible otherwise.
+- **Targeted Execution:** NEVER run the full test suite (`php artisan test`). Always use `--filter` or specify the exact filename to test only the feature you are currently working on.
+- **NO WorkOS/Third-Party Testing:** Treat all external integrations as black boxes. Do not waste quota testing them.
+- **Stay Surgical:** If a test is required, keep it as lean as possible. Avoid heavy setups, excessive factories, or "messy" state that slows down execution.
+
 ## Documentation
 
 Use `search-docs` for detailed Pest 4 patterns and documentation.

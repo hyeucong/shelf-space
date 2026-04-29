@@ -1,12 +1,10 @@
 {
-    "shell": "powershell.exe",
     "mcpServers": {
         "laravel-boost": {
-            "command": "powershell.exe",
+            "command": "php",
             "args": [
-                "-NoProfile",
-                "-Command",
-                "php artisan boost:mcp"
+                "artisan",
+                "boost:mcp"
             ]
         }
     }

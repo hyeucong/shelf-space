@@ -85,11 +85,10 @@ Check sibling files, related controllers, models, or tests for established patte
 
 ### 8. Testing Patterns → `rules/testing.md`
 
-- `LazilyRefreshDatabase` over `RefreshDatabase` for speed
-- `assertModelExists()` over raw `assertDatabaseHas()`
-- Factory states and sequences over manual overrides
-- Use fakes (`Event::fake()`, `Exceptions::fake()`, etc.) — but always after factory setup, not before
-- `recycle()` to share relationship instances across factories
+- **On-Demand ONLY:** Only create tests when explicitly requested or for critical business logic verification. Default to NOT adding tests.
+- **No Broad Testing:** Never run the full test suite. Only run specific tests related to the feature being modified using `--filter`.
+- **Skip WorkOS:** Never test external authentication or third-party services.
+
 
 ### 9. Queue & Job Patterns → `rules/queue-jobs.md`
 
