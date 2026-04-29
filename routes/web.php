@@ -1,16 +1,10 @@
 <?php
 
-use App\Http\Controllers\AssetController;
-use App\Http\Controllers\Assets\AssetActivityController;
-use App\Http\Controllers\Assets\AssetReminderController;
-use App\Http\Controllers\Assets\LayoutController;
-use App\Http\Controllers\Assets\SavedFilterController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\KitController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\TagController;
-use App\Models\Asset;
 use App\Models\Location;
 use Illuminate\Support\Facades\Route;
 use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
@@ -23,57 +17,7 @@ Route::middleware([
 ])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 
-    Route::prefix('assets')->name('assets.')->group(function () {
-        Route::post('layout', [LayoutController::class, 'store'])->name('layout.store');
-        Route::post('saved-filters', [SavedFilterController::class, 'store'])->name('saved-filters.store');
-        Route::patch('saved-filters/{savedFilter}', [SavedFilterController::class, 'update'])->name('saved-filters.update');
-        Route::delete('saved-filters/{savedFilter}', [SavedFilterController::class, 'destroy'])->name('saved-filters.destroy');
-
-        Route::get('/', [AssetController::class, 'index'])->name('index');
-        Route::get('create', [AssetController::class, 'create'])->name('create');
-        Route::post('/', [AssetController::class, 'store'])->name('store');
-
-        Route::get('{asset}/overview', [AssetController::class, 'show'])
-            ->whereNumber('asset')
-            ->name('overview');
-
-        Route::get('{asset}/activity', [AssetActivityController::class, 'index'])
-            ->whereNumber('asset')
-            ->name('activity');
-
-        Route::get('{asset}/reminders', [AssetReminderController::class, 'index'])
-            ->whereNumber('asset')
-            ->name('reminders');
-
-        Route::post('{asset}/reminders', [AssetReminderController::class, 'store'])
-            ->whereNumber('asset')
-            ->name('reminders.store');
-
-        // compatibility: redirect legacy `/assets/{asset}` GET to the overview route
-        Route::get('{asset}', function (Asset $asset) {
-            return redirect()->route('assets.overview', $asset);
-        })->whereNumber('asset');
-
-        Route::get('{asset}/edit', [AssetController::class, 'edit'])
-            ->whereNumber('asset')
-            ->name('edit');
-
-        Route::match(['put', 'patch'], '{asset}', [AssetController::class, 'update'])
-            ->whereNumber('asset')
-            ->name('update');
-
-        Route::delete('{asset}', [AssetController::class, 'destroy'])
-            ->whereNumber('asset')
-            ->name('destroy');
-
-        Route::post('{asset}/activity', [AssetActivityController::class, 'store'])
-            ->whereNumber('asset')
-            ->name('activity.store');
-        Route::delete('{asset}/activity/{activity}', [AssetActivityController::class, 'destroy'])
-            ->whereNumber('asset')
-            ->whereNumber('activity')
-            ->name('activity.destroy');
-    });
+    require __DIR__.'/web/assets.php';
 
     Route::prefix('kits')->name('kits.')->group(function () {
         Route::get('{kit}/overview', [KitController::class, 'show'])

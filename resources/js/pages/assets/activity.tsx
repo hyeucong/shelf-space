@@ -39,8 +39,17 @@ export default function AssetActivity() {
     const editor = useEditor({
         immediatelyRender: false,
         extensions: [
-            StarterKit,
-            Link.configure({ openOnClick: false }),
+            StarterKit.configure({
+                // Disable the internal link extension to avoid the 'Duplicate extension' warning
+                link: false,
+            }),
+            Link.configure({
+                openOnClick: false,
+                // Pro-tip: adding a class here makes links look like links in the editor
+                HTMLAttributes: {
+                    class: 'text-primary underline underline-offset-4 cursor-pointer',
+                },
+            }),
             Placeholder.configure({
                 placeholder: 'Note supports Markdown. Use / to access commands.',
             }),
