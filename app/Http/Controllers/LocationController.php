@@ -158,14 +158,6 @@ class LocationController extends Controller
         ]);
     }
 
-    public function activity(Location $location)
-    {
-        // Placeholder: no activity model yet; render the activity tab page.
-        return Inertia::render('locations/activity', [
-            'location' => $location,
-        ]);
-    }
-
     /**
      * Show the form for editing the specified resource.
      */

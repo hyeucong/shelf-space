@@ -18,11 +18,10 @@
 - **Performance**: Zero N+1 queries. Use `with()`/`withCount()`.
 - **UX**: Smooth transitions, optimistic updates, and loading states (skeletons).
 - **Responsive**: Ensure it looks premium on all screen sizes.
-- **Clean Code**: Run `pint` after every PHP change.
 
 # Foundational Context
 - php 8.4 | laravel 13 | inertia-laravel v3 | react v19 | tailwindcss v4
-- pest v4 (Primary Testing) | wayfinder v0 | pint v1
+- pest v4 (Primary Testing) | wayfinder v0
 
 # Skills Activation
 - `laravel-best-practices`: Backend logic, Eloquent, Security.
@@ -37,7 +36,7 @@
 - Use `search-docs` (packages scoped) before code changes.
 - Use `database-schema` to inspect DB before migrating/modeling.
 - Use `php artisan tinker --execute '...'` for quick debugging.
-- Use `vendor/bin/pint --dirty --format agent` before finalizing.
+- Always run `npm run types:check` after frontend changes to catch bugs.
 
 === inertia rules ===
 - Use Inertia v3 features: `useHttp`, optimistic updates, `setLayoutProps`, deferred props.

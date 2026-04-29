@@ -16,6 +16,7 @@
         "laravel/wayfinder": "^0.1.14",
         "laravel/workos": "^0.6.0",
         "resend/resend-php": "^1.3",
+        "simplesoftwareio/simple-qrcode": "*",
         "spatie/laravel-activitylog": "^5.0"
     },
     "require-dev": {

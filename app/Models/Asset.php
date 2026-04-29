@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Spatie\Activitylog\Models\Concerns\HasActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -30,6 +31,16 @@ class Asset extends Model
         'value',
         'status',
     ];
+
+    protected $appends = ['qr_code_svg'];
+
+    public function getQrCodeSvgAttribute(): string
+    {
+        return QrCode::size(200)
+            ->format('svg')
+            ->generate(route('assets.overview', $this->id))
+            ->toHtml();
+    }
 
     public function getActivitylogOptions(): LogOptions
     {

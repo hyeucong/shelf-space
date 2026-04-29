@@ -24,6 +24,5 @@ description: "Laravel backend patterns. Focus: Eloquent, Security, Performance."
 - **N+1**: Check with `Model::preventLazyLoading()`.
 - **Logic**: Extract to Actions/Services if > 10 lines in Controller.
 - **Config**: Use `config()`, never `env()` outside config files.
-- **Clean Code**: Run `pint` after every edit.
 
 Use `search-docs` for specific implementation details.

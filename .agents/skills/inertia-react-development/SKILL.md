@@ -23,3 +23,4 @@ description: "Inertia v3 React patterns. Focus: forms, navigation, v3 features."
 - Use `search-docs` for full API signatures.
 - Follow existing component patterns in `resources/js/pages`.
 - Avoid `axios`; use built-in XHR via `router` or `useHttp`.
+- Always run `npm run types:check` to catch potential bugs after layout or component changes.

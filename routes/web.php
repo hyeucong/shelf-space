@@ -3,6 +3,7 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\KitController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\Locations\LocationActivityController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\TagController;
 use App\Models\Location;
@@ -52,9 +53,15 @@ Route::middleware([
             ->whereNumber('location')
             ->name('add-kits');
 
-        Route::get('{location}/activity', [LocationController::class, 'activity'])
+        Route::get('{location}/activity', [LocationActivityController::class, 'index'])
             ->whereNumber('location')
             ->name('activity');
+        Route::post('{location}/activity', [LocationActivityController::class, 'store'])
+            ->whereNumber('location')
+            ->name('activity.store');
+        Route::delete('{location}/activity/{activity}', [LocationActivityController::class, 'destroy'])
+            ->whereNumber('location')
+            ->name('activity.destroy');
 
         Route::get('{location}', function (Location $location) {
             return redirect()->route('locations.overview', $location);

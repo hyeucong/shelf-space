@@ -6,7 +6,7 @@
 - **Pest Only**: This project uses Pest v4. Ignore PHPUnit patterns.
 - **Portfolio Quality**: Focus on premium UI, N+1 optimization, and smooth UX.
 - **Strict Adherence**: Do exactly what is asked. No extra "cleanup" unless requested.
-- **Tools**: Use `search-docs`, `database-schema`, and `pint` diligently.
+- **Tools**: Use `search-docs` and `database-schema` diligently.
 
 # Technical Context
 - Windows 11 / PowerShell 7.
@@ -19,6 +19,6 @@
 
 # Verification
 - Write lean Pest tests only when critical or requested.
-- Run `vendor/bin/pint --dirty --format agent` after PHP edits.
+- Always run `npm run types:check` after frontend changes to catch bugs.
 
 </laravel-boost-guidelines>

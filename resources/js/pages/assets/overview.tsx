@@ -9,8 +9,8 @@ export default function AssetOverview() {
     return (
         <>
             <Head title={`${asset?.name || 'Asset'} - Overview`} />
-            <div className="p-4">
-                <div className="max-w-3xl">
+            <div className="p-4 flex-1">
+                <div>
                     <div className="rounded border bg-background">
                         <dl className="divide-y">
                             <div className="flex items-center justify-between px-6 py-4">

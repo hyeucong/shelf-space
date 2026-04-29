@@ -81,13 +81,13 @@ export default function LocationLayout({ children, activeTab, headerAction }: Lo
                         </TabsList>
                     </Tabs>
 
-                    <div className="flex flex-1 flex-col lg:flex-row">
+                    <div className="flex flex-1 flex-col lg:flex-row gap-4 lg:gap-0">
                         <div className="flex-1 overflow-hidden">
                             {children}
                         </div>
                         {location?.latitude && location?.longitude && (
                             <aside className="w-full lg:w-96 bg-card">
-                                <div className="sticky top-0 p-4 pl-0 space-y-4">
+                                <div className="sticky top-0 p-4 lg:pl-0 space-y-4">
                                     {location.address && (
                                         <div className="p-4 rounded border bg-muted/20 flex items-center justify-between">
                                             <h4 className="text-xs font-bold text-muted-foreground uppercase">Address</h4>
