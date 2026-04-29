@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Assets;
 
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Spatie\Activitylog\Models\Activity;
 
@@ -41,5 +42,23 @@ class AssetActivityController extends Controller
             'asset' => $asset,
             'activity' => $activities,
         ]);
+    }
+
+    public function store(Request $request, Asset $asset)
+    {
+        $validated = $request->validate([
+            'note' => 'required|string|min:1',
+        ]);
+
+        // Log the note using Spatie Activity Log
+        activity()
+            ->performedOn($asset)
+            ->causedBy(auth()->user())
+            ->event('note')
+            ->inLog('notes')
+            ->withProperty('note', $validated['note'])
+            ->log('Added a note');
+
+        return back();
     }
 }

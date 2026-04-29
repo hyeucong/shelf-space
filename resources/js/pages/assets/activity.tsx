@@ -1,4 +1,4 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, useForm } from '@inertiajs/react';
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import { EditorContent, useEditor } from '@tiptap/react'
@@ -16,11 +16,17 @@ import AssetLayout from '@/layouts/asset-layout';
 
 import type { AssetPageProps } from '@/layouts/asset-layout';
 
+// 1. Shared styling for both Editor and Log Output
+const tiptapStyles =
+    'text-sm leading-6 [&_p]:m-0 [&_ul]:m-0 [&_ul]:list-outside [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:m-0 [&_ol]:list-outside [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:m-0 [&_li]:pl-1 [&_li]:leading-6 [&_li>p]:m-0 [&_li>p]:inline [&_li>p]:align-baseline [&_li>p]:leading-6';
+
 export default function AssetActivity() {
     const [isEditing, setIsEditing] = useState(false);
     const { asset, activity = [] } = usePage<AssetPageProps>().props as any;
-    const editorSurfaceClass =
-        'min-h-[150px] p-4 text-sm leading-6 focus:outline-none [&_p]:m-0 [&_ul]:m-0 [&_ul]:list-outside [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:m-0 [&_ol]:list-outside [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:m-0 [&_li]:pl-1 [&_li]:leading-6 [&_li>p]:m-0 [&_li>p]:inline [&_li>p]:align-baseline [&_li>p]:leading-6';
+
+    const { data, setData, post, processing, reset } = useForm({
+        note: '',
+    });
 
     const editor = useEditor({
         immediatelyRender: false,
@@ -28,20 +34,35 @@ export default function AssetActivity() {
             StarterKit,
             Link.configure({ openOnClick: false }),
             Placeholder.configure({
-                placeholder: 'note supports Markdown and Markdoc. Use / to access commands.',
+                placeholder: 'Note supports Markdown. Use / to access commands.',
             }),
         ],
-        content: '',
+        content: data.note,
+        onUpdate: ({ editor }) => {
+            setData('note', editor.getHTML());
+        },
         editorProps: {
             attributes: {
-                class: editorSurfaceClass,
+                // Apply shared styles + specific editor padding/height
+                class: `${tiptapStyles} min-h-[150px] p-4 focus:outline-none`,
             },
         },
     })
 
-    if (!editor) {
-        return null;
-    }
+    const handleSubmit = () => {
+        if (data.note === '<p></p>' || !data.note) return;
+
+        post(`/assets/${asset.id}/activity`, {
+            onSuccess: () => {
+                setIsEditing(false);
+                reset('note');
+                editor?.commands.setContent('');
+            },
+            preserveScroll: true,
+        });
+    };
+
+    if (!editor) return null;
 
     return (
         <>
@@ -58,13 +79,10 @@ export default function AssetActivity() {
                     </div>
                 ) : (
                     <div className="border rounded bg-background overflow-hidden shadow-sm">
-                        {/* Toolbar */}
                         <div className="flex items-center justify-between border-b p-2 bg-muted/20">
                             <div className="flex items-center gap-0.5 flex-wrap">
                                 <ToolbarButton onClick={() => editor.chain().focus().undo().run()} icon={<Undo size={16} />} />
                                 <ToolbarButton onClick={() => editor.chain().focus().redo().run()} icon={<Redo size={16} />} />
-                                <div className="w-px h-4 bg-border mx-1" />
-                                <ToolbarButton icon={<Type size={16} />} />
                                 <div className="w-px h-4 bg-border mx-1" />
                                 <ToolbarButton
                                     onClick={() => editor.chain().focus().toggleBold().run()}
@@ -76,7 +94,6 @@ export default function AssetActivity() {
                                     active={editor.isActive('italic')}
                                     icon={<Italic size={16} />}
                                 />
-                                <ToolbarButton icon={<LinkIcon size={16} />} />
                                 <ToolbarButton
                                     onClick={() => editor.chain().focus().toggleBulletList().run()}
                                     active={editor.isActive('bulletList')}
@@ -87,21 +104,21 @@ export default function AssetActivity() {
                                     active={editor.isActive('orderedList')}
                                     icon={<ListOrdered size={16} />}
                                 />
-                                {/* Quote and Minus buttons removed from here */}
                             </div>
 
                             <div className="flex items-center gap-2 pr-1">
-                                <Button className='border rounded' variant="ghost" size="sm" onClick={() => setIsEditing(false)}>Cancel</Button>
-                                <Button className='border rounded' size="sm" >Create note</Button>
+                                <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} disabled={processing}>
+                                    Cancel
+                                </Button>
+                                <Button size="sm" onClick={handleSubmit} disabled={processing || !data.note || data.note === '<p></p>'}>
+                                    {processing ? 'Saving...' : 'Create note'}
+                                </Button>
                             </div>
                         </div>
-
-                        {/* Editor Surface */}
                         <EditorContent editor={editor} />
                     </div>
                 )}
 
-                {/* Activity Feed */}
                 <div className="mt-4 space-y-4">
                     {activity.length === 0 ? (
                         <div className="rounded border bg-background p-3 text-sm text-muted-foreground shadow-sm">
@@ -109,23 +126,31 @@ export default function AssetActivity() {
                         </div>
                     ) : (
                         activity.map((item: any) => (
-                            <div key={item.id} className="rounded border bg-background p-3 flex items-center gap-3 text-sm shadow-sm">
-                                <Badge variant="outline" className="font-normal flex items-center justify-center">
-                                    {item.created_at && (
-                                        <span className="text-xs text-muted-foreground">{item.created_at}</span>
-                                    )}
-                                </Badge>
-                                <div className="flex-1 text-left">
-                                    <p className="leading-tight">
-                                        <span className="font-bold">{item.causer_name ?? 'Someone'}</span>
-                                        {' ' + item.description}
-                                    </p>
+                            <div key={item.id} className="rounded border bg-background flex flex-col text-sm shadow-sm">
+                                <div className="flex items-center gap-2 p-4">
+                                    <Badge variant="outline">
+                                        {item.created_at && (
+                                            <span className="text-xs text-muted-foreground">{item.created_at}</span>
+                                        )}
+                                    </Badge>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-foreground">{item.causer_name ?? 'Someone'}</span>
+                                        <span className="text-muted-foreground">{item.description}</span>
+                                    </div>
                                 </div>
+
+                                {/* Render HTML content with the EXACT same styling logic as the editor */}
+                                {item.properties?.note && (
+                                    <div
+                                        className={`${tiptapStyles} text-foreground border-t p-4`}
+                                        dangerouslySetInnerHTML={{ __html: item.properties.note }}
+                                    />
+                                )}
                             </div>
                         ))
                     )}
                 </div>
-            </div >
+            </div>
         </>
     );
 }
@@ -135,7 +160,7 @@ function ToolbarButton({ icon, onClick, active = false }: { icon: React.ReactNod
         <button
             type="button"
             onClick={onClick}
-            className={`p-2 rounded hover:bg-muted transition-colors ${active ? 'bg-muted text-primary' : 'text-muted-foreground'}`}
+            className={`p-2 rounded hover:bg-muted transition-colors ${active ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground'}`}
         >
             {icon}
         </button>
