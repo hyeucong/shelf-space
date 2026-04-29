@@ -1,22 +1,29 @@
-import { useState, type ReactNode } from 'react';
 import { Head, usePage } from '@inertiajs/react';
-import AssetLayout, { type AssetPageProps } from '@/layouts/asset-layout';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
+import { EditorContent, useEditor } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
 import {
     Bold, Italic, Link as LinkIcon, List, ListOrdered,
-    Quote, Minus, Undo, Redo, Type, PenLine
+    Undo, Redo, Type, PenLine
 } from 'lucide-react';
+import { useState } from 'react';
+import type { ReactNode } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import AssetLayout from '@/layouts/asset-layout';
+
+import type { AssetPageProps } from '@/layouts/asset-layout';
 
 export default function AssetActivity() {
     const [isEditing, setIsEditing] = useState(false);
     const { asset, activity = [] } = usePage<AssetPageProps>().props as any;
+    const editorSurfaceClass =
+        'min-h-[150px] p-4 text-sm leading-6 focus:outline-none [&_p]:m-0 [&_ul]:m-0 [&_ul]:list-outside [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:m-0 [&_ol]:list-outside [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:m-0 [&_li]:pl-1 [&_li]:leading-6 [&_li>p]:m-0 [&_li>p]:inline [&_li>p]:align-baseline [&_li>p]:leading-6';
 
     const editor = useEditor({
+        immediatelyRender: false,
         extensions: [
             StarterKit,
             Link.configure({ openOnClick: false }),
@@ -27,12 +34,14 @@ export default function AssetActivity() {
         content: '',
         editorProps: {
             attributes: {
-                class: 'prose prose-sm max-w-none focus:outline-none min-h-[150px] p-4',
+                class: editorSurfaceClass,
             },
         },
     })
 
-    if (!editor) return null;
+    if (!editor) {
+        return null;
+    }
 
     return (
         <>
@@ -48,7 +57,6 @@ export default function AssetActivity() {
                         <span className="text-sm">Leave a note</span>
                     </div>
                 ) : (
-                    /* 2. The Full Editor (image_0bc5d9.png) */
                     <div className="border rounded bg-background overflow-hidden shadow-sm">
                         {/* Toolbar */}
                         <div className="flex items-center justify-between border-b p-2 bg-muted/20">
@@ -56,7 +64,7 @@ export default function AssetActivity() {
                                 <ToolbarButton onClick={() => editor.chain().focus().undo().run()} icon={<Undo size={16} />} />
                                 <ToolbarButton onClick={() => editor.chain().focus().redo().run()} icon={<Redo size={16} />} />
                                 <div className="w-px h-4 bg-border mx-1" />
-                                <ToolbarButton icon={<Type size={16} />} /> {/* Paragraph dropdown placeholder */}
+                                <ToolbarButton icon={<Type size={16} />} />
                                 <div className="w-px h-4 bg-border mx-1" />
                                 <ToolbarButton
                                     onClick={() => editor.chain().focus().toggleBold().run()}
@@ -79,12 +87,7 @@ export default function AssetActivity() {
                                     active={editor.isActive('orderedList')}
                                     icon={<ListOrdered size={16} />}
                                 />
-                                <ToolbarButton
-                                    onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                                    active={editor.isActive('blockquote')}
-                                    icon={<Quote size={16} />}
-                                />
-                                <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} icon={<Minus size={16} />} />
+                                {/* Quote and Minus buttons removed from here */}
                             </div>
 
                             <div className="flex items-center gap-2 pr-1">
@@ -98,7 +101,7 @@ export default function AssetActivity() {
                     </div>
                 )}
 
-                {/* 3. The Activity Feed below */}
+                {/* Activity Feed */}
                 <div className="mt-4 space-y-4">
                     {activity.length === 0 ? (
                         <div className="rounded border bg-background p-3 text-sm text-muted-foreground shadow-sm">
@@ -127,10 +130,10 @@ export default function AssetActivity() {
     );
 }
 
-// Small helper for toolbar buttons
 function ToolbarButton({ icon, onClick, active = false }: { icon: React.ReactNode, onClick?: () => void, active?: boolean }) {
     return (
         <button
+            type="button"
             onClick={onClick}
             className={`p-2 rounded hover:bg-muted transition-colors ${active ? 'bg-muted text-primary' : 'text-muted-foreground'}`}
         >
