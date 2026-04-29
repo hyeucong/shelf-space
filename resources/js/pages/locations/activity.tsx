@@ -38,7 +38,7 @@ export default function LocationActivity() {
         <>
             <Head title={`${location?.name || 'Location'} - Activity`} />
 
-            <div className="p-4 max-w-3xl">
+            <div className="p-4">
                 {/* 1. The "Leave a Note" Trigger (image_0a07ba.png) */}
                 {!isEditing ? (
                     <div

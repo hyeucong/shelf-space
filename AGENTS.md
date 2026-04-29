@@ -5,6 +5,7 @@
 - **Efficiency**: Minimize token usage. Be extremely concise.
 - **Pest Only**: This project uses Pest v4. Ignore PHPUnit patterns.
 - **Portfolio Quality**: Focus on premium UI, N+1 optimization, and smooth UX.
+- **Strict Adherence**: Do exactly what is asked. No extra "cleanup" unless requested.
 - **Tools**: Use `search-docs`, `database-schema`, and `pint` diligently.
 
 # Technical Context

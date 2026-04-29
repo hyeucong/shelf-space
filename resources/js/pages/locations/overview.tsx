@@ -10,7 +10,7 @@ export default function LocationOverview() {
         <>
             <Head title={`${location?.name || 'Location'} - Overview`} />
             <div className="p-4">
-                <div className="max-w-3xl">
+                <div>
                     <div className="rounded border bg-background">
                         <dl className="divide-y">
                             <div className="flex items-center justify-between px-6 py-4">
@@ -66,31 +66,6 @@ export default function LocationOverview() {
                             </div>
                         </dl>
                     </div>
-
-                    {location?.latitude && location?.longitude && (
-                        <div className="mt-4 overflow-hidden rounded border bg-background">
-                            <div className="border-b px-4 py-2 bg-muted/50">
-                                <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Map Preview</h3>
-                            </div>
-                            <iframe
-                                width="100%"
-                                height="300"
-                                style={{ border: 0, overflow: 'hidden' }}
-                                src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(location.longitude) - 0.005},${Number(location.latitude) - 0.005},${Number(location.longitude) + 0.005},${Number(location.latitude) + 0.005}&layer=mapnik&marker=${location.latitude},${location.longitude}`}
-                                className="grayscale-[0.2] contrast-[0.9]"
-                            />
-                            <div className="px-4 py-2 border-t text-right">
-                                <a
-                                    href={`https://www.openstreetmap.org/?mlat=${location.latitude}&mlon=${location.longitude}#map=16/${location.latitude}/${location.longitude}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs text-primary hover:underline"
-                                >
-                                    View on OpenStreetMap
-                                </a>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
         </>

@@ -9,6 +9,7 @@ description: "Tailwind v4 styling. Focus: v4 syntax, performance, UI quality."
 - **CSS-First**: Use `@theme` in CSS, no `tailwind.config.js`.
 - **Imports**: Use `@import "tailwindcss";`.
 - **Utilities**: No opacity-specific utilities (e.g., `bg-opacity-*`). Use numeric variants: `bg-black/50`.
+- Strictly use "rounded" when rounding no overdone 
 
 ## Best Practices
 - **Spacing**: Use `gap` over margins where possible.

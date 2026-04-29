@@ -7,6 +7,7 @@
 - **Surgical Edits**: Use `replace_file_content` for small changes. Only provide necessary context.
 - **Pest Testing Only**: Ignore PHPUnit. Write lean Pest tests ONLY when requested or for critical logic.
 - **No Tinkering**: Avoid unnecessary discovery commands if the structure is obvious.
+- **Strict Adherence**: Do exactly what is asked. No extra "cleanup".
 
 # Environment
 - OS: Windows 11 | Shell: PowerShell 7 (pwsh)
