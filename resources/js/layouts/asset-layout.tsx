@@ -4,6 +4,7 @@ import { Camera, Download, Printer } from 'lucide-react';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import LocationMap from '@/components/location-map';
 
 export interface AssetResource {
     id: number;
@@ -13,7 +14,7 @@ export interface AssetResource {
     value: number | null;
     description?: string | null;
     category?: { id: number; name: string } | null;
-    location?: { id: number; name: string } | null;
+    location?: { id: number; name: string; latitude?: string | number | null; longitude?: string | number | null } | null;
     tags?: Array<{ id: number; name: string }>;
     created_at?: string | null;
     updated_at?: string | null;
@@ -81,7 +82,7 @@ export default function AssetLayout({ children, activeTab, headerAction }: Asset
                         </TabsList>
                     </Tabs>
 
-                    <div className="flex flex-1 flex-col lg:flex-row gap-4 lg:gap-0">
+                    <div className="flex flex-1 flex-col lg:flex-row lg:gap-0">
                         <div className="flex-1 overflow-hidden">
                             {children}
                         </div>
@@ -98,19 +99,22 @@ export default function AssetLayout({ children, activeTab, headerAction }: Asset
                                                 dangerouslySetInnerHTML={{ __html: asset.qr_code_svg || '' }}
                                             />
                                         </div>
-
-                                        <div className="grid grid-cols-2 gap-2 w-full">
-                                            <Button variant="outline" size="sm" className="w-full gap-2">
-                                                <Download size={14} />
-                                                Download
-                                            </Button>
-                                            <Button variant="outline" size="sm" className="w-full gap-2">
-                                                <Printer size={14} />
-                                                Print
-                                            </Button>
-                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4 w-full border-t p-4">
+                                        <Button variant="outline" size="sm" className="w-full gap-2">
+                                            <Download size={14} />
+                                            Download
+                                        </Button>
+                                        <Button variant="outline" size="sm" className="w-full gap-2">
+                                            <Printer size={14} />
+                                            Print
+                                        </Button>
                                     </div>
                                 </div>
+
+                                {asset.location?.latitude && asset.location?.longitude && (
+                                    <LocationMap location={asset.location as any} />
+                                )}
                             </div>
                         </aside>
                     </div>

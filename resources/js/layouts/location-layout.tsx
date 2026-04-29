@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { MapPin } from 'lucide-react';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import LocationMap from '@/components/location-map';
 
 export interface LocationResource {
     id: number;
@@ -81,8 +82,8 @@ export default function LocationLayout({ children, activeTab, headerAction }: Lo
                         </TabsList>
                     </Tabs>
 
-                    <div className="flex flex-1 flex-col lg:flex-row gap-4 lg:gap-0">
-                        <div className="flex-1 overflow-hidden">
+                    <div className="flex flex-1 flex-col lg:flex-row lg:gap-0">
+                        <div className="flex-1">
                             {children}
                         </div>
                         {location?.latitude && location?.longitude && (
@@ -94,28 +95,7 @@ export default function LocationLayout({ children, activeTab, headerAction }: Lo
                                             <p className="text-sm">{location.address}</p>
                                         </div>
                                     )}
-                                    <div className="overflow-hidden rounded border bg-background">
-                                        <div className="border-b px-4 py-2 bg-muted/50">
-                                            <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Location Map</h3>
-                                        </div>
-                                        <iframe
-                                            width="100%"
-                                            height="400"
-                                            style={{ border: 0, overflow: 'hidden' }}
-                                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(location.longitude) - 0.005},${Number(location.latitude) - 0.005},${Number(location.longitude) + 0.005},${Number(location.latitude) + 0.005}&layer=mapnik&marker=${location.latitude},${location.longitude}`}
-                                            className="grayscale-[0.1] contrast-[0.95]"
-                                        />
-                                        <div className="px-4 py-2 border-t text-right bg-muted/30">
-                                            <a
-                                                href={`https://www.openstreetmap.org/?mlat=${location.latitude}&mlon=${location.longitude}#map=16/${location.latitude}/${location.longitude}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-xs text-primary hover:underline font-medium"
-                                            >
-                                                View on OpenStreetMap
-                                            </a>
-                                        </div>
-                                    </div>
+                                    <LocationMap location={location} />
                                 </div>
                             </aside>
                         )}

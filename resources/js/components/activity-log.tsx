@@ -136,7 +136,7 @@ export function ActivityLog({ activity, resourceId, storeUrl, destroyUrl, emptyM
                 {!isEditing ? (
                     <div
                         onClick={() => setIsEditing(true)}
-                        className="flex items-center gap-3 border rounded p-3 cursor-text text-muted-foreground hover:bg-accent/50 transition-colors"
+                        className="flex items-center gap-3 border rounded p-4 cursor-text text-muted-foreground hover:bg-accent/50 transition-colors"
                     >
                         <PenLine size={18} />
                         <span className="text-sm">Leave a note</span>

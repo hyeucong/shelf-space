@@ -18,7 +18,7 @@ class AssetActivityController extends Controller
     {
         $asset->load([
             'category:id,name',
-            'location:id,name',
+            'location:id,name,latitude,longitude',
             'tags:id,name',
         ]);
 

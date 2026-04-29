@@ -1,3 +1,4 @@
+import { Map, Marker, ZoomControl } from 'pigeon-maps';
 import { useAppearance } from '@/hooks/use-appearance';
 import type { LocationResource } from '@/layouts/location-layout';
 
@@ -10,59 +11,40 @@ export default function LocationMap({ location }: { location: LocationResource }
 
     const lat = Number(location.latitude);
     const lon = Number(location.longitude);
-    const apiKey = import.meta.env.VITE_STADIA_MAPS_API_KEY;
 
-    // Use Stadia Maps if API key is present, otherwise fallback to OSM iframe
-    const mapTheme = resolvedAppearance === 'dark' ? 'alidade_smooth_dark' : 'alidade_smooth';
-
-    // Stadia Maps static v1 API supports markers and more options
-    // Marker color: using a shade of primary/blue for light, and a lighter blue for dark
-    const markerColor = resolvedAppearance === 'dark' ? '3b82f6' : '2563eb'; // blue-500 and blue-600
-
-    const stadiaUrl = apiKey
-        ? `https://api.stadiamaps.com/static/v1?style=${mapTheme}&center=${lat},${lon}&zoom=15&width=600&height=300&scale=2&markers=color:${markerColor}|${lat},${lon}&api_key=${apiKey}`
-        : null;
-
+    // Pigeon Maps can use custom tile providers. 
+    // For a premium look that matches the theme, we can use a provider that supports dark mode if available, 
+    // but the default OSM tiles are a solid choice for Pigeon Maps.
+    
     return (
         <div className="overflow-hidden rounded border bg-background">
-            {/* Header - Kept original styles */}
             <div className="border-b bg-muted/50 px-4 py-2">
                 <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Map Preview
                 </h3>
             </div>
 
-            <div className="relative h-75 w-full">
-                {stadiaUrl ? (
-                    <img
-                        src={stadiaUrl}
-                        alt="Location Map"
-                        className="h-full w-full object-cover grayscale-[0.1] contrast-[0.95]"
-                        onError={(e) => {
-                            // If Stadia fails (e.g. invalid API key), we hide the image
-                            // In a real app, we might fallback to OSM here too
-                            e.currentTarget.style.display = 'none';
-                        }}
+            <div className="relative h-[300px] w-full grayscale-[0.2] contrast-[0.9] brightness-[0.95] dark:brightness-[0.8] dark:contrast-[1.1]">
+                <Map 
+                    height={300} 
+                    center={[lat, lon]} 
+                    defaultZoom={15}
+                >
+                    <ZoomControl />
+                    <Marker 
+                        width={40} 
+                        anchor={[lat, lon]} 
+                        color={resolvedAppearance === 'dark' ? '#3b82f6' : '#2563eb'}
                     />
-                ) : (
-                    <iframe
-                        title="Location Map"
-                        width="100%"
-                        height="300"
-                        style={{ border: 0, overflow: 'hidden' }}
-                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${lon - 0.005},${lat - 0.005},${lon + 0.005},${lat + 0.005}&layer=mapnik&marker=${lat},${lon}`}
-                        className="grayscale-[0.2] contrast-[0.9]"
-                    />
-                )}
+                </Map>
             </div>
 
-            {/* Footer - Background color updated to match header */}
             <div className="border-t bg-muted/50 px-4 py-2 text-right">
                 <a
                     href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=16/${lat}/${lon}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-primary hover:underline"
+                    className="text-xs text-primary hover:underline font-medium"
                 >
                     View on OpenStreetMap
                 </a>
