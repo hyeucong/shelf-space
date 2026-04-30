@@ -13,6 +13,9 @@ Route::prefix('kits')->name('kits.')->group(function () {
     Route::get('{kit}/assets/add-assets', [KitController::class, 'addAssets'])
         ->whereUlid('kit')
         ->name('add-assets');
+    Route::post('{kit}/assets/add-assets', [KitController::class, 'storeAssets'])
+        ->whereUlid('kit')
+        ->name('store-assets');
 });
 
 Route::resource('kits', KitController::class);

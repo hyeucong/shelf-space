@@ -1,26 +1,16 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { isValidElement } from 'react';
-import type { ReactNode } from 'react';
+import { isValidElement, type ReactNode } from 'react';
 import { ResourceIndexTable } from '@/components/resource-index-table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import LocationLayout from '@/layouts/location-layout';
-import type { LocationPageProps } from '@/layouts/location-layout';
+import LocationLayout, { type LocationPageProps } from '@/layouts/location-layout';
 import { addAssets } from '@/routes/locations';
 import type { PaginatedData } from '@/types/pagination';
 
-interface AssetRecord {
-    id: string;
-    name: string;
-    asset_id?: string | null;
-    description?: string | null;
-    status?: string | null;
-    created_at?: string | null;
-    updated_at?: string | null;
-}
+import { createAssetTableColumns } from '@/pages/assets/column-config';
+import type { AssetRecord } from '@/pages/assets/column-config';
 
 export default function LocationAssets() {
-    const { location, assets } = usePage<LocationPageProps & { assets?: PaginatedData<AssetRecord> }>().props;
+    const { location, assets, filters } = usePage<LocationPageProps & { assets?: PaginatedData<AssetRecord>, filters: any }>().props;
 
     const pagination: PaginatedData<AssetRecord> = assets ?? {
         data: [],
@@ -35,36 +25,10 @@ export default function LocationAssets() {
         total: 0,
     };
 
-    const columns = [
-        {
-            key: 'name',
-            header: 'Asset',
-            render: (a: AssetRecord) => (
-                <Link href={`/assets/${a.id}/overview`} className="block line-clamp-1">
-                    {a.name}
-                </Link>
-            ),
-        },
-        {
-            key: 'status',
-            header: 'Status',
-            render: (a: AssetRecord) => (
-                <Badge variant="outline" className="capitalize">{a.status || 'unknown'}</Badge>
-            ),
-        },
-        {
-            key: 'description',
-            header: 'Description',
-            render: (a: AssetRecord) => a.description || '—',
-        },
-        {
-            key: 'updated_at',
-            header: 'Last updated',
-            headerClassName: 'hidden sm:table-cell',
-            cellClassName: 'hidden sm:table-cell text-muted-foreground whitespace-nowrap',
-            render: (a: AssetRecord) => (a.updated_at ?? a.created_at) ? new Date((a.updated_at ?? a.created_at) as string).toLocaleDateString() : '—',
-        },
-    ];
+    const columns = createAssetTableColumns({
+        onDelete: () => { },
+        onDuplicate: () => { },
+    }).filter(col => col.key !== 'actions' && col.key !== 'location');
 
     return (
         <>
@@ -75,8 +39,9 @@ export default function LocationAssets() {
                 searchPlaceholder="Search assets..."
                 pagination={pagination}
                 showSearch={true}
-                filters={{}}
+                filters={filters ?? {}}
                 columns={columns}
+                addPaddingLeft={true}
                 emptyState={{ title: 'No assets in this location', description: 'There are no assets assigned to this location.' }}
             />
         </>

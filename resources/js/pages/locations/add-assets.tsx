@@ -1,4 +1,5 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { Camera } from 'lucide-react';
 import { isValidElement, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { AssetQueryBuilder } from '@/components/asset-query-builder';
@@ -20,6 +21,7 @@ interface AddAssetsPageProps extends LocationPageProps {
     assets: PaginatedData<AssetRecord>;
     categories: AssetFilterOption[];
     columnPreferences: AssetColumnPreference[];
+    existingAssetIds: string[];
     locations: AssetFilterOption[];
     savedFilters: AssetSavedFilter[];
     filters: AssetFiltersQuery;
@@ -32,15 +34,16 @@ const sanitizeQuery = (query: Record<string, AssetQueryValue>) => (
     ) as Record<string, string | number>
 );
 
-export default function AddAssets({ location, assets: availableAssets, categories, columnPreferences, locations, savedFilters, filters, sorts }: AddAssetsPageProps) {
+export default function AddAssets({ location, assets: availableAssets, categories, columnPreferences, existingAssetIds, locations, savedFilters, filters, sorts }: AddAssetsPageProps) {
     const persistedColumns = useMemo(
         () => cloneColumnPreferences(columnPreferences.length > 0 ? columnPreferences : DEFAULT_ASSET_COLUMN_PREFERENCES),
         [columnPreferences],
     );
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [selectedIds, setSelectedIds] = useState<string[]>(() => existingAssetIds ?? []);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const selectedAssets = useMemo(
-        () => availableAssets.data.filter((asset) => selectedIds.includes(asset.id)),
+    const selectedCount = useMemo(
+        () => availableAssets.data.filter((asset) => selectedIds.includes(asset.id)).length,
         [availableAssets.data, selectedIds],
     );
 
@@ -64,12 +67,30 @@ export default function AddAssets({ location, assets: availableAssets, categorie
 
     const toggleAll = (checked: boolean) => {
         if (checked) {
-            setSelectedIds(availableAssets.data.map((asset) => asset.id));
+            setSelectedIds((previous) => Array.from(new Set([
+                ...previous,
+                ...availableAssets.data.map((asset) => asset.id),
+            ])));
 
             return;
         }
 
-        setSelectedIds([]);
+        const currentPageIds = new Set(availableAssets.data.map((asset) => asset.id));
+        setSelectedIds((previous) => previous.filter((id) => !currentPageIds.has(id)));
+    };
+
+    const handleConfirm = () => {
+        setIsSubmitting(true);
+        router.post(addAssets(location.id).url, {
+            asset_ids: selectedIds,
+        }, {
+            preserveScroll: true,
+            onFinish: () => setIsSubmitting(false),
+        });
+    };
+
+    const handleCancel = () => {
+        router.visit(assets(location.id).url);
     };
 
     const baseColumns = useMemo(
@@ -86,7 +107,7 @@ export default function AddAssets({ location, assets: availableAssets, categorie
                                 {asset.image_url ? (
                                     <img src={asset.image_url} alt={asset.name} className="h-full w-full object-cover" />
                                 ) : (
-                                    <div className="text-sm font-semibold text-muted-foreground">A</div>
+                                    <Camera className="h-5 w-5 text-muted-foreground/50" />
                                 )}
                             </div>
                             <div className="min-w-0">
@@ -162,13 +183,13 @@ export default function AddAssets({ location, assets: availableAssets, categorie
                 toolbarEnd={(
                     <>
                         <div className="text-sm text-muted-foreground">
-                            {selectedAssets.length} selected
+                            {selectedIds.length} selected
                         </div>
-                        <Button type="button" variant="outline" onClick={() => setSelectedIds([])}>
+                        <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
                             Cancel
                         </Button>
-                        <Button type="button">
-                            Confirm
+                        <Button type="button" onClick={handleConfirm} disabled={isSubmitting}>
+                            {isSubmitting ? 'Saving...' : 'Confirm'}
                         </Button>
                     </>
                 )}

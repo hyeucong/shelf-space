@@ -877,7 +877,7 @@ export function AssetQueryBuilder({
                         <Button
                             type="button"
                             variant="outline"
-                            className={builderMode === 'filter' ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0'}
+                            className={builderMode === 'filter' || activeFilterCount > 0 ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0'}
                             onClick={() => setBuilderMode((current) => current === 'filter' ? null : 'filter')}
                             aria-expanded={builderMode === 'filter'}
                         >
@@ -904,7 +904,8 @@ export function AssetQueryBuilder({
                             onClick={() => setBuilderMode((current) => current === 'saved' ? null : 'saved')}
                             aria-expanded={builderMode === 'saved'}
                         >
-                            <Bookmark size={16} /> Saved Filters
+                            <Bookmark size={16} />
+                            {savedFilters.length > 0 ? `Saved Filters ${savedFilters.length}` : 'Saved Filters'}
                         </Button>
                     ) : null}
                 </div>

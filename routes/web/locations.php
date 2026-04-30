@@ -15,6 +15,9 @@ Route::prefix('locations')->name('locations.')->group(function () {
     Route::get('{location}/assets/add-assets', [LocationController::class, 'addAssets'])
         ->whereUlid('location')
         ->name('add-assets');
+    Route::post('{location}/assets/add-assets', [LocationController::class, 'storeAssets'])
+        ->whereUlid('location')
+        ->name('store-assets');
     Route::get('{location}/kits', [LocationController::class, 'kits'])
         ->whereUlid('location')
         ->name('kits');

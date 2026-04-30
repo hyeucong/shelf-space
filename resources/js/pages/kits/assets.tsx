@@ -4,21 +4,13 @@ import { Button } from '@/components/ui/button';
 import KitLayout, { type KitPageProps } from '@/layouts/kit-layout';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import type { PaginatedData } from '@/types/pagination';
-import { Badge } from '@/components/ui/badge';
 import { addAssets } from '@/routes/kits';
 
-interface AssetRecord {
-    id: string;
-    name: string;
-    asset_id?: string | null;
-    description?: string | null;
-    status?: string | null;
-    created_at?: string | null;
-    updated_at?: string | null;
-}
+import { createAssetTableColumns } from '@/pages/assets/column-config';
+import type { AssetRecord } from '@/pages/assets/column-config';
 
 export default function KitAssets() {
-    const { kit, assets } = usePage<KitPageProps & { assets?: PaginatedData<AssetRecord> }>().props;
+    const { kit, assets, filters } = usePage<KitPageProps & { assets?: PaginatedData<AssetRecord>, filters: any }>().props;
 
     const pagination: PaginatedData<AssetRecord> = assets ?? {
         data: [],
@@ -33,36 +25,10 @@ export default function KitAssets() {
         total: 0,
     };
 
-    const columns = [
-        {
-            key: 'name',
-            header: 'Asset',
-            render: (a: AssetRecord) => (
-                <Link href={`/assets/${a.id}/overview`} className="block line-clamp-1">
-                    {a.name}
-                </Link>
-            ),
-        },
-        {
-            key: 'status',
-            header: 'Status',
-            render: (a: AssetRecord) => (
-                <Badge variant="outline" className="capitalize">{a.status || 'unknown'}</Badge>
-            ),
-        },
-        {
-            key: 'description',
-            header: 'Description',
-            render: (a: AssetRecord) => a.description || '—',
-        },
-        {
-            key: 'updated_at',
-            header: 'Last updated',
-            headerClassName: 'hidden sm:table-cell',
-            cellClassName: 'hidden sm:table-cell text-muted-foreground whitespace-nowrap',
-            render: (a: AssetRecord) => (a.updated_at ?? a.created_at) ? new Date((a.updated_at ?? a.created_at) as string).toLocaleDateString() : '—',
-        },
-    ];
+    const columns = createAssetTableColumns({
+        onDelete: () => { },
+        onDuplicate: () => { },
+    }).filter(col => col.key !== 'actions');
 
     return (
         <>
@@ -73,8 +39,9 @@ export default function KitAssets() {
                 searchPlaceholder="Search assets..."
                 pagination={pagination}
                 showSearch={true}
-                filters={{}}
+                filters={filters ?? {}}
                 columns={columns}
+                addPaddingLeft={true}
                 emptyState={{ title: 'No assets in this kit', description: 'There are no assets assigned to this kit.' }}
             />
         </>

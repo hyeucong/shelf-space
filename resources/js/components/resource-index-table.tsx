@@ -80,6 +80,7 @@ interface ResourceIndexTableProps<T extends { id: string | number }> {
     showSearch?: boolean;
     rowActions?: ResourceIndexRowActions<T>;
     onRowClick?: (item: T) => void;
+    addPaddingLeft?: boolean;
 }
 
 export function ResourceIndexTable<T extends { id: string | number }>({
@@ -98,6 +99,7 @@ export function ResourceIndexTable<T extends { id: string | number }>({
     showSearch = true,
     rowActions,
     onRowClick,
+    addPaddingLeft = false,
 }: ResourceIndexTableProps<T>) {
     const items = pagination?.data || [];
     const hasItems = items.length > 0;
@@ -209,7 +211,10 @@ export function ResourceIndexTable<T extends { id: string | number }>({
                                     ) : null}
 
                                     {columns.map((column, index) => (
-                                        <TableHead key={column.key} className={cn(index === 0 && 'pl-0', column.headerClassName)}>
+                                        <TableHead key={column.key} className={cn(
+                                            index === 0 && (addPaddingLeft ? 'pl-4' : !selection && 'pl-0'),
+                                            column.headerClassName
+                                        )}>
                                             {column.header}
                                         </TableHead>
                                     ))}
@@ -253,7 +258,10 @@ export function ResourceIndexTable<T extends { id: string | number }>({
                                                 : column.cellClassName;
 
                                             return (
-                                                <TableCell key={column.key} className={cn(index === 0 && 'pl-0', cellClassName)}>
+                                                <TableCell key={column.key} className={cn(
+                                                    index === 0 && (addPaddingLeft ? 'pl-4' : !selection && 'pl-0'),
+                                                    cellClassName
+                                                )}>
                                                     {column.render(item)}
                                                 </TableCell>
                                             );

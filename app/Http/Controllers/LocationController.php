@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Asset;
 use App\Models\Location;
 use App\Queries\AssetQuery;
 use App\Services\GeocodingService;
@@ -115,15 +116,25 @@ class LocationController extends Controller
         ]);
     }
 
-    public function assets(Location $location)
+    public function assets(Request $request, Location $location, AssetQuery $assetQuery)
     {
-        $assets = $location->assets()
-            ->with('category:id,name')
-            ->paginate(20);
+        $indexState = $assetQuery->resolveIndexState($request);
+
+        $assets = $assetQuery->handle($request)
+            ->where('location_id', $location->id)
+            ->paginate($indexState['perPage'])
+            ->withQueryString();
 
         return Inertia::render('locations/assets', [
             'location' => $location,
             'assets' => $assets,
+            'filters' => [
+                'search' => $request->input('search'),
+                'per_page' => $indexState['perPage'],
+                'sort' => $indexState['sort'],
+                'order' => $indexState['order'],
+                ...$indexState['filters'],
+            ],
         ]);
     }
 
@@ -134,10 +145,34 @@ class LocationController extends Controller
             ->paginate($indexState['perPage'])
             ->withQueryString();
 
+        $existingAssetIds = $location->assets()->pluck('id')->all();
+
         return Inertia::render('locations/add-assets', [
             'location' => $location,
+            'existingAssetIds' => $existingAssetIds,
             ...$this->buildAssetIndexProps($request, $assetQuery, $assets, $indexState),
         ]);
+    }
+
+    public function storeAssets(Request $request, Location $location)
+    {
+        $validated = $request->validate([
+            'asset_ids' => ['present', 'array'],
+            'asset_ids.*' => ['required', 'string'],
+        ]);
+
+        // Clear existing location assignments and set new ones
+        Asset::query()
+            ->where('user_id', $request->user()->id)
+            ->where('location_id', $location->id)
+            ->update(['location_id' => null]);
+
+        Asset::query()
+            ->where('user_id', $request->user()->id)
+            ->whereIn('id', $validated['asset_ids'])
+            ->update(['location_id' => $location->id]);
+
+        return redirect()->route('locations.assets', $location);
     }
 
     public function kits(Request $request, Location $location)

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Asset;
 use App\Models\Kit;
 use App\Queries\AssetQuery;
 use App\Services\UserResourceCache;
@@ -93,11 +94,25 @@ class KitController extends Controller
         ]);
     }
 
-    public function assets(Kit $kit)
+    public function assets(Request $request, Kit $kit, AssetQuery $assetQuery)
     {
+        $indexState = $assetQuery->resolveIndexState($request);
+
+        $assets = $assetQuery->handle($request)
+            ->where('kit_id', $kit->id)
+            ->paginate($indexState['perPage'])
+            ->withQueryString();
 
         return Inertia::render('kits/assets', [
             'kit' => $kit,
+            'assets' => $assets,
+            'filters' => [
+                'search' => $request->input('search'),
+                'per_page' => $indexState['perPage'],
+                'sort' => $indexState['sort'],
+                'order' => $indexState['order'],
+                ...$indexState['filters'],
+            ],
         ]);
     }
 
@@ -132,10 +147,34 @@ class KitController extends Controller
             ->paginate($indexState['perPage'])
             ->withQueryString();
 
+        $existingAssetIds = $kit->assets()->pluck('id')->all();
+
         return Inertia::render('kits/add-assets', [
             'kit' => $kit,
+            'existingAssetIds' => $existingAssetIds,
             ...$this->buildAssetIndexProps($request, $assetQuery, $assets, $indexState),
         ]);
+    }
+
+    public function storeAssets(Request $request, Kit $kit)
+    {
+        $validated = $request->validate([
+            'asset_ids' => ['present', 'array'],
+            'asset_ids.*' => ['required', 'string'],
+        ]);
+
+        // Clear existing kit assignments and set new ones
+        Asset::query()
+            ->where('user_id', $request->user()->id)
+            ->where('kit_id', $kit->id)
+            ->update(['kit_id' => null]);
+
+        Asset::query()
+            ->where('user_id', $request->user()->id)
+            ->whereIn('id', $validated['asset_ids'])
+            ->update(['kit_id' => $kit->id]);
+
+        return redirect()->route('kits.assets', $kit);
     }
 
     /**

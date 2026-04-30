@@ -225,11 +225,23 @@ class AssetQuery
             return null;
         }
 
-        if (! is_numeric($value)) {
+        if (! is_string($value) && ! is_numeric($value)) {
             return null;
         }
 
-        return (string) (int) $value;
+        $trimmed = trim((string) $value);
+
+        if ($trimmed === '') {
+            return null;
+        }
+
+        // Numeric IDs: cast to clean integer string (strips leading zeros etc.)
+        if (is_numeric($trimmed)) {
+            return (string) (int) $trimmed;
+        }
+
+        // String IDs (ULIDs, UUIDs, etc.): accept as-is
+        return $trimmed;
     }
 
     /**
