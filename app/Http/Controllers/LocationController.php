@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Kit;
 use App\Models\Location;
 use App\Queries\AssetQuery;
+use App\Services\GeocodingService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\Rule;
@@ -75,9 +76,17 @@ class LocationController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, GeocodingService $geocoding)
     {
         $validated = $this->validatedData($request);
+
+        if (! empty($validated['address'])) {
+            $coords = $geocoding->geocode($validated['address']);
+            if ($coords) {
+                $validated['latitude'] = $coords['lat'];
+                $validated['longitude'] = $coords['lon'];
+            }
+        }
 
         $redirectTo = $request->string('redirect_to')->toString();
         if ($redirectTo === '' || ! str_starts_with($redirectTo, '/')) {
@@ -172,9 +181,19 @@ class LocationController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Location $location)
+    public function update(Request $request, Location $location, GeocodingService $geocoding)
     {
-        $location->update($this->validatedData($request, $location));
+        $validated = $this->validatedData($request, $location);
+
+        if ($request->filled('address') && ($request->input('address') !== $location->address || is_null($location->latitude))) {
+            $coords = $geocoding->geocode($validated['address']);
+            if ($coords) {
+                $validated['latitude'] = $coords['lat'];
+                $validated['longitude'] = $coords['lon'];
+            }
+        }
+
+        $location->update($validated);
 
         return redirect()->route('locations.index');
     }

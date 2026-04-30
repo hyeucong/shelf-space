@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToUser;
+use App\Models\Concerns\HasResourceLimit;
 use Database\Factories\AssetFactory;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,7 +19,7 @@ use Spatie\Activitylog\Support\LogOptions;
 #[UseFactory(AssetFactory::class)]
 class Asset extends Model
 {
-    use BelongsToUser, HasActivity, HasFactory, HasUlids;
+    use BelongsToUser, HasActivity, HasFactory, HasResourceLimit, HasUlids;
 
     protected static array $recordEvents = ['created', 'updated', 'deleted'];
 

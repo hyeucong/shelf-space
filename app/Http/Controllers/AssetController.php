@@ -293,14 +293,6 @@ class AssetController extends Controller
         $count = (int) $request->input('count');
         $userId = $request->user()->id;
 
-        // 2. Safety Check: Don't let the user exceed the 10,000 item limit
-        $currentTotal = Asset::where('user_id', $userId)->count();
-        if (($currentTotal + $count) > 10000) {
-            return back()->withErrors([
-                'limit' => "Request denied. Adding {$count} items would exceed your 10,000 item limit.",
-            ]);
-        }
-
         // 3. Database Transaction: All-or-nothing protection
         DB::transaction(function () use ($asset, $count, $userId) {
             // Lock the sequence to prevent other requests from grabbing the same number
