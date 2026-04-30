@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
 use App\Models\Kit;
-use App\Models\Location;
 use App\Queries\AssetQuery;
+use App\Services\UserResourceCache;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
@@ -56,8 +55,8 @@ class KitController extends Controller
      */
     public function create(Request $request)
     {
-        $categories = $request->user()->categories()->orderBy('name')->get(['id', 'name']);
-        $locations = $request->user()->locations()->orderBy('name')->get(['id', 'name']);
+        $categories = UserResourceCache::categoriesForSelect($request->user()->id);
+        $locations = UserResourceCache::locationsForSelect($request->user()->id);
 
         return Inertia::render('kits/create', [
             'categories' => $categories,
@@ -162,8 +161,8 @@ class KitController extends Controller
                 ...$indexState['filters'],
             ],
             'sorts' => $indexState['sorts'],
-            'categories' => $request->user()->categories()->orderBy('name')->get(['id', 'name']),
-            'locations' => $request->user()->locations()->orderBy('name')->get(['id', 'name']),
+            'categories' => UserResourceCache::categoriesForSelect($request->user()->id),
+            'locations' => UserResourceCache::locationsForSelect($request->user()->id),
             'savedFilters' => $assetQuery->loadSavedFilters($request),
             'columnPreferences' => $assetQuery->loadColumnPreference($request),
         ];

@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Location;
 use App\Models\Tag;
 use App\Queries\AssetQuery;
+use App\Services\UserResourceCache;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -17,16 +18,16 @@ use Inertia\Inertia;
 class AssetController extends Controller
 {
     /**
-     * @return array{categories: Collection<int, Category>, tags: Collection<int, Tag>, locations: Collection<int, Location>}
+     * @return array{categories: array<int, mixed>, tags: array<int, mixed>, locations: array<int, mixed>}
      */
     private function assetFormOptions(Request $request): array
     {
-        $user = $request->user();
+        $userId = $request->user()->id;
 
         return [
-            'categories' => $user->categories()->orderBy('name')->get(),
-            'tags' => $user->tags()->orderBy('name')->get(),
-            'locations' => $user->locations()->orderBy('name')->get(),
+            'categories' => UserResourceCache::categories($userId),
+            'tags' => UserResourceCache::tags($userId),
+            'locations' => UserResourceCache::locations($userId),
         ];
     }
 
@@ -167,8 +168,8 @@ class AssetController extends Controller
                 ...$indexState['filters'],
             ],
             'sorts' => $indexState['sorts'],
-            'categories' => $request->user()->categories()->orderBy('name')->get(['id', 'name']),
-            'locations' => $request->user()->locations()->orderBy('name')->get(['id', 'name']),
+            'categories' => UserResourceCache::categoriesForSelect($request->user()->id),
+            'locations' => UserResourceCache::locationsForSelect($request->user()->id),
             'savedFilters' => $assetQuery->loadSavedFilters($request),
             'columnPreferences' => $assetQuery->loadColumnPreference($request),
         ];

@@ -31,7 +31,7 @@ class AssetQuery
     {
         $indexState = $this->resolveIndexState($request);
 
-        return $request->user()->assets()
+        return Asset::query()
             ->with([
                 'category:id,name',
                 'location:id,name',

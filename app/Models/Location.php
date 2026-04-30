@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToUser;
 use App\Models\Concerns\HasResourceLimit;
+use App\Services\UserResourceCache;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,6 +34,11 @@ class Location extends Model
 
     protected static function booted()
     {
+        $flush = fn (self $model) => UserResourceCache::forgetLocations($model->user_id);
+
+        static::created($flush);
+        static::updated($flush);
+        static::deleted($flush);
         // Geocoding is now handled in the LocationController via GeocodingService
         // to comply with OSM TOS and ensure better control over requests.
     }

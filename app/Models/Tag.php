@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToUser;
 use App\Models\Concerns\HasResourceLimit;
+use App\Services\UserResourceCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -17,6 +18,15 @@ class Tag extends Model
         'description',
         'hex_color',
     ];
+
+    protected static function booted(): void
+    {
+        $flush = fn (self $model) => UserResourceCache::forgetTags($model->user_id);
+
+        static::created($flush);
+        static::updated($flush);
+        static::deleted($flush);
+    }
 
     public function assets(): BelongsToMany
     {
