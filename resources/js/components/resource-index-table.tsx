@@ -192,7 +192,7 @@ export function ResourceIndexTable<T extends { id: string | number }>({
 
             {hasItems ? (
                 <div className="mx-4 mt-4 mb-4 flex flex-1 min-h-0 flex-col overflow-hidden rounded border bg-background shadow-sm">
-                    <div className="flex-1 overflow-y-auto">
+                    <div className="flex-1 overflow-auto overscroll-x-contain [&_[data-slot=table-container]]:overflow-visible">
                         <Table className={tableClassName}>
                             <TableHeader>
                                 <TableRow className="sticky top-0 z-10 bg-background hover:bg-background">

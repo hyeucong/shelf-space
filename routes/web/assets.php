@@ -29,6 +29,8 @@ Route::prefix('assets')->name('assets.')->group(function () {
         Route::get('overview', [AssetController::class, 'show'])->name('overview');
         Route::get('/', fn ($asset) => redirect()->route('assets.overview', $asset));
 
+        Route::post('duplicate', [AssetController::class, 'duplicate'])->name('duplicate');
+
         // Core CRUD
         Route::get('edit', [AssetController::class, 'edit'])->name('edit');
         Route::match(['put', 'patch'], '/', [AssetController::class, 'update'])->name('update');

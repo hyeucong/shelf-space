@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Camera, Pencil, Trash2 } from 'lucide-react';
+import { Camera, Copy, Pencil, Trash2 } from 'lucide-react';
 import type { ResourceIndexColumn } from '@/components/resource-index-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,7 @@ export interface AssetRecord {
     }>;
 }
 
-export type AssetColumnKey = 'id' | 'asset_id' | 'status' | 'category' | 'location' | 'tags' | 'description' | 'value' | 'created_at' | 'updated_at';
+export type AssetColumnKey = 'id' | 'asset_id' | 'status' | 'category' | 'location' | 'tags' | 'description' | 'value' | 'created_at' | 'updated_at' | 'actions';
 
 export interface AssetColumnPreference {
     key: AssetColumnKey;
@@ -43,6 +43,7 @@ export interface AssetTableColumn extends ResourceIndexColumn<AssetRecord> {
 
 interface AssetTableColumnFactoryOptions {
     onDelete: (asset: AssetRecord) => void;
+    onDuplicate: (asset: AssetRecord) => void;
 }
 
 export const ASSET_OPTIONAL_COLUMN_OPTIONS: Array<{ key: AssetColumnKey; label: string }> = [
@@ -55,6 +56,7 @@ export const ASSET_OPTIONAL_COLUMN_OPTIONS: Array<{ key: AssetColumnKey; label: 
     { key: 'value', label: 'Value' },
     { key: 'created_at', label: 'Created' },
     { key: 'updated_at', label: 'Updated' },
+    { key: 'actions', label: 'Actions' },
 ];
 
 export const ASSET_OPTIONAL_COLUMN_LABELS = Object.fromEntries(
@@ -93,6 +95,7 @@ export const formatDate = (value: string | null) => {
 
 export function createAssetTableColumns({
     onDelete,
+    onDuplicate,
 }: AssetTableColumnFactoryOptions): AssetTableColumn[] {
     return [
         {
@@ -214,7 +217,7 @@ export function createAssetTableColumns({
         {
             key: 'actions',
             header: 'Actions',
-            isOptional: false,
+            isOptional: true,
             headerClassName: 'w-24 text-right',
             cellClassName: 'w-24 text-right',
             render: (asset) => (
@@ -224,6 +227,15 @@ export function createAssetTableColumns({
                             <Pencil className="h-4 w-4" />
                             <span className="sr-only">Edit</span>
                         </Link>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 border"
+                        onClick={() => onDuplicate(asset)}
+                    >
+                        <Copy className="h-4 w-4" />
+                        <span className="sr-only">Duplicate</span>
                     </Button>
                     <Button
                         variant="ghost"

@@ -7,7 +7,7 @@ import { ColumnVisibilityPanel } from '@/components/asset-column-visibility-pane
 import { AssetQueryBuilder } from '@/components/asset-query-builder';
 import type { AssetFilterOption, AssetFiltersQuery, AssetQueryValue, AssetSavedFilter, AssetSortDraft } from '@/components/asset-query-builder';
 import { AssetSelectionActions } from '@/components/asset-selection-actions';
-import { ResourceDeleteDialog } from '@/components/resource-form-dialog';
+import { ResourceDeleteDialog, ResourceDuplicateDialog } from '@/components/resource-form-dialog';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
@@ -41,8 +41,10 @@ export default function Assets({ assets, categories, columnPreferences, location
         [columnPreferences],
     );
     const [assetToDelete, setAssetToDelete] = useState<AssetRecord | null>(null);
+    const [assetToDuplicate, setAssetToDuplicate] = useState<AssetRecord | null>(null);
     const [deletedAssetIds, setDeletedAssetIds] = useState<string[]>([]);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [optimisticColumns, setOptimisticColumns] = useState<AssetColumnPreference[] | null>(null);
     const [draftColumns, setDraftColumns] = useState<AssetColumnPreference[]>(persistedColumns);
@@ -215,6 +217,25 @@ export default function Assets({ assets, categories, columnPreferences, location
             onFinish: () => setIsDeleting(false),
         });
     };
+ 
+    const handleDuplicate = (count: number) => {
+        if (!assetToDuplicate || isDuplicating) {
+            return;
+        }
+
+        router.post(`/assets/${assetToDuplicate.id}/duplicate`, { count }, {
+            preserveScroll: true,
+            onBefore: () => setIsDuplicating(true),
+            onSuccess: () => {
+                setAssetToDuplicate(null);
+            },
+            onError: (errors) => {
+                if (errors.limit) alert(errors.limit);
+            },
+            onFinish: () => setIsDuplicating(false),
+        });
+    };
+
 
     const handleExportSelection = () => {
         if (selectedAssets.length === 0) {
@@ -250,10 +271,11 @@ export default function Assets({ assets, categories, columnPreferences, location
 
     const tableColumns = createAssetTableColumns({
         onDelete: (asset) => setAssetToDelete(asset),
+        onDuplicate: (asset) => setAssetToDuplicate(asset),
     });
 
     const fixedLeadingColumns = tableColumns.filter((column) => column.key === 'name');
-    const fixedTrailingColumns = tableColumns.filter((column) => column.key === 'actions');
+    const fixedTrailingColumns = tableColumns.filter((column) => column.key === 'actions' && !column.isOptional);
     const optionalColumnMap = useMemo(() => new Map(
         tableColumns
             .filter((column) => column.isOptional)
@@ -346,12 +368,6 @@ export default function Assets({ assets, categories, columnPreferences, location
                                 disabled: selectedAssets.length === 0,
                             },
                             {
-                                key: 'duplicate',
-                                label: 'Duplicate',
-                                icon: <Copy className="h-4 w-4" />,
-                                disabled: true,
-                            },
-                            {
                                 key: 'delete',
                                 label: 'Delete',
                                 icon: <Trash2 className="h-4 w-4" />,
@@ -385,6 +401,15 @@ export default function Assets({ assets, categories, columnPreferences, location
                 confirmLabel="Delete asset"
                 confirmPendingLabel="Deleting asset..."
                 contentClassName="sm:max-w-106.25 rounded"
+            />
+
+            <ResourceDuplicateDialog
+                open={!!assetToDuplicate}
+                onOpenChange={(open) => !open && setAssetToDuplicate(null)}
+                itemName={assetToDuplicate?.name}
+                itemMeta={assetToDuplicate?.asset_id}
+                processing={isDuplicating}
+                onConfirm={handleDuplicate}
             />
         </>
     );

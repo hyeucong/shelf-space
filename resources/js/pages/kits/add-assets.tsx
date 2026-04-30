@@ -75,6 +75,7 @@ export default function AddAssets({ kit, assets: availableAssets, categories, co
     const baseColumns = useMemo(
         () => createAssetTableColumns({
             onDelete: () => { },
+            onDuplicate: () => { },
         }).filter((column) => column.key !== 'actions').map((column) => (
             column.key === 'name'
                 ? {

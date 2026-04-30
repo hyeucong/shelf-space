@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
+import { Copy } from 'lucide-react';
 
 export interface AssetSelectionActionItem {
     key: string;

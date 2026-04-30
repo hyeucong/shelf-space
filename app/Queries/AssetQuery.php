@@ -170,6 +170,7 @@ class AssetQuery
             'value',
             'created_at',
             'updated_at',
+            'actions',
         ];
 
         if (! is_array($columns)) {

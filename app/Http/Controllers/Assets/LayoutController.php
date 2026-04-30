@@ -18,7 +18,7 @@ class LayoutController extends Controller
     {
         $validated = $request->validate([
             'columns' => ['required', 'array'],
-            'columns.*.key' => ['required', 'string', Rule::in(['id', 'asset_id', 'status', 'category', 'location', 'tags', 'description', 'value', 'created_at', 'updated_at'])],
+            'columns.*.key' => ['required', 'string', Rule::in(['id', 'asset_id', 'status', 'category', 'location', 'tags', 'description', 'value', 'created_at', 'updated_at', 'actions'])],
             'columns.*.visible' => ['required', 'boolean'],
         ]);
 

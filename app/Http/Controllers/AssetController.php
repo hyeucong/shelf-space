@@ -198,7 +198,13 @@ class AssetController extends Controller
             $userId = $request->user()->id;
 
             // Re-calculate the next sequential number to ensure accuracy and handle collisions
-            $lastSeq = Asset::where('user_id', $userId)->lockForUpdate()->max('sequential_number') ?? 0;
+            // Inside the store method's DB::transaction block
+            $lastAsset = Asset::where('user_id', $userId)
+                ->lockForUpdate()
+                ->orderBy('sequential_number', 'desc')
+                ->first();
+
+            $lastSeq = $lastAsset ? $lastAsset->sequential_number : 0;
             $nextSeq = $lastSeq + 1;
 
             $prefix = 'AST';
@@ -275,5 +281,62 @@ class AssetController extends Controller
         $asset->delete();
 
         return redirect()->route('assets.index');
+    }
+
+    public function duplicate(Request $request, Asset $asset)
+    {
+        // 1. Validate that the count is a number between 1 and 10
+        $request->validate([
+            'count' => ['required', 'integer', 'min:1', 'max:10'],
+        ]);
+
+        $count = (int) $request->input('count');
+        $userId = $request->user()->id;
+
+        // 2. Safety Check: Don't let the user exceed the 10,000 item limit
+        $currentTotal = Asset::where('user_id', $userId)->count();
+        if (($currentTotal + $count) > 10000) {
+            return back()->withErrors([
+                'limit' => "Request denied. Adding {$count} items would exceed your 10,000 item limit.",
+            ]);
+        }
+
+        // 3. Database Transaction: All-or-nothing protection
+        DB::transaction(function () use ($asset, $count, $userId) {
+            // Lock the sequence to prevent other requests from grabbing the same number
+            $lastAsset = Asset::where('user_id', $userId)
+                ->orderBy('sequential_number', 'desc')
+                ->lockForUpdate()
+                ->first();
+
+            $lastSeq = $lastAsset ? $lastAsset->sequential_number : 0;
+
+            // Load the tag IDs from the original so we can copy them
+            $asset->loadMissing('tags:id');
+            $tagIds = $asset->tags->modelKeys();
+
+            for ($i = 1; $i <= $count; $i++) {
+                $nextSeq = $lastSeq + $i;
+
+                // replicate() creates a fresh copy of the model without an ID
+                $clone = $asset->replicate();
+
+                // Customize the new item
+                $clone->name = $asset->name." (Copy {$i})";
+                $clone->sequential_number = $nextSeq;
+
+                // Format the custom AST ID just like in your store method[cite: 2]
+                $clone->asset_id = 'AST-'.str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+
+                $clone->save();
+
+                // Sync the many-to-many tags to the new clone
+                if (! empty($tagIds)) {
+                    $clone->tags()->sync($tagIds);
+                }
+            }
+        });
+
+        return redirect()->route('assets.index')->with('success', "Successfully created {$count} duplicates.");
     }
 }

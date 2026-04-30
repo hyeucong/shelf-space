@@ -1,6 +1,4 @@
-import { router, usePage } from '@inertiajs/react';
 import { ArrowUpDown, Bookmark, Filter, Pencil, Plus, Trash2, X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -32,344 +30,26 @@ import {
 import { CategoryFormDialog } from '@/pages/categories/create';
 import { LocationFormDialog } from '@/pages/locations/form-dialog';
 
-export type AssetQueryValue = string | number | undefined;
-export type AssetFilterKey = 'status' | 'category_id' | 'location_id' | 'asset_id' | 'value';
-export type AssetFilterCondition = 'equals' | 'contains' | 'gte' | 'lte';
-export type AssetSortField = 'created_at' | 'name' | 'value' | 'asset_id' | 'status';
-export type AssetSortDirection = 'asc' | 'desc';
+import {
+    EMPTY_ROW_CLASS,
+    FILTER_CONDITION_LABELS,
+    PANEL_ROW_CLASS,
+    PANEL_TOGGLE_BUTTON_CLASS,
+    SORT_DEFINITIONS,
+} from './asset-query-builder/constants';
+import {
+    AssetFilterCondition,
+    AssetFilterKey,
+    AssetQueryBuilderProps,
+    AssetSortField,
+    BuilderOptionSelectProps,
+    FilterDefinition,
+    FilterRow,
+    SortRow,
+} from './asset-query-builder/types';
+import { useAssetQuery } from './asset-query-builder/use-asset-query';
 
-export type AssetFilterOption = {
-    id: string | number;
-    name: string;
-};
-
-export type AssetSavedFilter = {
-    id: string | number;
-    key: string;
-    name: string;
-    filters: {
-        status?: string | null;
-        category_id?: string | null;
-        location_id?: string | null;
-        asset_id?: string | null;
-        value_min?: string | null;
-        value_max?: string | null;
-    };
-};
-
-export type AssetFiltersQuery = {
-    search?: string;
-    per_page?: string | number;
-    sort?: string;
-    order?: 'asc' | 'desc';
-    sorts?: string;
-    status?: string;
-    category_id?: string | number;
-    location_id?: string | number;
-    asset_id?: string;
-    value_min?: string | number;
-    value_max?: string | number;
-};
-
-export type AssetFilterState = {
-    status: string;
-    category_id: string;
-    location_id: string;
-    asset_id: string;
-    value_min: string;
-    value_max: string;
-};
-
-export type AssetSortDraft = {
-    field: AssetSortField;
-    order: AssetSortDirection;
-};
-
-type FilterDefinition = {
-    key: AssetFilterKey;
-    label: string;
-    input: 'select' | 'text' | 'number';
-    placeholder?: string;
-    options?: Array<{ value: string; label: string }>;
-    conditions: AssetFilterCondition[];
-    defaultCondition: AssetFilterCondition;
-};
-
-type FilterRow = {
-    id: string;
-    fieldKey: AssetFilterKey | '';
-    condition: AssetFilterCondition | '';
-    value: string;
-};
-
-type SortDefinition = {
-    key: AssetSortField;
-    label: string;
-};
-
-type SortRow = {
-    id: string;
-    field: AssetSortField;
-    order: AssetSortDirection;
-};
-
-type ResourceFilterField = 'category_id' | 'location_id';
-
-type BuilderMode = 'filter' | 'sort' | 'saved' | null;
-type CreateTarget = 'category' | 'location';
-
-type PendingCreate = {
-    target: CreateTarget;
-    rowId: string;
-};
-
-type SavedFilterDialogMode = 'edit' | 'delete' | null;
-
-type SharedPageProps = Record<string, unknown> & {
-    flash?: {
-        createdCategory?: AssetFilterOption;
-        createdLocation?: AssetFilterOption;
-    };
-};
-
-interface AssetQueryBuilderProps {
-    categories: AssetFilterOption[];
-    locations: AssetFilterOption[];
-    savedFilters: AssetSavedFilter[];
-    filters: AssetFiltersQuery;
-    sorts: AssetSortDraft[];
-    resourcePath?: string;
-    showFilterButton?: boolean;
-    showSortButton?: boolean;
-    showSavedFiltersButton?: boolean;
-    filterActionLayout?: 'default' | 'confirm';
-}
-
-interface BuilderOptionSelectProps {
-    value: string;
-    onValueChange: (value: string) => void;
-    placeholder: string;
-    options: Array<{ value: string; label: string }>;
-    emptyLabel: string;
-    open?: boolean;
-    onOpenChange?: (open: boolean) => void;
-    createValue?: string;
-    createLabel?: string;
-    disabled?: boolean;
-}
-
-const EMPTY_FILTERS: AssetFilterState = {
-    status: '',
-    category_id: '',
-    location_id: '',
-    asset_id: '',
-    value_min: '',
-    value_max: '',
-};
-
-const FILTER_CONDITION_LABELS: Record<AssetFilterCondition, string> = {
-    equals: '=',
-    contains: 'contains',
-    gte: '>=',
-    lte: '<=',
-};
-
-const PANEL_TOGGLE_BUTTON_CLASS = 'h-9 gap-2 border-white bg-background text-foreground shadow-none font-normal shrink-0 hover:bg-muted';
-const PANEL_ROW_CLASS = 'flex flex-col gap-2 md:flex-row md:items-center justify-between';
-const EMPTY_ROW_CLASS = 'flex h-11 items-center rounded border border-dashed px-4 text-sm text-muted-foreground';
-const DEFAULT_SORT: AssetSortDraft = {
-    field: 'created_at',
-    order: 'desc',
-};
-const NESTED_OVERLAY_SELECTOR = '[data-slot="select-content"], [data-slot="dropdown-menu-content"], [data-slot="dialog-content"]';
-const SORT_DEFINITIONS: SortDefinition[] = [
-    { key: 'created_at', label: 'Created Date' },
-    { key: 'name', label: 'Name' },
-    { key: 'asset_id', label: 'Asset ID' },
-    { key: 'status', label: 'Status' },
-    { key: 'value', label: 'Value' },
-];
-
-const createFilterRow = (): FilterRow => ({
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    fieldKey: '',
-    condition: '',
-    value: '',
-});
-
-const createSortRow = (field: AssetSortField, order: AssetSortDirection = 'desc'): SortRow => ({
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    field,
-    order,
-});
-
-const createResourceFilterRow = (fieldKey: ResourceFilterField, value: string): FilterRow => ({
-    id: createFilterRow().id,
-    fieldKey,
-    condition: 'equals',
-    value,
-});
-
-const sanitizeQuery = (query: Record<string, AssetQueryValue>) => (
-    Object.fromEntries(
-        Object.entries(query).filter(([, value]) => value !== undefined && value !== ''),
-    ) as Record<string, string | number>
-);
-
-const normalizeDraftFilters = (filters: AssetFiltersQuery): AssetFilterState => ({
-    status: String(filters.status ?? ''),
-    category_id: String(filters.category_id ?? ''),
-    location_id: String(filters.location_id ?? ''),
-    asset_id: String(filters.asset_id ?? ''),
-    value_min: String(filters.value_min ?? ''),
-    value_max: String(filters.value_max ?? ''),
-});
-
-const normalizeAppliedSorts = (sorts: AssetSortDraft[]): AssetSortDraft[] => {
-    if (sorts.length === 0) {
-        return [DEFAULT_SORT];
-    }
-
-    return sorts;
-};
-
-const filtersToRows = (filters: AssetFilterState): FilterRow[] => {
-    const rows: FilterRow[] = [];
-
-    if (filters.status) {
-        rows.push({ id: createFilterRow().id, fieldKey: 'status', condition: 'equals', value: filters.status });
-    }
-
-    if (filters.category_id) {
-        rows.push({ id: createFilterRow().id, fieldKey: 'category_id', condition: 'equals', value: filters.category_id });
-    }
-
-    if (filters.location_id) {
-        rows.push({ id: createFilterRow().id, fieldKey: 'location_id', condition: 'equals', value: filters.location_id });
-    }
-
-    if (filters.asset_id) {
-        rows.push({ id: createFilterRow().id, fieldKey: 'asset_id', condition: 'contains', value: filters.asset_id });
-    }
-
-    if (filters.value_min) {
-        rows.push({ id: createFilterRow().id, fieldKey: 'value', condition: 'gte', value: filters.value_min });
-    }
-
-    if (filters.value_max) {
-        rows.push({ id: createFilterRow().id, fieldKey: 'value', condition: 'lte', value: filters.value_max });
-    }
-
-    return rows;
-};
-
-const rowsToFilters = (rows: FilterRow[]): AssetFilterState => {
-    const nextFilters = { ...EMPTY_FILTERS };
-
-    rows.forEach((row) => {
-        if (!row.fieldKey || !row.condition || row.value.trim() === '') {
-            return;
-        }
-
-        if (row.fieldKey === 'status' && row.condition === 'equals') {
-            nextFilters.status = row.value;
-        }
-
-        if (row.fieldKey === 'category_id' && row.condition === 'equals') {
-            nextFilters.category_id = row.value;
-        }
-
-        if (row.fieldKey === 'location_id' && row.condition === 'equals') {
-            nextFilters.location_id = row.value;
-        }
-
-        if (row.fieldKey === 'asset_id' && row.condition === 'contains') {
-            nextFilters.asset_id = row.value;
-        }
-
-        if (row.fieldKey === 'value' && row.condition === 'gte') {
-            nextFilters.value_min = row.value;
-        }
-
-        if (row.fieldKey === 'value' && row.condition === 'lte') {
-            nextFilters.value_max = row.value;
-        }
-    });
-
-    return nextFilters;
-};
-
-const sortDraftsToRows = (sorts: AssetSortDraft[]): SortRow[] => {
-    const normalizedSorts = normalizeAppliedSorts(sorts);
-
-    if (normalizedSorts.length === 1 && normalizedSorts[0].field === DEFAULT_SORT.field && normalizedSorts[0].order === DEFAULT_SORT.order) {
-        return [];
-    }
-
-    return normalizedSorts.map((sort) => createSortRow(sort.field, sort.order));
-};
-
-const sortRowsToDrafts = (rows: SortRow[]): AssetSortDraft[] => {
-    if (rows.length === 0) {
-        return [DEFAULT_SORT];
-    }
-
-    return rows.map((row) => ({
-        field: row.field,
-        order: row.order,
-    }));
-};
-
-const getFilterDefinitions = (
-    categories: AssetFilterOption[],
-    locations: AssetFilterOption[],
-): FilterDefinition[] => [
-        {
-            key: 'status',
-            label: 'Status',
-            input: 'select',
-            options: [
-                { value: 'available', label: 'Available' },
-                { value: 'assigned', label: 'Assigned' },
-                { value: 'maintenance', label: 'In Maintenance' },
-                { value: 'retired', label: 'Retired' },
-            ],
-            conditions: ['equals'],
-            defaultCondition: 'equals',
-        },
-        {
-            key: 'category_id',
-            label: 'Category',
-            input: 'select',
-            options: categories.map((category) => ({ value: String(category.id), label: category.name })),
-            conditions: ['equals'],
-            defaultCondition: 'equals',
-        },
-        {
-            key: 'location_id',
-            label: 'Location',
-            input: 'select',
-            options: locations.map((location) => ({ value: String(location.id), label: location.name })),
-            conditions: ['equals'],
-            defaultCondition: 'equals',
-        },
-        {
-            key: 'asset_id',
-            label: 'Asset ID',
-            input: 'text',
-            placeholder: 'e.g. AST-204',
-            conditions: ['contains'],
-            defaultCondition: 'contains',
-        },
-        {
-            key: 'value',
-            label: 'Value',
-            input: 'number',
-            placeholder: '0.00',
-            conditions: ['gte', 'lte'],
-            defaultCondition: 'gte',
-        },
-    ];
+export type { AssetFilterOption, AssetFiltersQuery, AssetQueryValue, AssetSavedFilter, AssetSortDraft } from './asset-query-builder/types';
 
 function BuilderOptionSelect({
     value,
@@ -409,379 +89,95 @@ function BuilderOptionSelect({
     );
 }
 
-export function AssetQueryBuilder({
-    categories,
-    locations,
-    savedFilters,
-    filters,
-    sorts,
-    resourcePath = '/assets',
-    showFilterButton = true,
-    showSortButton = true,
-    showSavedFiltersButton = true,
-    filterActionLayout = 'default',
-}: AssetQueryBuilderProps) {
-    const page = usePage<SharedPageProps>();
-    const flash = page.props.flash;
-    const overlayWidth = 'min(52rem, calc(100vw - 2rem))';
-    const builderContainerRef = useRef<HTMLDivElement | null>(null);
-    const appliedFilters = normalizeDraftFilters(filters);
-    const appliedFiltersSignature = JSON.stringify(appliedFilters);
-    const appliedSorts = normalizeAppliedSorts(sorts);
-    const appliedSortSignature = JSON.stringify(appliedSorts);
-    const filterDefinitions = useMemo(() => getFilterDefinitions(categories, locations), [categories, locations]);
-    const filterDefinitionMap = useMemo(
-        () => Object.fromEntries(filterDefinitions.map((definition) => [definition.key, definition])) as Record<AssetFilterKey, FilterDefinition>,
-        [filterDefinitions],
+export function AssetQueryBuilder(props: AssetQueryBuilderProps) {
+    const {
+        categories,
+        locations,
+        savedFilters,
+        filters,
+        sorts,
+        resourcePath = '/assets',
+        showFilterButton = true,
+        showSortButton = true,
+        showSavedFiltersButton = true,
+        filterActionLayout = 'default',
+    } = props;
+
+    const {
+        builderMode,
+        setBuilderMode,
+        filterRows,
+        sortRows,
+        setSortRows,
+        savedFilterName,
+        setSavedFilterName,
+        isSavingFilter,
+        setIsSavingFilter,
+        isSaveFilterDialogOpen,
+        setIsSaveFilterDialogOpen,
+        savedFilterDialogMode,
+        selectedSavedFilter,
+        editingSavedFilterName,
+        setEditingSavedFilterName,
+        isUpdatingSavedFilter,
+        isDeletingSavedFilter,
+        openSelectKey,
+        setOpenSelectKey,
+        isCategoryDialogOpen,
+        setIsCategoryDialogOpen,
+        isLocationDialogOpen,
+        setIsLocationDialogOpen,
+        builderContainerRef,
+        
+        filterDefinitions,
+        filterDefinitionMap,
+        activeFilterCount,
+        completedFilterRows,
+        hasDraftFilters,
+        hasPendingFilterChanges,
+        hasPendingSortChanges,
+        showConfirmFilterActions,
+        draftFilters,
+        sortDrafts,
+        
+        applyFilters,
+        applySort,
+        handleApplySavedFilter,
+        handleOpenEditSavedFilter,
+        handleOpenDeleteSavedFilter,
+        handleCloseSavedFilterDialog,
+        handleUpdateSavedFilter,
+        handleDeleteSavedFilter,
+        handleSaveFilter,
+        handleClearDraftFilters,
+        handleAddFilterRow,
+        handleRemoveFilterRow,
+        handleFilterFieldChange,
+        handleFilterConditionChange,
+        handleFilterValueChange,
+        handleCreateFromRow,
+        closeBuilderPanel,
+    } = useAssetQuery(
+        categories,
+        locations,
+        filters,
+        sorts,
+        resourcePath,
+        showSavedFiltersButton,
+        filterActionLayout
     );
 
-    const [builderMode, setBuilderMode] = useState<BuilderMode>(null);
-    const [isSaveFilterDialogOpen, setIsSaveFilterDialogOpen] = useState(false);
-    const [filterRows, setFilterRows] = useState<FilterRow[]>(() => filtersToRows(appliedFilters));
-    const [sortRows, setSortRows] = useState<SortRow[]>(() => sortDraftsToRows(appliedSorts));
-    const [savedFilterName, setSavedFilterName] = useState('');
-    const [isSavingFilter, setIsSavingFilter] = useState(false);
-    const [savedFilterDialogMode, setSavedFilterDialogMode] = useState<SavedFilterDialogMode>(null);
-    const [selectedSavedFilter, setSelectedSavedFilter] = useState<AssetSavedFilter | null>(null);
-    const [editingSavedFilterName, setEditingSavedFilterName] = useState('');
-    const [isUpdatingSavedFilter, setIsUpdatingSavedFilter] = useState(false);
-    const [isDeletingSavedFilter, setIsDeletingSavedFilter] = useState(false);
-    const [openSelectKey, setOpenSelectKey] = useState<string | null>(null);
-    const [pendingCreate, setPendingCreate] = useState<PendingCreate | null>(null);
-    const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
-    const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
-    const handledCreatedCategoryId = useRef<string | number | null>(null);
-    const handledCreatedLocationId = useRef<string | number | null>(null);
-
-    useEffect(() => {
-        if (builderMode === null) {
-            return;
-        }
-
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                if (document.querySelector(NESTED_OVERLAY_SELECTOR)) {
-                    return;
-                }
-
-                setBuilderMode(null);
-                setOpenSelectKey(null);
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [builderMode]);
-
-    useEffect(() => {
-        if (builderMode === null) {
-            return;
-        }
-
-        const handlePointerDown = (event: MouseEvent | PointerEvent | TouchEvent) => {
-            const target = event.target;
-
-            if (!(target instanceof Node)) {
-                return;
-            }
-
-            if (builderContainerRef.current?.contains(target)) {
-                return;
-            }
-
-            if (target instanceof Element && target.closest(NESTED_OVERLAY_SELECTOR)) {
-                return;
-            }
-
-            if (document.querySelector(NESTED_OVERLAY_SELECTOR)) {
-                return;
-            }
-
-            setBuilderMode(null);
-            setOpenSelectKey(null);
-        };
-
-        document.addEventListener('pointerdown', handlePointerDown);
-
-        return () => document.removeEventListener('pointerdown', handlePointerDown);
-    }, [builderMode]);
-
-    useEffect(() => {
-        setFilterRows(filtersToRows(appliedFilters));
-    }, [appliedFiltersSignature]);
-
-    useEffect(() => {
-        setSortRows(sortDraftsToRows(appliedSorts));
-    }, [appliedSortSignature]);
-
-    useEffect(() => {
-        if (pendingCreate?.target !== 'category' || openSelectKey !== null) {
-            return;
-        }
-
-        const timeoutId = window.setTimeout(() => {
-            setIsCategoryDialogOpen(true);
-        }, 0);
-
-        return () => window.clearTimeout(timeoutId);
-    }, [openSelectKey, pendingCreate]);
-
-    useEffect(() => {
-        if (pendingCreate?.target !== 'location' || openSelectKey !== null) {
-            return;
-        }
-
-        const timeoutId = window.setTimeout(() => {
-            setIsLocationDialogOpen(true);
-        }, 0);
-
-        return () => window.clearTimeout(timeoutId);
-    }, [openSelectKey, pendingCreate]);
-
-    useEffect(() => {
-        if (pendingCreate?.target !== 'category' || !flash?.createdCategory || handledCreatedCategoryId.current === flash.createdCategory.id) {
-            return;
-        }
-
-        const createdCategory = flash.createdCategory;
-
-        handledCreatedCategoryId.current = createdCategory.id;
-
-        setFilterRows((current) => {
-            const nextRows: FilterRow[] = current.map((row): FilterRow => (
-                row.id === pendingCreate?.rowId
-                    ? { ...row, fieldKey: 'category_id', condition: 'equals', value: String(createdCategory.id) }
-                    : row
-            ));
-
-            if (nextRows.some((row) => row.id === pendingCreate?.rowId)) {
-                return nextRows;
-            }
-
-            return [
-                createResourceFilterRow('category_id', String(createdCategory.id)),
-                ...nextRows,
-            ];
-        });
-
-        setOpenSelectKey(null);
-        setPendingCreate(null);
-        setIsCategoryDialogOpen(false);
-    }, [flash?.createdCategory, pendingCreate]);
-
-    useEffect(() => {
-        if (pendingCreate?.target !== 'location' || !flash?.createdLocation || handledCreatedLocationId.current === flash.createdLocation.id) {
-            return;
-        }
-
-        const createdLocation = flash.createdLocation;
-
-        handledCreatedLocationId.current = createdLocation.id;
-
-        setFilterRows((current) => {
-            const nextRows: FilterRow[] = current.map((row): FilterRow => (
-                row.id === pendingCreate?.rowId
-                    ? { ...row, fieldKey: 'location_id', condition: 'equals', value: String(createdLocation.id) }
-                    : row
-            ));
-
-            if (nextRows.some((row) => row.id === pendingCreate?.rowId)) {
-                return nextRows;
-            }
-
-            return [
-                createResourceFilterRow('location_id', String(createdLocation.id)),
-                ...nextRows,
-            ];
-        });
-
-        setOpenSelectKey(null);
-        setPendingCreate(null);
-        setIsLocationDialogOpen(false);
-    }, [flash?.createdLocation, pendingCreate]);
-
-    const draftFilters = rowsToFilters(filterRows);
-    const draftFiltersSignature = JSON.stringify(draftFilters);
-    const sortDrafts = sortRowsToDrafts(sortRows);
-    const sortRowsSignature = JSON.stringify(sortDrafts);
-    const completedFilterRows = filterRows.filter((row) => row.fieldKey && row.condition && row.value.trim() !== '');
-    const activeFilterCount = completedFilterRows.length;
-    const hasDraftFilters = activeFilterCount > 0;
-    const hasPendingFilterChanges = draftFiltersSignature !== appliedFiltersSignature;
-    const hasPendingSortChanges = sortRowsSignature !== appliedSortSignature;
-    const showConfirmFilterActions = filterActionLayout === 'confirm';
-
-    const applyFilters = (nextFilters: AssetFilterState = draftFilters) => {
-        router.get(resourcePath, sanitizeQuery({
-            ...filters,
-            ...nextFilters,
-            page: 1,
-        }), {
-            preserveState: true,
-            replace: true,
-        });
-    };
-
-    const applySort = (nextSorts: AssetSortDraft[] = sortDrafts) => {
-        router.get(resourcePath, sanitizeQuery({
-            ...filters,
-            sort: undefined,
-            order: undefined,
-            sorts: nextSorts.length === 1 && nextSorts[0].field === DEFAULT_SORT.field && nextSorts[0].order === DEFAULT_SORT.order
-                ? undefined
-                : nextSorts.map((sort) => `${sort.field}:${sort.order}`).join(','),
-            page: 1,
-        }), {
-            preserveState: true,
-            replace: true,
-        });
-    };
-
-    const handleApplySavedFilter = (savedFilter: AssetSavedFilter) => {
-        const nextFilters = {
-            ...EMPTY_FILTERS,
-            ...savedFilter.filters,
-        } as AssetFilterState;
-
-        setFilterRows(filtersToRows(nextFilters));
-        setBuilderMode(null);
-        applyFilters(nextFilters);
-    };
-
-    const handleOpenEditSavedFilter = (savedFilter: AssetSavedFilter) => {
-        setSelectedSavedFilter(savedFilter);
-        setEditingSavedFilterName(savedFilter.name);
-        setSavedFilterDialogMode('edit');
-    };
-
-    const handleOpenDeleteSavedFilter = (savedFilter: AssetSavedFilter) => {
-        setSelectedSavedFilter(savedFilter);
-        setSavedFilterDialogMode('delete');
-    };
-
-    const handleCloseSavedFilterDialog = (force = false) => {
-        if (!force && (isUpdatingSavedFilter || isDeletingSavedFilter)) {
-            return;
-        }
-
-        setSavedFilterDialogMode(null);
-        setSelectedSavedFilter(null);
-        setEditingSavedFilterName('');
-    };
-
-    const handleUpdateSavedFilter = () => {
-        if (!selectedSavedFilter || !editingSavedFilterName.trim() || isUpdatingSavedFilter) {
-            return;
-        }
-
-        setIsUpdatingSavedFilter(true);
-
-        router.patch(`/assets/saved-filters/${selectedSavedFilter.id}`, {
-            name: editingSavedFilterName.trim(),
-        }, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                handleCloseSavedFilterDialog(true);
-            },
-            onFinish: () => setIsUpdatingSavedFilter(false),
-        });
-    };
-
-    const handleDeleteSavedFilter = () => {
-        if (!selectedSavedFilter || isDeletingSavedFilter) {
-            return;
-        }
-
-        setIsDeletingSavedFilter(true);
-
-        router.delete(`/assets/saved-filters/${selectedSavedFilter.id}`, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                handleCloseSavedFilterDialog(true);
-                setBuilderMode(showSavedFiltersButton ? 'saved' : null);
-            },
-            onFinish: () => setIsDeletingSavedFilter(false),
-        });
-    };
-
-    const handleSaveFilter = () => {
-        if (!savedFilterName.trim() || isSavingFilter) {
-            return;
-        }
-
-        setIsSavingFilter(true);
-
-        router.post('/assets/saved-filters', {
-            name: savedFilterName.trim(),
-            filters: draftFilters,
-        }, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                setSavedFilterName('');
-                setIsSaveFilterDialogOpen(false);
-            },
-            onFinish: () => setIsSavingFilter(false),
-        });
-    };
-
-    const handleClearDraftFilters = () => {
-        setFilterRows([]);
-    };
-
-    const handleAddFilterRow = () => {
-        setFilterRows((current) => [createFilterRow(), ...current]);
-    };
-
-    const handleRemoveFilterRow = (rowId: string) => {
-        setFilterRows((current) => current.filter((row) => row.id !== rowId));
-    };
-
-    const handleFilterFieldChange = (rowId: string, fieldKey: AssetFilterKey) => {
-        const definition = filterDefinitionMap[fieldKey];
-
-        setFilterRows((current) => current.map((row) => (
-            row.id === rowId
-                ? {
-                    ...row,
-                    fieldKey,
-                    condition: definition.defaultCondition,
-                    value: '',
-                }
-                : row
-        )));
-    };
-
-    const handleFilterConditionChange = (rowId: string, condition: AssetFilterCondition) => {
-        setFilterRows((current) => current.map((row) => (
-            row.id === rowId
-                ? {
-                    ...row,
-                    condition,
-                    value: row.fieldKey === 'value' ? '' : row.value,
-                }
-                : row
-        )));
-    };
-
-    const handleFilterValueChange = (rowId: string, value: string) => {
-        setFilterRows((current) => current.map((row) => (
-            row.id === rowId
-                ? {
-                    ...row,
-                    value,
-                }
-                : row
-        )));
-    };
-
-    const handleCreateFromRow = (target: CreateTarget, rowId: string) => {
-        setPendingCreate({ target, rowId });
-        setOpenSelectKey(null);
-    };
+    const overlayWidth = 'min(52rem, calc(100vw - 2rem))';
+    const panelTitle = builderMode === 'filter'
+        ? 'Filter assets'
+        : builderMode === 'sort'
+            ? 'Sort assets'
+            : 'Saved filters';
+    const panelDescription = builderMode === 'filter'
+        ? 'Build filters here without shifting the table layout below.'
+        : builderMode === 'sort'
+            ? 'Adjust the sort order in an overlay panel.'
+            : 'Apply, rename, or remove saved asset filter sets.';
 
     const renderFilterValueControl = (filterRow: FilterRow, definition: FilterDefinition | null) => {
         if (!definition) {
@@ -818,16 +214,12 @@ export function AssetQueryBuilder({
                     onValueChange={(value) => {
                         if (value === 'create_category') {
                             handleCreateFromRow('category', filterRow.id);
-
                             return;
                         }
-
                         if (value === 'create_location') {
                             handleCreateFromRow('location', filterRow.id);
-
                             return;
                         }
-
                         handleFilterValueChange(filterRow.id, value);
                         setOpenSelectKey(null);
                     }}
@@ -851,22 +243,6 @@ export function AssetQueryBuilder({
                 min={definition.input === 'number' ? '0' : undefined}
             />
         );
-    };
-
-    const panelTitle = builderMode === 'filter'
-        ? 'Filter assets'
-        : builderMode === 'sort'
-            ? 'Sort assets'
-            : 'Saved filters';
-    const panelDescription = builderMode === 'filter'
-        ? 'Build filters here without shifting the table layout below.'
-        : builderMode === 'sort'
-            ? 'Adjust the sort order in an overlay panel.'
-            : 'Apply, rename, or remove saved asset filter sets.';
-
-    const closeBuilderPanel = () => {
-        setBuilderMode(null);
-        setOpenSelectKey(null);
     };
 
     return (
@@ -904,13 +280,14 @@ export function AssetQueryBuilder({
                             onClick={() => setBuilderMode((current) => current === 'saved' ? null : 'saved')}
                             aria-expanded={builderMode === 'saved'}
                         >
-                            <Bookmark size={16} /> Saved Filters
+                            <Bookmark size={16} /> Saved
                         </Button>
                     ) : null}
                 </div>
+
                 {builderMode ? (
                     <div
-                        className="absolute left-0 top-full z-50 mt-3 max-w-[calc(100vw-2rem)] min-w-80 rounded border bg-background shadow-xl"
+                        className="absolute left-0 top-full z-50 mt-3 flex flex-col overflow-hidden rounded border bg-background shadow-xl"
                         style={{ width: overlayWidth }}
                     >
                         <div className="flex items-start justify-between border-b px-4 py-3">
@@ -930,53 +307,59 @@ export function AssetQueryBuilder({
                             </Button>
                         </div>
 
-                        {builderMode === 'filter' ? (
-                            <div className="p-4">
+                        <div className="max-h-[60vh] overflow-y-auto p-4 pb-3">
+                            {builderMode === 'filter' ? (
                                 <div className="space-y-3">
                                     {filterRows.length > 0 ? filterRows.map((filterRow) => {
                                         const definition = filterRow.fieldKey ? filterDefinitionMap[filterRow.fieldKey] : null;
-                                        const conditionOptions = definition?.conditions ?? [];
 
                                         return (
-                                            <div key={filterRow.id} className={PANEL_ROW_CLASS}>
-                                                <div className="md:min-w-48">
+                                            <div key={filterRow.id} className="flex flex-wrap items-center gap-2 rounded border bg-muted/20 p-2 md:flex-nowrap">
+                                                <div className="w-full md:w-1/3">
                                                     <Select
-                                                        value={filterRow.fieldKey || undefined}
-                                                        onValueChange={(value) => handleFilterFieldChange(filterRow.id, value as AssetFilterKey)}
+                                                        value={filterRow.fieldKey}
+                                                        onValueChange={(value: AssetFilterKey) => handleFilterFieldChange(filterRow.id, value)}
+                                                        open={openSelectKey === `field:${filterRow.id}`}
+                                                        onOpenChange={(open) => setOpenSelectKey(open ? `field:${filterRow.id}` : null)}
                                                     >
                                                         <SelectTrigger className="w-full">
                                                             <SelectValue placeholder="Select field" />
                                                         </SelectTrigger>
                                                         <SelectContent align="start" side="top">
-                                                            {filterDefinitions.map((definitionOption) => (
-                                                                <SelectItem key={definitionOption.key} value={definitionOption.key}>
-                                                                    {definitionOption.label}
+                                                            {filterDefinitions.map((def) => (
+                                                                <SelectItem key={def.key} value={def.key}>
+                                                                    {def.label}
                                                                 </SelectItem>
                                                             ))}
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
-                                                <div className="md:w-28">
+
+                                                <div className="w-full md:w-24">
                                                     <Select
-                                                        value={filterRow.condition || undefined}
-                                                        onValueChange={(value) => handleFilterConditionChange(filterRow.id, value as AssetFilterCondition)}
-                                                        disabled={!definition}
+                                                        value={filterRow.condition}
+                                                        onValueChange={(value: AssetFilterCondition) => handleFilterConditionChange(filterRow.id, value)}
+                                                        disabled={!filterRow.fieldKey}
+                                                        open={openSelectKey === `condition:${filterRow.id}`}
+                                                        onOpenChange={(open) => setOpenSelectKey(open ? `condition:${filterRow.id}` : null)}
                                                     >
                                                         <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder="Condition" />
+                                                            <SelectValue placeholder="Cond" />
                                                         </SelectTrigger>
                                                         <SelectContent align="start" side="top">
-                                                            {conditionOptions.map((condition) => (
-                                                                <SelectItem key={condition} value={condition}>
-                                                                    {FILTER_CONDITION_LABELS[condition]}
+                                                            {definition?.conditions.map((cond) => (
+                                                                <SelectItem key={cond} value={cond}>
+                                                                    {FILTER_CONDITION_LABELS[cond]}
                                                                 </SelectItem>
                                                             ))}
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
-                                                <div className="flex-1">
+
+                                                <div className="min-w-0 flex-1">
                                                     {renderFilterValueControl(filterRow, definition)}
                                                 </div>
+
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
@@ -994,272 +377,339 @@ export function AssetQueryBuilder({
                                             No filters added yet. Add one to narrow the assets list.
                                         </div>
                                     )}
-                                </div>
 
-                                <div className="mt-4 flex flex-col gap-3 border-t pt-4 md:flex-row md:items-center md:justify-between">
-                                    <div className="flex flex-wrap items-center gap-3">
-                                        <Button type="button" variant="outline" className="gap-2" onClick={handleAddFilterRow}>
-                                            <Plus size={16} /> Add filter
-                                        </Button>
-                                        <span className="text-sm text-muted-foreground">
-                                            Pick a field, choose a condition, then fill in the value.
-                                        </span>
-                                    </div>
+                                    <div className="mt-4 flex flex-col gap-3 border-t pt-4 md:flex-row md:items-center md:justify-between">
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <Button type="button" variant="outline" className="gap-2" onClick={handleAddFilterRow}>
+                                                <Plus size={16} /> Add filter
+                                            </Button>
+                                            <span className="text-sm text-muted-foreground">
+                                                Pick a field, choose a condition, then fill in the value.
+                                            </span>
+                                        </div>
 
-                                    <div className="flex flex-wrap items-center justify-end gap-2">
-                                        <Button type="button" variant="ghost" className="px-2 text-sm text-muted-foreground" onClick={handleClearDraftFilters}>
-                                            Clear all
-                                        </Button>
-                                        {!showConfirmFilterActions && showSavedFiltersButton ? (
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                className="gap-2"
-                                                onClick={() => setIsSaveFilterDialogOpen(true)}
-                                                disabled={!hasDraftFilters}
-                                            >
-                                                <Bookmark size={16} /> Save Filter
+                                        <div className="flex flex-wrap items-center justify-end gap-2">
+                                            <Button type="button" variant="ghost" className="px-2 text-sm text-muted-foreground" onClick={handleClearDraftFilters}>
+                                                Clear all
                                             </Button>
-                                        ) : null}
-                                        {showConfirmFilterActions ? (
-                                            <>
-                                                <Button type="button" variant="outline" onClick={closeBuilderPanel}>
-                                                    Close
+                                            {!showConfirmFilterActions && showSavedFiltersButton ? (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="gap-2"
+                                                    onClick={() => setIsSaveFilterDialogOpen(true)}
+                                                    disabled={!hasDraftFilters}
+                                                >
+                                                    <Bookmark size={16} /> Save filter set
                                                 </Button>
-                                                <Button type="button" onClick={() => applyFilters()}>
-                                                    Confirm
-                                                </Button>
-                                            </>
-                                        ) : (
-                                            <Button type="button" onClick={() => applyFilters()} disabled={!hasPendingFilterChanges}>
-                                                Apply filters
-                                            </Button>
-                                        )}
+                                            ) : null}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ) : null}
-
-                        {builderMode === 'sort' ? (
-                            <div className="p-4">
+                            ) : builderMode === 'sort' ? (
                                 <div className="space-y-3">
-                                    {sortRows.length > 0 ? sortRows.map((sortRow) => (
-                                        <div key={sortRow.id} className={PANEL_ROW_CLASS}>
-                                            <div className="flex-1 md:max-w-72">
+                                    {sortRows.length > 0 ? sortRows.map((sortRow, index) => (
+                                        <div key={sortRow.id} className="flex items-center gap-2 rounded border bg-muted/20 p-2">
+                                            <span className="w-8 shrink-0 text-center text-xs font-medium text-muted-foreground">
+                                                {index === 0 ? 'Sort' : 'Then'}
+                                            </span>
+
+                                            <div className="min-w-0 flex-1">
                                                 <Select
                                                     value={sortRow.field}
-                                                    onValueChange={(value) => {
+                                                    onValueChange={(value: AssetSortField) => {
                                                         setSortRows((current) => current.map((row) => (
-                                                            row.id === sortRow.id
-                                                                ? { ...row, field: value as AssetSortField }
-                                                                : row
+                                                            row.id === sortRow.id ? { ...row, field: value } : row
                                                         )));
                                                     }}
+                                                    open={openSelectKey === `sortField:${sortRow.id}`}
+                                                    onOpenChange={(open) => setOpenSelectKey(open ? `sortField:${sortRow.id}` : null)}
                                                 >
                                                     <SelectTrigger className="w-full">
-                                                        <SelectValue placeholder="Select sort field" />
+                                                        <SelectValue placeholder="Sort field" />
                                                     </SelectTrigger>
                                                     <SelectContent align="start" side="top">
-                                                        {SORT_DEFINITIONS.map((definition) => (
-                                                            <SelectItem key={definition.key} value={definition.key}>
-                                                                {definition.label}
+                                                        {SORT_DEFINITIONS.map((def) => (
+                                                            <SelectItem key={def.key} value={def.key}>
+                                                                {def.label}
                                                             </SelectItem>
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
                                             </div>
-                                            <div className="flex gap-1">
-                                                <div className="flex items-center rounded border p-1 gap-1">
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className={sortRow.order === 'asc' ? 'h-7 bg-muted text-foreground shadow-none' : 'h-7 text-muted-foreground shadow-none'}
-                                                        onClick={() => setSortRows((current) => current.map((row) => (
-                                                            row.id === sortRow.id
-                                                                ? { ...row, order: 'asc' }
-                                                                : row
-                                                        )))}
-                                                    >
-                                                        Ascending
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className={sortRow.order === 'desc' ? 'h-7 bg-muted text-foreground shadow-none' : 'h-7 text-muted-foreground shadow-none'}
-                                                        onClick={() => setSortRows((current) => current.map((row) => (
-                                                            row.id === sortRow.id
-                                                                ? { ...row, order: 'desc' }
-                                                                : row
-                                                        )))}
-                                                    >
-                                                        Reverse
-                                                    </Button>
+
+                                            <div className="w-28 shrink-0">
+                                                <Select
+                                                    value={sortRow.order}
+                                                    onValueChange={(value: 'asc' | 'desc') => {
+                                                        setSortRows((current) => current.map((row) => (
+                                                            row.id === sortRow.id ? { ...row, order: value } : row
+                                                        )));
+                                                    }}
+                                                    open={openSelectKey === `sortOrder:${sortRow.id}`}
+                                                    onOpenChange={(open) => setOpenSelectKey(open ? `sortOrder:${sortRow.id}` : null)}
+                                                >
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue placeholder="Order" />
+                                                    </SelectTrigger>
+                                                    <SelectContent align="start" side="top">
+                                                        <SelectItem value="asc">Ascending</SelectItem>
+                                                        <SelectItem value="desc">Descending</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-9 w-9 shrink-0"
+                                                onClick={() => setSortRows((current) => current.filter((row) => row.id !== sortRow.id))}
+                                            >
+                                                <X className="h-4 w-4" />
+                                                <span className="sr-only">Remove sort</span>
+                                            </Button>
+                                        </div>
+                                    )) : (
+                                        <div className={EMPTY_ROW_CLASS}>
+                                            Using default sorting (Newest First).
+                                        </div>
+                                    )}
+
+                                    <div className="mt-4 flex flex-wrap items-center gap-3 border-t pt-4">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="gap-2"
+                                            onClick={() => setSortRows((current) => [...current, {
+                                                id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                                                field: 'name',
+                                                order: 'asc'
+                                            }])}
+                                            disabled={sortRows.length >= 3}
+                                        >
+                                            <Plus size={16} /> Add level
+                                        </Button>
+                                        <span className="text-sm text-muted-foreground">
+                                            Sort by up to 3 levels (e.g. Status then Name).
+                                        </span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-1.5">
+                                    {savedFilters.length > 0 ? savedFilters.map((savedFilter) => (
+                                        <div
+                                            key={savedFilter.id}
+                                            className="group flex items-center justify-between gap-3 rounded border border-transparent p-2 hover:border-border hover:bg-muted/30"
+                                        >
+                                            <button
+                                                type="button"
+                                                className="min-w-0 flex-1 text-left"
+                                                onClick={() => handleApplySavedFilter(savedFilter)}
+                                            >
+                                                <div className="truncate font-medium">{savedFilter.name}</div>
+                                                <div className="truncate text-xs text-muted-foreground">
+                                                    {Object.entries(savedFilter.filters)
+                                                        .filter(([, value]) => value !== null && value !== undefined && value !== '')
+                                                        .map(([key, value]) => `${key}: ${value}`)
+                                                        .join(', ') || 'No filters'}
                                                 </div>
+                                            </button>
+                                            <div className="flex shrink-0 items-center gap-1 opacity-0 group-hover:opacity-100">
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-9 w-9 shrink-0"
-                                                    onClick={() => setSortRows((current) => current.filter((row) => row.id !== sortRow.id))}
+                                                    className="h-8 w-8"
+                                                    onClick={() => handleOpenEditSavedFilter(savedFilter)}
                                                 >
-                                                    <X className="h-4 w-4" />
-                                                    <span className="sr-only">Remove sort</span>
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    )) : (
-                                        <div className={EMPTY_ROW_CLASS}>
-                                            No sorting added yet. Add one to override the default created date order.
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="mt-4 flex flex-col gap-3 border-t pt-4 md:flex-row md:items-center md:justify-between">
-                                    <div className="flex flex-wrap items-center gap-3">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button type="button" variant="outline" className="gap-2">
-                                                    <Plus size={16} /> Add sort
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="start" className="w-56">
-                                                <DropdownMenuLabel>Pick a column to sort by</DropdownMenuLabel>
-                                                <DropdownMenuSeparator />
-                                                {SORT_DEFINITIONS.map((definition) => (
-                                                    <DropdownMenuItem key={definition.key} onClick={() => setSortRows((current) => [...current, createSortRow(definition.key)])}>
-                                                        {definition.label}
-                                                    </DropdownMenuItem>
-                                                ))}
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                        <span className="text-sm text-muted-foreground">
-                                            Add sort blocks in the order they should be applied, then choose ascending or reverse.
-                                        </span>
-                                    </div>
-
-                                    <div className="flex flex-wrap items-center justify-end gap-2">
-                                        <Button type="button" onClick={() => applySort()} disabled={!hasPendingSortChanges}>
-                                            Apply sort
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : null}
-
-                        {builderMode === 'saved' ? (
-                            <div className="p-4">
-                                <div className="space-y-3">
-                                    {savedFilters.length > 0 ? savedFilters.map((savedFilter) => (
-                                        <div key={savedFilter.id} className="flex flex-col gap-3 rounded border p-3 md:flex-row md:items-center md:justify-between">
-                                            <div className="min-w-0 flex-1">
-                                                <div className="truncate text-sm font-medium text-foreground">{savedFilter.name}</div>
-                                                <div className="text-xs text-muted-foreground">
-                                                    {Object.values(savedFilter.filters).filter((value) => value && String(value).trim() !== '').length} filter rule(s)
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <Button type="button" variant="outline" className="h-8" onClick={() => handleApplySavedFilter(savedFilter)}>
-                                                    Apply
-                                                </Button>
-                                                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenEditSavedFilter(savedFilter)}>
                                                     <Pencil className="h-4 w-4" />
-                                                    <span className="sr-only">Edit saved filter</span>
+                                                    <span className="sr-only">Edit name</span>
                                                 </Button>
-                                                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => handleOpenDeleteSavedFilter(savedFilter)}>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                    onClick={() => handleOpenDeleteSavedFilter(savedFilter)}
+                                                >
                                                     <Trash2 className="h-4 w-4" />
-                                                    <span className="sr-only">Delete saved filter</span>
+                                                    <span className="sr-only">Delete</span>
                                                 </Button>
                                             </div>
                                         </div>
                                     )) : (
                                         <div className={EMPTY_ROW_CLASS}>
-                                            No saved filters yet. Save one from the filter panel.
+                                            No saved filters yet. Create some from the filter tab.
                                         </div>
                                     )}
                                 </div>
+                            )}
+                        </div>
+
+                        <div className="border-t bg-muted/20 px-4 py-3">
+                            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                <div className="flex-1">
+                                    {builderMode === 'filter' && hasPendingFilterChanges && !showConfirmFilterActions ? (
+                                        <div className="flex items-center gap-2 text-xs text-orange-600 dark:text-orange-400">
+                                            <span className="flex h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
+                                            Pending changes. Apply to see updated results.
+                                        </div>
+                                    ) : null}
+                                    {builderMode === 'sort' && hasPendingSortChanges ? (
+                                        <div className="flex items-center gap-2 text-xs text-orange-600 dark:text-orange-400">
+                                            <span className="flex h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
+                                            Pending sort changes. Apply to update order.
+                                        </div>
+                                    ) : null}
+                                </div>
+                                <div className="flex items-center justify-end gap-2">
+                                    <Button type="button" variant="outline" onClick={closeBuilderPanel}>
+                                        Cancel
+                                    </Button>
+                                    {builderMode === 'filter' ? (
+                                        <>
+                                            {showConfirmFilterActions ? (
+                                                <Button
+                                                    type="button"
+                                                    className="gap-2 rounded border-none bg-[#f0642d] text-white hover:bg-[#d95627]"
+                                                    onClick={() => setIsSaveFilterDialogOpen(true)}
+                                                    disabled={!hasDraftFilters}
+                                                >
+                                                    <Bookmark size={16} /> Save filter set
+                                                </Button>
+                                            ) : null}
+                                            <Button
+                                                type="button"
+                                                className="gap-2 rounded border-none bg-primary text-primary-foreground"
+                                                onClick={() => applyFilters()}
+                                                disabled={!hasPendingFilterChanges}
+                                            >
+                                                Apply filters
+                                            </Button>
+                                        </>
+                                    ) : builderMode === 'sort' ? (
+                                        <Button
+                                            type="button"
+                                            className="gap-2 rounded border-none bg-primary text-primary-foreground"
+                                            onClick={() => applySort()}
+                                            disabled={!hasPendingSortChanges}
+                                        >
+                                            Apply sorting
+                                        </Button>
+                                    ) : null}
+                                </div>
                             </div>
-                        ) : null}
+                        </div>
                     </div>
                 ) : null}
             </div>
 
             <Dialog open={isSaveFilterDialogOpen} onOpenChange={setIsSaveFilterDialogOpen}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>Save filter</DialogTitle>
+                        <DialogTitle>Save filter set</DialogTitle>
                         <DialogDescription>
-                            Save the current asset filter set so you can apply it again from the toolbar.
+                            Give this filter set a name to easily apply it later from the Saved tab.
                         </DialogDescription>
                     </DialogHeader>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="saved-filter-name">Filter name</Label>
-                        <Input
-                            id="saved-filter-name"
-                            value={savedFilterName}
-                            onChange={(event) => setSavedFilterName(event.target.value)}
-                            placeholder="e.g. Available warehouse assets"
-                        />
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="filter-name">Name</Label>
+                            <Input
+                                id="filter-name"
+                                placeholder="e.g. Available Assets"
+                                value={savedFilterName}
+                                onChange={(e) => setSavedFilterName(e.target.value)}
+                                autoFocus
+                            />
+                        </div>
+                        <div className="rounded bg-muted p-3 text-xs">
+                            <div className="mb-1 font-medium text-foreground">Filters to save:</div>
+                            <div className="text-muted-foreground">
+                                {completedFilterRows.map((row: FilterRow) => {
+                                    const label = filterDefinitionMap[row.fieldKey as AssetFilterKey]?.label || row.fieldKey;
+                                    const condition = FILTER_CONDITION_LABELS[row.condition as AssetFilterCondition];
+                                    return (
+                                        <div key={row.id}>
+                                            • {label} {condition} {row.value}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
-
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setIsSaveFilterDialogOpen(false)}>
+                        <Button variant="outline" onClick={() => setIsSaveFilterDialogOpen(false)}>
                             Cancel
                         </Button>
-                        <Button type="button" onClick={handleSaveFilter} disabled={!savedFilterName.trim() || isSavingFilter}>
-                            Save filter
+                        <Button
+                            type="button"
+                            onClick={handleSaveFilter}
+                            disabled={!savedFilterName.trim() || isSavingFilter}
+                            className="rounded border-none bg-primary text-primary-foreground"
+                        >
+                            {isSavingFilter ? 'Saving...' : 'Save filters'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
             <Dialog open={savedFilterDialogMode === 'edit'} onOpenChange={(open) => !open && handleCloseSavedFilterDialog()}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>Edit saved filter</DialogTitle>
+                        <DialogTitle>Rename saved filter</DialogTitle>
                         <DialogDescription>
-                            Update the name for this saved asset filter.
+                            Enter a new name for this saved filter set.
                         </DialogDescription>
                     </DialogHeader>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="edit-saved-filter-name">Filter name</Label>
-                        <Input
-                            id="edit-saved-filter-name"
-                            value={editingSavedFilterName}
-                            onChange={(event) => setEditingSavedFilterName(event.target.value)}
-                            placeholder="e.g. Available warehouse assets"
-                        />
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="edit-filter-name">Name</Label>
+                            <Input
+                                id="edit-filter-name"
+                                value={editingSavedFilterName}
+                                onChange={(e) => setEditingSavedFilterName(e.target.value)}
+                                autoFocus
+                            />
+                        </div>
                     </div>
-
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => handleCloseSavedFilterDialog()} disabled={isUpdatingSavedFilter}>
+                        <Button variant="outline" onClick={() => handleCloseSavedFilterDialog()} disabled={isUpdatingSavedFilter}>
                             Cancel
                         </Button>
-                        <Button type="button" onClick={handleUpdateSavedFilter} disabled={!editingSavedFilterName.trim() || isUpdatingSavedFilter}>
-                            Save changes
+                        <Button
+                            type="button"
+                            onClick={handleUpdateSavedFilter}
+                            disabled={!editingSavedFilterName.trim() || isUpdatingSavedFilter}
+                            className="rounded border-none bg-primary text-primary-foreground"
+                        >
+                            {isUpdatingSavedFilter ? 'Updating...' : 'Update name'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
             <Dialog open={savedFilterDialogMode === 'delete'} onOpenChange={(open) => !open && handleCloseSavedFilterDialog()}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>Delete saved filter</DialogTitle>
+                        <DialogTitle className="text-destructive">Delete saved filter</DialogTitle>
                         <DialogDescription>
-                            Remove {selectedSavedFilter?.name ? `"${selectedSavedFilter.name}"` : 'this saved filter'} from your saved asset filters.
+                            Are you sure you want to delete <span className="font-semibold text-foreground">"{selectedSavedFilter?.name}"</span>? This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
-
-                    <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => handleCloseSavedFilterDialog()} disabled={isDeletingSavedFilter}>
+                    <DialogFooter className="gap-2 md:gap-0">
+                        <Button variant="outline" onClick={() => handleCloseSavedFilterDialog()} disabled={isDeletingSavedFilter}>
                             Cancel
                         </Button>
-                        <Button type="button" variant="destructive" onClick={handleDeleteSavedFilter} disabled={isDeletingSavedFilter}>
-                            Delete filter
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={handleDeleteSavedFilter}
+                            disabled={isDeletingSavedFilter}
+                            className="rounded"
+                        >
+                            {isDeletingSavedFilter ? 'Deleting...' : 'Delete saved filter'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -1268,15 +718,11 @@ export function AssetQueryBuilder({
             <CategoryFormDialog
                 open={isCategoryDialogOpen}
                 onOpenChange={setIsCategoryDialogOpen}
-                redirectTo={resourcePath}
-                preserveState
             />
+
             <LocationFormDialog
                 open={isLocationDialogOpen}
                 onOpenChange={setIsLocationDialogOpen}
-                parentOptions={locations}
-                redirectTo={resourcePath}
-                preserveState
             />
         </>
     );
