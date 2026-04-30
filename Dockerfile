@@ -9,6 +9,15 @@ ENV AUTORUN_LARAVEL_OPTIMIZE=true
 # 1. SWITCH TO ROOT to handle system-level permissions
 USER root
 
+# Install GD extension dependencies and the extension itself
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /var/www/html
 
 # 2. Copy code and assign ownership directly to the web user
