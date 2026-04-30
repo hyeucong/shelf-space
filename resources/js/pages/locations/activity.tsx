@@ -6,7 +6,7 @@ import LocationLayout, { type LocationPageProps } from '@/layouts/location-layou
 import { ActivityLog } from '@/components/activity-log';
 
 export default function LocationActivity() {
-    const { location, activity = [] } = usePage<LocationPageProps>().props as any;
+    const { location, activity = [] } = usePage<LocationPageProps & { activity?: any[] }>().props;
 
     return (
         <>

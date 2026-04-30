@@ -10,12 +10,12 @@ import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import type { PaginatedData } from '@/types/pagination';
 
 interface Location {
-    id: number;
+    id: string;
     name: string;
     description: string | null;
-    parent_location_id?: number | null;
+    parent_location_id?: string | null;
     parent?: {
-        id: number;
+        id: string;
         name: string;
     } | null;
     assets_count: number;
@@ -25,7 +25,7 @@ interface Location {
 interface PageProps {
     locations: PaginatedData<Location>;
     parentOptions: Array<{
-        id: number;
+        id: string;
         name: string;
     }>;
     filters: {
@@ -39,8 +39,8 @@ interface PageProps {
 export default function Locations({ locations, filters }: PageProps) {
     const [locationToDelete, setLocationToDelete] = useState<Location | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [selectedIds, setSelectedIds] = useState<number[]>([]);
-    const [deletedLocationIds, setDeletedLocationIds] = useState<number[]>([]);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [deletedLocationIds, setDeletedLocationIds] = useState<string[]>([]);
 
     const localLocations = useMemo(
         () => (locations?.data || []).filter((location) => !deletedLocationIds.includes(location.id)),
@@ -79,7 +79,7 @@ export default function Locations({ locations, filters }: PageProps) {
         });
     };
 
-    const toggleOne = (id: number, checked: boolean) => {
+    const toggleOne = (id: string, checked: boolean) => {
         setSelectedIds((prev) => {
             if (checked) {
                 return Array.from(new Set([...prev, id]));

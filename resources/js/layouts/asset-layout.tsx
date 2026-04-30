@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button';
 import LocationMap from '@/components/location-map';
 
 export interface AssetResource {
-    id: number;
+    id: string;
     name: string;
     asset_id: string;
     status: string;
     value: number | null;
     description?: string | null;
     category?: { id: number; name: string } | null;
-    location?: { id: number; name: string; latitude?: string | number | null; longitude?: string | number | null } | null;
+    location?: { id: string; name: string; latitude?: string | number | null; longitude?: string | number | null } | null;
     tags?: Array<{ id: number; name: string }>;
     created_at?: string | null;
     updated_at?: string | null;
@@ -113,7 +113,7 @@ export default function AssetLayout({ children, activeTab, headerAction }: Asset
                                 </div>
 
                                 {asset.location?.latitude && asset.location?.longitude && (
-                                    <LocationMap location={asset.location as any} />
+                                    <LocationMap location={asset.location} />
                                 )}
                             </div>
                         </aside>

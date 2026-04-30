@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Support\Facades\Http;
 
 
 
 class Location extends Model
 {
-    use BelongsToUser, HasFactory;
+    use BelongsToUser, HasFactory, HasUlids;
 
     protected $appends = [];
 

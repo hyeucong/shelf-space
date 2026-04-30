@@ -16,7 +16,7 @@ interface CategoryOption {
 }
 
 interface LocationOption {
-    id: number;
+    id: string;
     name: string;
 }
 
@@ -64,7 +64,7 @@ export default function Create() {
     const [pendingDialog, setPendingDialog] = useState<'category' | 'tag' | 'location' | null>(null);
     const handledCreatedCategoryId = useRef<number | null>(null);
     const handledCreatedTagId = useRef<number | null>(null);
-    const handledCreatedLocationId = useRef<number | null>(null);
+    const handledCreatedLocationId = useRef<string | null>(null);
     const page = usePage<PageProps>();
     const categories = page.props.categories || [];
     const tags = page.props.tags || [];
@@ -249,7 +249,7 @@ export default function Create() {
                             <div className="md:col-span-2">
                                 <div className="flex -space-x-px">
                                     <div className="flex items-center rounded-l border border-input bg-muted px-3 text-sm text-muted-foreground">
-                                        SAM
+                                        AST
                                     </div>
                                     <Input
                                         id="asset_id"

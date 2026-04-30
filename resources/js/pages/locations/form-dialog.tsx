@@ -14,7 +14,7 @@ export interface LocationFormValues {
 }
 
 export interface LocationOption {
-    id: number;
+    id: string | number;
     name: string;
 }
 
@@ -27,7 +27,7 @@ interface LocationFormDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     mode?: 'create' | 'edit';
-    locationId?: number | null;
+    locationId?: string | null;
     initialValues?: Partial<LocationFormValues>;
     parentOptions?: LocationOption[];
     redirectTo?: string;

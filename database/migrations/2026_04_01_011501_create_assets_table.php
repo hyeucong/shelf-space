@@ -9,7 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('assets', function (Blueprint $table) {
-            $table->id();
+            $table->ulid('id')->primary();
+            $table->integer('sequential_number')->default(0);
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('category_id')->nullable()->index();
             $table->string('asset_id');

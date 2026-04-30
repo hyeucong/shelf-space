@@ -40,8 +40,8 @@ export interface ResourceIndexSortOption {
     label: string;
 }
 
-interface ResourceIndexSelection<T extends { id: number }> {
-    selectedIds: number[];
+interface ResourceIndexSelection<T extends { id: string | number }> {
+    selectedIds: (string | number)[];
     onToggleAll: (checked: boolean) => void;
     onToggleOne: (item: T, checked: boolean) => void;
     getLabel: (item: T) => string;
@@ -64,7 +64,7 @@ interface ResourceIndexRowActions<T> {
     cellClassName?: string;
 }
 
-interface ResourceIndexTableProps<T extends { id: number }> {
+interface ResourceIndexTableProps<T extends { id: string | number }> {
     resourcePath: string;
     searchPlaceholder: string;
     pagination: PaginatedData<T>;
@@ -82,7 +82,7 @@ interface ResourceIndexTableProps<T extends { id: number }> {
     onRowClick?: (item: T) => void;
 }
 
-export function ResourceIndexTable<T extends { id: number }>({
+export function ResourceIndexTable<T extends { id: string | number }>({
     resourcePath,
     searchPlaceholder,
     pagination,

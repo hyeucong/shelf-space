@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import LocationMap from '@/components/location-map';
 
 export interface LocationResource {
-    id: number;
+    id: string;
     name: string;
     description?: string | null;
     address?: string | null;
@@ -15,7 +15,7 @@ export interface LocationResource {
     longitude?: string | number | null;
     created_at?: string | null;
     updated_at?: string | null;
-    parent?: { id: number; name: string } | null;
+    parent?: { id: string; name: string } | null;
     assets_count?: number;
     children_count?: number;
 }

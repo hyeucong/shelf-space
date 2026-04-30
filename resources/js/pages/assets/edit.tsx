@@ -16,7 +16,7 @@ interface CategoryOption {
 }
 
 interface LocationOption {
-    id: number;
+    id: string;
     name: string;
 }
 
@@ -37,14 +37,14 @@ interface PageProps extends Record<string, unknown> {
 }
 
 interface Asset {
-    id: number;
+    id: string;
     asset_id: string;
     name: string;
     description: string | null;
     value: number | string | null;
     category_id?: number | null;
     tags?: number[];
-    location_id?: number | null;
+    location_id?: string | null;
 }
 
 export default function Edit({ asset }: { asset: Asset }) {
@@ -80,7 +80,7 @@ export default function Edit({ asset }: { asset: Asset }) {
     const [pendingDialog, setPendingDialog] = useState<'category' | 'tag' | 'location' | null>(null);
     const handledCreatedCategoryId = useRef<number | null>(null);
     const handledCreatedTagId = useRef<number | null>(null);
-    const handledCreatedLocationId = useRef<number | null>(null);
+    const handledCreatedLocationId = useRef<string | null>(null);
 
     useEffect(() => {
         const flash = page.props.flash as PageProps['flash'];

@@ -10,7 +10,7 @@ import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import type { PaginatedData } from '@/types/pagination';
 
 interface Kit {
-    id: number;
+    id: string;
     name: string;
     description: string | null;
     status: string;
@@ -26,7 +26,7 @@ interface PageProps {
 }
 
 export default function Kits({ kits, filters }: PageProps) {
-    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const localKits = useMemo(() => kits?.data || [], [kits]);
     const activeSelectedIds = useMemo(
         () => selectedIds.filter((id) => localKits.some((kit) => kit.id === id)),
@@ -41,7 +41,7 @@ export default function Kits({ kits, filters }: PageProps) {
         : null;
 
 
-    const toggleOne = (id: number, checked: boolean) => {
+    const toggleOne = (id: string, checked: boolean) => {
         setSelectedIds((prev) => {
             if (checked) {
                 return Array.from(new Set([...prev, id]));

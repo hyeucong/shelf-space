@@ -7,7 +7,7 @@ import type { AssetPageProps } from '@/layouts/asset-layout';
 import { ActivityLog } from '@/components/activity-log';
 
 export default function AssetActivity() {
-    const { asset, activity = [] } = usePage<AssetPageProps>().props as any;
+    const { asset, activity = [] } = usePage<AssetPageProps & { activity?: any[] }>().props;
 
     return (
         <>

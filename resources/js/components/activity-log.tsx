@@ -38,7 +38,7 @@ interface ActivityItem {
 
 interface ActivityLogProps {
     activity: ActivityItem[];
-    resourceId: number;
+    resourceId: string;
     storeUrl: string;
     destroyUrl: (activityId: number) => string;
     emptyMessage?: string;

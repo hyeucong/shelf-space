@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { addAssets } from '@/routes/kits';
 
 interface AssetRecord {
-    id: number;
+    id: string;
     name: string;
     asset_id?: string | null;
     description?: string | null;

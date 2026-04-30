@@ -10,6 +10,7 @@ use App\Queries\AssetQuery;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -28,7 +29,7 @@ class AssetController extends Controller
     }
 
     /**
-     * @return array{id: int, asset_id: string, name: string, description: string|null, value: mixed, category_id: int|null, location_id: int|null, tags: array<int, int>}
+     * @return array{id: string, asset_id: string, name: string, description: string|null, value: mixed, category_id: int|null, location_id: int|null, tags: array<int, int>}
      */
     private function assetFormData(Asset $asset): array
     {
@@ -54,7 +55,7 @@ class AssetController extends Controller
         return $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'asset_id' => [
-                'required',
+                'nullable',
                 'string',
                 'max:255',
                 Rule::unique('assets', 'asset_id')
@@ -187,7 +188,25 @@ class AssetController extends Controller
         $tags = $validated['tags'] ?? [];
         unset($validated['tags']);
 
-        $asset = Asset::create($validated);
+        $asset = DB::transaction(function () use ($validated, $request) {
+            $userId = $request->user()->id;
+
+            if (empty($validated['asset_id'])) {
+                $lastSeq = Asset::where('user_id', $userId)->max('sequential_number') ?? 0;
+                $nextSeq = $lastSeq + 1;
+
+                $prefix = 'AST';
+
+                $validated['asset_id'] = $prefix . '-' . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+                $validated['sequential_number'] = $nextSeq;
+            } else {
+                $validated['sequential_number'] = 0;
+            }
+
+            $validated['user_id'] = $userId;
+
+            return Asset::create($validated);
+        });
 
         $tagIds = $this->resolveTagIds($request, $tags);
 

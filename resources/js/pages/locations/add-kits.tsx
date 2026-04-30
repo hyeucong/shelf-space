@@ -11,7 +11,7 @@ import { addKits, kits as locationKits } from '@/routes/locations';
 import type { PaginatedData } from '@/types/pagination';
 
 interface KitRecord {
-    id: number;
+    id: string;
     name: string;
     created_at?: string | null;
     category_name?: string | null;
@@ -35,14 +35,14 @@ const sanitizeQuery = (query: Record<string, string | number | undefined>) => (
 );
 
 export default function AddKits({ location, kits: availableKits, filters }: AddKitsPageProps) {
-    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
     const selectedKits = useMemo(
         () => availableKits.data.filter((kit) => selectedIds.includes(kit.id)),
         [availableKits.data, selectedIds],
     );
 
-    const toggleKitSelection = (kitId: number) => {
+    const toggleKitSelection = (kitId: string) => {
         setSelectedIds((previous) => (
             previous.includes(kitId)
                 ? previous.filter((selectedId) => selectedId !== kitId)
@@ -50,7 +50,7 @@ export default function AddKits({ location, kits: availableKits, filters }: AddK
         ));
     };
 
-    const toggleOne = (id: number, checked: boolean) => {
+    const toggleOne = (id: string, checked: boolean) => {
         setSelectedIds((previous) => {
             if (checked) {
                 return Array.from(new Set([...previous, id]));

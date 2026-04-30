@@ -204,7 +204,7 @@ class LocationController extends Controller
             'name' => trim((string) $request->input('name', '')),
             'description' => is_string($description) ? trim($description) ?: null : null,
             'address' => is_string($address) ? trim($address) ?: null : null,
-            'parent_location_id' => is_numeric($parentLocationId) ? (int) $parentLocationId : null,
+            'parent_location_id' => is_string($parentLocationId) && trim($parentLocationId) !== '' ? $parentLocationId : null,
         ]);
 
         $validated = $request->validate([
@@ -213,7 +213,7 @@ class LocationController extends Controller
             'address' => ['nullable', 'string'],
             'parent_location_id' => [
                 'nullable',
-                'integer',
+                'string',
                 ...($location ? [Rule::notIn([$location->id])] : []),
                 Rule::exists('locations', 'id')->where(fn ($query) => $query->where('user_id', $request->user()->id)),
             ],
@@ -222,7 +222,7 @@ class LocationController extends Controller
         ]);
 
         if ($location && isset($validated['parent_location_id'])) {
-            $candidateParentId = (int) $validated['parent_location_id'];
+            $candidateParentId = $validated['parent_location_id'];
 
             if ($candidateParentId !== 0 && $this->createsHierarchyCycle($location, $candidateParentId)) {
                 throw ValidationException::withMessages([
@@ -234,7 +234,7 @@ class LocationController extends Controller
         return $validated;
     }
 
-    private function createsHierarchyCycle(Location $location, int $candidateParentId): bool
+    private function createsHierarchyCycle(Location $location, string $candidateParentId): bool
     {
         $currentParent = Location::query()
             ->select(['id', 'parent_location_id'])

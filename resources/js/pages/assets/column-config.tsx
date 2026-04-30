@@ -5,9 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 export interface AssetRecord {
-    id: number;
+    id: string;
     category_id: number | null;
-    location_id: number | null;
+    location_id: string | null;
     asset_id: string;
     name: string;
     description: string | null;
@@ -21,7 +21,7 @@ export interface AssetRecord {
         name: string;
     } | null;
     location?: {
-        id: number;
+        id: string;
         name: string;
     } | null;
     tags?: Array<{

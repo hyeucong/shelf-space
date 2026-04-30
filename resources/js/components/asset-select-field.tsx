@@ -2,7 +2,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export interface AssetSelectOption {
-    id: number;
+    id: string | number;
     name: string;
 }
 

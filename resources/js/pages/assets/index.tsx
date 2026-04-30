@@ -41,9 +41,9 @@ export default function Assets({ assets, categories, columnPreferences, location
         [columnPreferences],
     );
     const [assetToDelete, setAssetToDelete] = useState<AssetRecord | null>(null);
-    const [deletedAssetIds, setDeletedAssetIds] = useState<number[]>([]);
+    const [deletedAssetIds, setDeletedAssetIds] = useState<string[]>([]);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [optimisticColumns, setOptimisticColumns] = useState<AssetColumnPreference[] | null>(null);
     const [draftColumns, setDraftColumns] = useState<AssetColumnPreference[]>(persistedColumns);
     const [isColumnsPanelOpen, setIsColumnsPanelOpen] = useState(false);
@@ -117,7 +117,7 @@ export default function Assets({ assets, categories, columnPreferences, location
         return () => document.removeEventListener('pointerdown', handlePointerDown);
     }, [isColumnsPanelOpen, visibleColumns]);
 
-    const toggleOne = (id: number, checked: boolean) => {
+    const toggleOne = (id: string, checked: boolean) => {
         setSelectedIds((prev) => {
             if (checked) {
                 return Array.from(new Set([...prev, id]));

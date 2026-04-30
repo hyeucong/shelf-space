@@ -39,12 +39,12 @@ export type AssetSortField = 'created_at' | 'name' | 'value' | 'asset_id' | 'sta
 export type AssetSortDirection = 'asc' | 'desc';
 
 export type AssetFilterOption = {
-    id: number;
+    id: string | number;
     name: string;
 };
 
 export type AssetSavedFilter = {
-    id: number;
+    id: string | number;
     key: string;
     name: string;
     filters: {
@@ -450,8 +450,8 @@ export function AssetQueryBuilder({
     const [pendingCreate, setPendingCreate] = useState<PendingCreate | null>(null);
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
     const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
-    const handledCreatedCategoryId = useRef<number | null>(null);
-    const handledCreatedLocationId = useRef<number | null>(null);
+    const handledCreatedCategoryId = useRef<string | number | null>(null);
+    const handledCreatedLocationId = useRef<string | number | null>(null);
 
     useEffect(() => {
         if (builderMode === null) {

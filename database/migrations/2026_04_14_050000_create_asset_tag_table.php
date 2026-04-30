@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('asset_tag', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('asset_id')->constrained('assets')->cascadeOnDelete();
+            $table->foreignUlid('asset_id')->constrained('assets')->cascadeOnDelete();
             $table->foreignId('tag_id')->constrained('tags')->cascadeOnDelete();
             $table->timestamps();
 

@@ -17,17 +17,17 @@ export interface LocationFormValues {
 }
 
 interface LocationOption {
-    id: number;
+    id: string;
     name: string;
 }
 
 interface SharedPageProps extends Record<string, unknown> {
     location?: {
-        id: number;
+        id: string;
         name: string;
         description: string | null;
         address: string | null;
-        parent_location_id: number | null;
+        parent_location_id: string | null;
     } | null;
     parentOptions?: LocationOption[];
     locations?: LocationOption[];
@@ -55,7 +55,7 @@ export default function Create() {
     const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
     const [pendingDialog, setPendingDialog] = useState<'location' | null>(null);
     const [submitMode, setSubmitMode] = useState<'save' | 'add-another'>('save');
-    const handledCreatedLocationId = useRef<number | null>(null);
+    const handledCreatedLocationId = useRef<string | null>(null);
     const initialValues = buildFormValues({
         name: location?.name ?? '',
         description: location?.description ?? '',

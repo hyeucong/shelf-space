@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Spatie\Activitylog\Models\Concerns\HasActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -17,7 +18,7 @@ use Spatie\Activitylog\Support\LogOptions;
 #[UseFactory(AssetFactory::class)]
 class Asset extends Model
 {
-    use BelongsToUser, HasActivity, HasFactory;
+    use BelongsToUser, HasActivity, HasFactory, HasUlids;
 
     protected static array $recordEvents = ['created', 'updated', 'deleted'];
 
@@ -30,6 +31,7 @@ class Asset extends Model
         'description',
         'value',
         'status',
+        'sequential_number',
     ];
 
     protected $appends = ['qr_code_svg'];

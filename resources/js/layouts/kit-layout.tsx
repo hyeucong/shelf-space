@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 
 export interface KitResource {
-    id: number;
+    id: string;
     name: string;
     description?: string | null;
     status?: string | null;

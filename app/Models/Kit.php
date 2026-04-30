@@ -4,12 +4,13 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class Kit extends Model
 {
-    use BelongsToUser;
+    use BelongsToUser, HasUlids;
 
     protected $appends = ['qr_code_svg'];
 

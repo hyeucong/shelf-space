@@ -37,14 +37,14 @@ export default function AddAssets({ kit, assets: availableAssets, categories, co
         () => cloneColumnPreferences(columnPreferences.length > 0 ? columnPreferences : DEFAULT_ASSET_COLUMN_PREFERENCES),
         [columnPreferences],
     );
-    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
     const selectedAssets = useMemo(
         () => availableAssets.data.filter((asset) => selectedIds.includes(asset.id)),
         [availableAssets.data, selectedIds],
     );
 
-    const toggleAssetSelection = (assetId: number) => {
+    const toggleAssetSelection = (assetId: string) => {
         setSelectedIds((previous) => (
             previous.includes(assetId)
                 ? previous.filter((selectedId) => selectedId !== assetId)
@@ -52,7 +52,7 @@ export default function AddAssets({ kit, assets: availableAssets, categories, co
         ));
     };
 
-    const toggleOne = (id: number, checked: boolean) => {
+    const toggleOne = (id: string, checked: boolean) => {
         setSelectedIds((previous) => {
             if (checked) {
                 return Array.from(new Set([...previous, id]));

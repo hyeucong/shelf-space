@@ -11,7 +11,7 @@ import { addKits, kits as locationKits } from '@/routes/locations';
 import type { PaginatedData } from '@/types/pagination';
 
 interface KitRecord {
-    id: number;
+    id: string;
     name: string;
     description?: string | null;
     status?: string | null;

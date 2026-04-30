@@ -10,7 +10,7 @@ import { addAssets } from '@/routes/locations';
 import type { PaginatedData } from '@/types/pagination';
 
 interface AssetRecord {
-    id: number;
+    id: string;
     name: string;
     asset_id?: string | null;
     description?: string | null;

@@ -15,7 +15,7 @@ interface CategoryOption {
 }
 
 interface LocationOption {
-    id: number;
+    id: string;
     name: string;
 }
 
@@ -34,7 +34,7 @@ export default function Create() {
     const [isLocationSelectOpen, setIsLocationSelectOpen] = useState(false);
     const [pendingDialog, setPendingDialog] = useState<'category' | 'location' | null>(null);
     const handledCreatedCategoryId = useRef<number | null>(null);
-    const handledCreatedLocationId = useRef<number | null>(null);
+    const handledCreatedLocationId = useRef<string | null>(null);
     const page = usePage<{ categories?: CategoryOption[]; locations?: LocationOption[]; flash?: Record<string, any> }>();
     const categories = page.props.categories || [];
     const locations = page.props.locations || [];
