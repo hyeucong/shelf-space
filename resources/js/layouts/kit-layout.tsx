@@ -4,6 +4,7 @@ import { Download, Package, Printer } from 'lucide-react';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { HeaderActions } from '@/components/header-action';
 
 export interface KitResource {
     id: string;
@@ -35,7 +36,12 @@ export default function KitLayout({ children, activeTab, headerAction }: KitLayo
                 { title: 'Kits', href: '/kits' },
                 { title: kit?.name || 'Kit', href: '#' },
             ]}
-            headerAction={headerAction}
+            headerAction={
+                <div className="flex items-center gap-2">
+                    <HeaderActions editHref={`/kits/${kit.id}/edit`} />
+                    {headerAction}
+                </div>
+            }
             children={
                 <>
                     <div className="flex items-start p-4">

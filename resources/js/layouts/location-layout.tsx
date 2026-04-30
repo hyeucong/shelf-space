@@ -4,6 +4,7 @@ import { Download, MapPin, Printer } from 'lucide-react';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { HeaderActions } from '@/components/header-action';
 import LocationMap from '@/components/location-map';
 
 export interface LocationResource {
@@ -40,7 +41,12 @@ export default function LocationLayout({ children, activeTab, headerAction }: Lo
                 { title: 'Locations', href: '/locations' },
                 { title: location?.name || 'Location', href: '#' },
             ]}
-            headerAction={headerAction}
+            headerAction={
+                <div className="flex items-center gap-2">
+                    <HeaderActions editHref={`/locations/${location.id}/edit`} />
+                    {headerAction}
+                </div>
+            }
             children={
                 <div className="flex flex-1 flex-col">
                     <div className="flex items-start p-4">
