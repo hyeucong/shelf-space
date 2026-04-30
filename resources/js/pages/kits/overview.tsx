@@ -11,10 +11,7 @@ export default function KitOverview() {
             <div className="p-4">
                 <div className="rounded border bg-background">
                     <dl className="divide-y">
-                        <div className="flex items-center justify-between px-6 py-4">
-                            <dt className="text-sm text-muted-foreground">ID</dt>
-                            <dd className="ml-4 text-sm text-foreground wrap-break-word">{kit?.id ?? '-'}</dd>
-                        </div>
+
 
                         <div className="flex items-center justify-between px-6 py-4">
                             <dt className="text-sm text-muted-foreground">Status</dt>

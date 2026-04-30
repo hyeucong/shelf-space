@@ -34,9 +34,11 @@ interface PageProps extends Record<string, unknown> {
         createdTag?: TagOption;
         createdLocation?: LocationOption;
     };
+    next_id: string;
 }
 
 export default function Create() {
+    const page = usePage<PageProps>();
     const { data, setData, post, processing, errors } = useForm<{
         name: string;
         asset_id: string;
@@ -47,7 +49,7 @@ export default function Create() {
         location_id: string;
     }>({
         name: '',
-        asset_id: '',
+        asset_id: page.props.next_id || '',
         description: '',
         value: '',
         category_id: '',
@@ -65,7 +67,7 @@ export default function Create() {
     const handledCreatedCategoryId = useRef<number | null>(null);
     const handledCreatedTagId = useRef<number | null>(null);
     const handledCreatedLocationId = useRef<string | null>(null);
-    const page = usePage<PageProps>();
+
     const categories = page.props.categories || [];
     const tags = page.props.tags || [];
     const locations = page.props.locations || [];
@@ -244,7 +246,7 @@ export default function Create() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                             <div>
                                 <Label htmlFor="asset_id">Asset ID</Label>
-                                <p className="text-sm text-muted-foreground mt-1">This sequential ID will be assigned when the asset is created.</p>
+                                <p className="text-sm text-muted-foreground mt-1">This sequential ID is automatically generated and fixed.</p>
                             </div>
                             <div className="md:col-span-2">
                                 <div className="flex -space-x-px">
@@ -255,8 +257,10 @@ export default function Create() {
                                         id="asset_id"
                                         value={data.asset_id}
                                         onChange={e => setData('asset_id', e.target.value)}
-                                        className="rounded-l-none rounded-r focus-visible:z-10"
+                                        className="rounded-l-none rounded-r focus-visible:z-10 bg-muted/50 cursor-not-allowed"
                                         placeholder="0002"
+                                        disabled
+                                        readOnly
                                     />
                                 </div>
                                 {errors.asset_id && <span className="text-sm text-red-500">{errors.asset_id}</span>}

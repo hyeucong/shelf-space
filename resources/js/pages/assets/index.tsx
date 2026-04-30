@@ -222,9 +222,8 @@ export default function Assets({ assets, categories, columnPreferences, location
         }
 
         const rows = [
-            ['ID', 'Asset ID', 'Name', 'Status', 'Category', 'Location', 'Value'],
+            ['Asset ID', 'Name', 'Status', 'Category', 'Location', 'Value'],
             ...selectedAssets.map((asset) => [
-                String(asset.id),
                 asset.asset_id,
                 asset.name,
                 asset.status,

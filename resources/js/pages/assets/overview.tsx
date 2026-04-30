@@ -13,10 +13,7 @@ export default function AssetOverview() {
                 <div>
                     <div className="rounded border bg-background">
                         <dl className="divide-y">
-                            <div className="flex items-center justify-between px-6 py-4">
-                                <dt className="text-sm text-muted-foreground">ID</dt>
-                                <dd className="text-sm text-foreground wrap-break-word ml-4">{asset?.id ?? '-'}</dd>
-                            </div>
+
 
                             <div className="flex items-center justify-between px-6 py-4">
                                 <dt className="text-sm text-muted-foreground">Asset ID</dt>

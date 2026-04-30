@@ -1,70 +1,52 @@
 import { Link } from '@inertiajs/react';
+import { User } from 'lucide-react';
 import type { PropsWithChildren } from 'react';
-import Heading from '@/components/heading';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCurrentUrl } from '@/hooks/use-current-url';
-import { cn, toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit } from '@/routes/profile';
-import type { NavItem } from '@/types';
-
-const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Profile',
-        href: edit(),
-        icon: null,
-    },
-    {
-        title: 'Appearance',
-        href: editAppearance(),
-        icon: null,
-    },
-];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
+    const activeTab = isCurrentOrParentUrl(edit()) ? 'profile' : 'appearance';
 
     return (
-        <div className="px-4 py-6">
-            <Heading
-                title="Settings"
-                description="Manage your profile and account settings"
-            />
+        <div className="flex flex-1 flex-col">
+            <div className="flex items-start p-4">
+                <div className="shrink-0">
+                    <div className="flex h-13 w-13 items-center justify-center overflow-hidden rounded border bg-background">
+                        <User className="text-muted-foreground" size={32} />
+                    </div>
+                </div>
 
-            <div className="flex flex-col lg:flex-row lg:space-x-12">
-                <aside className="w-full max-w-xl lg:w-48">
-                    <nav
-                        className="flex flex-col space-y-1 space-x-0"
-                        aria-label="Settings"
-                    >
-                        {sidebarNavItems.map((item, index) => (
-                            <Button
-                                key={`${toUrl(item.href)}-${index}`}
-                                size="sm"
-                                variant="ghost"
-                                asChild
-                                className={cn('w-full justify-start', {
-                                    'bg-muted': isCurrentOrParentUrl(item.href),
-                                })}
-                            >
-                                <Link href={item.href} prefetch>
-                                    {item.icon && (
-                                        <item.icon className="h-4 w-4" />
-                                    )}
-                                    {item.title}
-                                </Link>
-                            </Button>
-                        ))}
-                    </nav>
-                </aside>
+                <div className="ml-4 flex items-start justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-semibold">Settings</h1>
+                        <p className="text-sm text-muted-foreground">Manage your profile and account settings</p>
+                    </div>
+                </div>
+            </div>
 
-                <Separator className="my-6 lg:hidden" />
+            <Tabs value={activeTab} className="border-y px-4">
+                <TabsList variant="line">
+                    <TabsTrigger value="profile" asChild>
+                        <Link href={edit()} preserveState className="block">
+                            Profile
+                        </Link>
+                    </TabsTrigger>
+                    <TabsTrigger value="appearance" asChild>
+                        <Link href={editAppearance()} preserveState className="block">
+                            Appearance
+                        </Link>
+                    </TabsTrigger>
+                </TabsList>
+            </Tabs>
 
-                <div className="flex-1 md:max-w-2xl">
-                    <section className="max-w-xl space-y-12">
+            <div className="flex flex-1 flex-col">
+                <div className="flex-1 p-6">
+                    <div className="max-w-xl">
                         {children}
-                    </section>
+                    </div>
                 </div>
             </div>
         </div>

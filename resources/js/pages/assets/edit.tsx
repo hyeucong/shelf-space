@@ -63,7 +63,7 @@ export default function Edit({ asset }: { asset: Asset }) {
         location_id: string;
     }>({
         name: asset.name || '',
-        asset_id: asset.asset_id || '',
+        asset_id: asset.asset_id?.includes('-') ? asset.asset_id.split('-')[1] : asset.asset_id || '',
         description: asset.description || '',
         value: asset.value ? String(asset.value) : '',
         category_id: asset.category_id ? String(asset.category_id) : '',
@@ -200,12 +200,20 @@ export default function Edit({ asset }: { asset: Asset }) {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                             <div>
                                 <Label htmlFor="asset_id">Asset ID</Label>
-                                <p className="text-sm text-muted-foreground mt-1">This sequential ID will be assigned when the asset is created.</p>
+                                <p className="text-sm text-muted-foreground mt-1">This sequential ID is fixed and cannot be changed.</p>
                             </div>
                             <div className="md:col-span-2">
                                 <div className="flex -space-x-px">
-                                    <div className="flex items-center rounded-l border border-input bg-muted px-3 text-sm text-muted-foreground">SAM</div>
-                                    <Input id="asset_id" value={data.asset_id} onChange={e => setData('asset_id', e.target.value)} className="rounded-l-none rounded-r focus-visible:z-10" placeholder="0002" />
+                                    <div className="flex items-center rounded-l border border-input bg-muted px-3 text-sm text-muted-foreground">AST</div>
+                                    <Input
+                                        id="asset_id"
+                                        value={data.asset_id}
+                                        onChange={e => setData('asset_id', e.target.value)}
+                                        className="rounded-l-none rounded-r focus-visible:z-10 bg-muted/50 cursor-not-allowed"
+                                        placeholder="0002"
+                                        disabled
+                                        readOnly
+                                    />
                                 </div>
                                 {errors.asset_id && <span className="text-sm text-red-500">{errors.asset_id}</span>}
                             </div>

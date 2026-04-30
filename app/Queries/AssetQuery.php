@@ -161,7 +161,6 @@ class AssetQuery
     public function normalizeAssetColumnPreferences(mixed $columns): array
     {
         $defaults = [
-            'id',
             'asset_id',
             'status',
             'category',

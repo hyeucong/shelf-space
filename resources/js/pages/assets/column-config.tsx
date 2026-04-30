@@ -46,7 +46,6 @@ interface AssetTableColumnFactoryOptions {
 }
 
 export const ASSET_OPTIONAL_COLUMN_OPTIONS: Array<{ key: AssetColumnKey; label: string }> = [
-    { key: 'id', label: 'ID' },
     { key: 'asset_id', label: 'Asset ID' },
     { key: 'status', label: 'Status' },
     { key: 'category', label: 'Category' },
@@ -119,14 +118,7 @@ export function createAssetTableColumns({
                 </div>
             ),
         },
-        {
-            key: 'id',
-            header: 'ID',
-            isOptional: true,
-            headerClassName: 'hidden sm:table-cell',
-            cellClassName: 'hidden whitespace-nowrap font-medium text-muted-foreground sm:table-cell',
-            render: (asset) => asset.id,
-        },
+
         {
             key: 'asset_id',
             header: 'Asset ID',
@@ -154,9 +146,6 @@ export function createAssetTableColumns({
             render: (asset) => (
                 <div className="min-w-32 whitespace-normal">
                     <div>{asset.category?.name || '-'}</div>
-                    {asset.category_id ? (
-                        <div className="text-xs text-muted-foreground">{`ID ${asset.category_id}`}</div>
-                    ) : null}
                 </div>
             ),
         },
@@ -169,9 +158,6 @@ export function createAssetTableColumns({
             render: (asset) => (
                 <div className="min-w-32 whitespace-normal">
                     <div>{asset.location?.name || '-'}</div>
-                    {asset.location_id ? (
-                        <div className="text-xs text-muted-foreground">{`ID ${asset.location_id}`}</div>
-                    ) : null}
                 </div>
             ),
         },
