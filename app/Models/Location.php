@@ -57,4 +57,9 @@ class Location extends Model
     {
         return $this->hasMany(Asset::class);
     }
+
+    public function kits(): HasMany
+    {
+        return $this->hasMany(Kit::class);
+    }
 }

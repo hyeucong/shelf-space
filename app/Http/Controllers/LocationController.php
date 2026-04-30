@@ -180,6 +180,7 @@ class LocationController extends Controller
         [$sort, $order, $perPage] = $this->resolveKitIndexState($request);
 
         $kits = $this->buildKitIndexQuery($request, $sort, $order)
+            ->where('location_id', $location->id)
             ->paginate($perPage)
             ->withQueryString();
 
@@ -197,10 +198,32 @@ class LocationController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
+        $existingKitIds = $location->kits()->pluck('id')->all();
+
         return Inertia::render('locations/add-kits', [
             'location' => $location,
+            'existingKitIds' => $existingKitIds,
             ...$this->buildKitIndexProps($request, $kits, $sort, $order, $perPage),
         ]);
+    }
+
+    public function storeKits(Request $request, Location $location)
+    {
+        $validated = $request->validate([
+            'kit_ids' => ['present', 'array'],
+            'kit_ids.*' => ['required', 'string'],
+        ]);
+
+        // Clear existing location assignments and set new ones
+        $location->kits()->update(['location_id' => null]);
+
+        if (!empty($validated['kit_ids'])) {
+            $request->user()->kits()
+                ->whereIn('id', $validated['kit_ids'])
+                ->update(['location_id' => $location->id]);
+        }
+
+        return redirect()->route('locations.kits', $location);
     }
 
     /**

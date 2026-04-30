@@ -24,6 +24,9 @@ Route::prefix('locations')->name('locations.')->group(function () {
     Route::get('{location}/kits/add-kits', [LocationController::class, 'addKits'])
         ->whereUlid('location')
         ->name('add-kits');
+    Route::post('{location}/kits/add-kits', [LocationController::class, 'storeKits'])
+        ->whereUlid('location')
+        ->name('store-kits');
 
     Route::get('{location}/activity', [LocationActivityController::class, 'index'])
         ->whereUlid('location')

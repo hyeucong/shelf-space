@@ -31,6 +31,7 @@ class Kit extends Model
 
     protected $fillable = [
         'user_id',
+        'location_id',
         'name',
         'description',
         'status',

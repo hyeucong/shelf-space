@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Package2 } from 'lucide-react';
 import { isValidElement, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -19,6 +19,7 @@ interface KitRecord {
 
 interface AddKitsPageProps extends LocationPageProps {
     kits: PaginatedData<KitRecord>;
+    existingKitIds: string[];
     filters: {
         search?: string;
         per_page?: number | string;
@@ -34,8 +35,9 @@ const sanitizeQuery = (query: Record<string, string | number | undefined>) => (
     ) as Record<string, string | number>
 );
 
-export default function AddKits({ location, kits: availableKits, filters }: AddKitsPageProps) {
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+export default function AddKits({ location, kits: availableKits, existingKitIds, filters }: AddKitsPageProps) {
+    const [selectedIds, setSelectedIds] = useState<string[]>(() => existingKitIds ?? []);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const selectedKits = useMemo(
         () => availableKits.data.filter((kit) => selectedIds.includes(kit.id)),
@@ -62,12 +64,30 @@ export default function AddKits({ location, kits: availableKits, filters }: AddK
 
     const toggleAll = (checked: boolean) => {
         if (checked) {
-            setSelectedIds(availableKits.data.map((kit) => kit.id));
+            setSelectedIds((previous) => Array.from(new Set([
+                ...previous,
+                ...availableKits.data.map((kit) => kit.id),
+            ])));
 
             return;
         }
 
-        setSelectedIds([]);
+        const currentPageIds = new Set(availableKits.data.map((kit) => kit.id));
+        setSelectedIds((previous) => previous.filter((id) => !currentPageIds.has(id)));
+    };
+
+    const handleConfirm = () => {
+        setIsSubmitting(true);
+        router.post(addKits(location.id).url, {
+            kit_ids: selectedIds,
+        }, {
+            preserveScroll: true,
+            onFinish: () => setIsSubmitting(false),
+        });
+    };
+
+    const handleCancel = () => {
+        router.visit(locationKits(location.id).url);
     };
 
     const locationName = location?.name ?? '—';
@@ -76,8 +96,8 @@ export default function AddKits({ location, kits: availableKits, filters }: AddK
         {
             key: 'name',
             header: 'Kit',
-            headerClassName: 'w-full pl-4',
-            cellClassName: 'w-full pl-4 font-medium text-foreground',
+            headerClassName: 'w-full ',
+            cellClassName: 'w-full  font-medium text-foreground',
             render: (kit) => (
                 <div className="flex min-w-0 items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded border bg-muted/10">
@@ -133,11 +153,11 @@ export default function AddKits({ location, kits: availableKits, filters }: AddK
                         <div className="text-sm text-muted-foreground">
                             {selectedKits.length} selected
                         </div>
-                        <Button type="button" variant="outline" onClick={() => setSelectedIds([])}>
+                        <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
                             Cancel
                         </Button>
-                        <Button type="button">
-                            Confirm
+                        <Button type="button" onClick={handleConfirm} disabled={isSubmitting}>
+                            {isSubmitting ? 'Saving...' : 'Confirm'}
                         </Button>
                     </>
                 )}
