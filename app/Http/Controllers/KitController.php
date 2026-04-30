@@ -32,7 +32,7 @@ class KitController extends Controller
 
         $order = in_array(strtolower($order), ['asc', 'desc']) ? $order : 'desc';
 
-        $kits = Kit::query()
+        $kits = $request->user()->kits()
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
@@ -54,10 +54,10 @@ class KitController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        $categories = Category::orderBy('name')->get(['id', 'name']);
-        $locations = Location::orderBy('name')->get(['id', 'name']);
+        $categories = $request->user()->categories()->orderBy('name')->get(['id', 'name']);
+        $locations = $request->user()->locations()->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('kits/create', [
             'categories' => $categories,
@@ -162,8 +162,8 @@ class KitController extends Controller
                 ...$indexState['filters'],
             ],
             'sorts' => $indexState['sorts'],
-            'categories' => Category::query()->orderBy('name')->get(['id', 'name']),
-            'locations' => Location::query()->orderBy('name')->get(['id', 'name']),
+            'categories' => $request->user()->categories()->orderBy('name')->get(['id', 'name']),
+            'locations' => $request->user()->locations()->orderBy('name')->get(['id', 'name']),
             'savedFilters' => $assetQuery->loadSavedFilters($request),
             'columnPreferences' => $assetQuery->loadColumnPreference($request),
         ];

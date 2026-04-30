@@ -29,7 +29,7 @@ class TagController extends Controller
 
         $order = in_array(strtolower($order), ['asc', 'desc']) ? $order : 'desc';
 
-        $tags = Tag::query()
+        $tags = $request->user()->tags()
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
@@ -59,7 +59,10 @@ class TagController extends Controller
             $redirectTo = route('tags.index');
         }
 
-        $tag = Tag::create($this->validatedData($request));
+        $validated = $this->validatedData($request);
+        $validated['user_id'] = $request->user()->id;
+
+        $tag = Tag::create($validated);
 
         return redirect()->to($redirectTo)->with('createdTag', [
             'id' => $tag->id,

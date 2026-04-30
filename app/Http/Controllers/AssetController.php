@@ -19,12 +19,14 @@ class AssetController extends Controller
     /**
      * @return array{categories: Collection<int, Category>, tags: Collection<int, Tag>, locations: Collection<int, Location>}
      */
-    private function assetFormOptions(): array
+    private function assetFormOptions(Request $request): array
     {
+        $user = $request->user();
+
         return [
-            'categories' => Category::query()->orderBy('name')->get(),
-            'tags' => Tag::query()->orderBy('name')->get(),
-            'locations' => Location::query()->orderBy('name')->get(),
+            'categories' => $user->categories()->orderBy('name')->get(),
+            'tags' => $user->tags()->orderBy('name')->get(),
+            'locations' => $user->locations()->orderBy('name')->get(),
         ];
     }
 
@@ -75,9 +77,9 @@ class AssetController extends Controller
             'tags' => ['nullable', 'array'],
             'tags.*' => [
                 'nullable',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, \Closure $fail) use ($request): void {
                     if (is_numeric($value)) {
-                        if (! Tag::query()->whereKey((int) $value)->exists()) {
+                        if (! $request->user()->tags()->whereKey((int) $value)->exists()) {
                             $fail('The selected tag is invalid.');
                         }
 
@@ -102,7 +104,9 @@ class AssetController extends Controller
 
         foreach ($tags as $tagValue) {
             if (is_numeric($tagValue)) {
-                $tagIds[] = (int) $tagValue;
+                if ($request->user()->tags()->whereKey((int) $tagValue)->exists()) {
+                    $tagIds[] = (int) $tagValue;
+                }
 
                 continue;
             }
@@ -163,8 +167,8 @@ class AssetController extends Controller
                 ...$indexState['filters'],
             ],
             'sorts' => $indexState['sorts'],
-            'categories' => Category::query()->orderBy('name')->get(['id', 'name']),
-            'locations' => Location::query()->orderBy('name')->get(['id', 'name']),
+            'categories' => $request->user()->categories()->orderBy('name')->get(['id', 'name']),
+            'locations' => $request->user()->locations()->orderBy('name')->get(['id', 'name']),
             'savedFilters' => $assetQuery->loadSavedFilters($request),
             'columnPreferences' => $assetQuery->loadColumnPreference($request),
         ];
@@ -179,7 +183,7 @@ class AssetController extends Controller
         $nextSeq = $lastSeq + 1;
 
         return Inertia::render('assets/create', [
-            ...$this->assetFormOptions(),
+            ...$this->assetFormOptions($request),
             'next_id' => str_pad($nextSeq, 4, '0', STR_PAD_LEFT),
         ]);
     }
@@ -249,11 +253,11 @@ class AssetController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Asset $asset)
+    public function edit(Request $request, Asset $asset)
     {
         return Inertia::render('assets/edit', [
             'asset' => $this->assetFormData($asset),
-            ...$this->assetFormOptions(),
+            ...$this->assetFormOptions($request),
         ]);
     }
 

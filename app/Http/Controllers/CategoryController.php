@@ -20,7 +20,7 @@ class CategoryController extends Controller
             $perPage = 20;
         }
 
-        $categories = Category::query()
+        $categories = $request->user()->categories()
             ->withCount('assets')
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
@@ -53,11 +53,12 @@ class CategoryController extends Controller
         $baseSlug = Str::slug($validated['name']);
         $slug = $baseSlug;
         $counter = 1;
-        while (Category::where('slug', $slug)->exists()) {
+        while ($request->user()->categories()->where('slug', $slug)->exists()) {
             $slug = $baseSlug.'-'.$counter++;
         }
 
         $validated['slug'] = $slug;
+        $validated['user_id'] = $request->user()->id;
 
         $category = Category::create($validated);
 
@@ -85,7 +86,7 @@ class CategoryController extends Controller
         $baseSlug = Str::slug($validated['name']);
         $slug = $baseSlug;
         $counter = 1;
-        while (Category::where('slug', $slug)->where('id', '!=', $category->id)->exists()) {
+        while ($request->user()->categories()->where('slug', $slug)->where('id', '!=', $category->id)->exists()) {
             $slug = $baseSlug.'-'.$counter++;
         }
 

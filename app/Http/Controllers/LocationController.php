@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use App\Models\Kit;
 use App\Models\Location;
 use App\Queries\AssetQuery;
 use App\Services\GeocodingService;
@@ -35,7 +33,7 @@ class LocationController extends Controller
 
         $order = in_array(strtolower($order), ['asc', 'desc']) ? $order : 'desc';
 
-        $locations = Location::query()
+        $locations = $request->user()->locations()
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($nestedQuery) use ($search) {
                     $nestedQuery
@@ -53,7 +51,7 @@ class LocationController extends Controller
 
         return Inertia::render('locations/index', [
             'locations' => $locations,
-            'parentOptions' => $this->parentOptions(),
+            'parentOptions' => $this->parentOptions($request),
             'filters' => [
                 'search' => $request->input('search'),
                 'per_page' => $perPage,
@@ -66,10 +64,10 @@ class LocationController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
         return Inertia::render('locations/create', [
-            'parentOptions' => $this->parentOptions(),
+            'parentOptions' => $this->parentOptions($request),
         ]);
     }
 
@@ -88,12 +86,14 @@ class LocationController extends Controller
             }
         }
 
+        $validated['user_id'] = $request->user()->id;
+
+        $location = Location::create($validated);
+
         $redirectTo = $request->string('redirect_to')->toString();
         if ($redirectTo === '' || ! str_starts_with($redirectTo, '/')) {
             $redirectTo = route('locations.index');
         }
-
-        $location = Location::create($validated);
 
         return redirect()->to($redirectTo)->with('createdLocation', [
             'id' => $location->id,
@@ -170,11 +170,11 @@ class LocationController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Location $location)
+    public function edit(Request $request, Location $location)
     {
         return Inertia::render('locations/create', [
             'location' => $location,
-            'parentOptions' => $this->parentOptions($location),
+            'parentOptions' => $this->parentOptions($request, $location),
         ]);
     }
 
@@ -256,6 +256,7 @@ class LocationController extends Controller
     private function createsHierarchyCycle(Location $location, string $candidateParentId): bool
     {
         $currentParent = Location::query()
+            ->where('user_id', $location->user_id)
             ->select(['id', 'parent_location_id'])
             ->find($candidateParentId);
 
@@ -266,16 +267,16 @@ class LocationController extends Controller
 
             $nextParentId = $currentParent->parent_location_id;
             $currentParent = $nextParentId
-                ? Location::query()->select(['id', 'parent_location_id'])->find($nextParentId)
+                ? Location::query()->where('user_id', $location->user_id)->select(['id', 'parent_location_id'])->find($nextParentId)
                 : null;
         }
 
         return false;
     }
 
-    private function parentOptions(?Location $excludeLocation = null)
+    private function parentOptions(Request $request, ?Location $excludeLocation = null)
     {
-        return Location::query()
+        return $request->user()->locations()
             ->when($excludeLocation, fn ($query) => $query->whereKeyNot($excludeLocation->id))
             ->orderBy('name')
             ->get(['id', 'name']);
@@ -304,8 +305,8 @@ class LocationController extends Controller
                 ...$indexState['filters'],
             ],
             'sorts' => $indexState['sorts'],
-            'categories' => Category::query()->orderBy('name')->get(['id', 'name']),
-            'locations' => Location::query()->orderBy('name')->get(['id', 'name']),
+            'categories' => $request->user()->categories()->orderBy('name')->get(['id', 'name']),
+            'locations' => $request->user()->locations()->orderBy('name')->get(['id', 'name']),
             'savedFilters' => $assetQuery->loadSavedFilters($request),
             'columnPreferences' => $assetQuery->loadColumnPreference($request),
         ];
@@ -313,7 +314,7 @@ class LocationController extends Controller
 
     private function buildKitIndexQuery(Request $request, string $sort, string $order)
     {
-        return Kit::query()
+        return $request->user()->kits()
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
