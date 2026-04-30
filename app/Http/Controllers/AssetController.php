@@ -196,16 +196,16 @@ class AssetController extends Controller
 
         $asset = DB::transaction(function () use ($validated, $request) {
             $userId = $request->user()->id;
-            
+
             // Re-calculate the next sequential number to ensure accuracy and handle collisions
             $lastSeq = Asset::where('user_id', $userId)->lockForUpdate()->max('sequential_number') ?? 0;
             $nextSeq = $lastSeq + 1;
-            
+
             $prefix = 'AST';
-            
-            // We use the next sequence regardless of what the frontend sent, 
+
+            // We use the next sequence regardless of what the frontend sent,
             // but we ensure it matches the format the user expects.
-            $validated['asset_id'] = $prefix . '-' . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+            $validated['asset_id'] = $prefix.'-'.str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
             $validated['sequential_number'] = $nextSeq;
 
             $validated['user_id'] = $userId;

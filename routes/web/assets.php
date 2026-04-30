@@ -14,7 +14,7 @@ Route::prefix('assets')->name('assets.')->group(function () {
     Route::get('create', [AssetController::class, 'create'])->name('create');
     Route::post('/', [AssetController::class, 'store'])->name('store');
     Route::post('layout', [LayoutController::class, 'store'])->name('layout.store');
-    Route::post('bulk-duplicate', [AssetController::class, 'bulkDuplicate'])->name('bulk-duplicate');
+    Route::post('/assets/{asset}/duplicate', [AssetController::class, 'duplicate'])->name('assets.duplicate');
 
     // --- 2. Saved Filters ---
     Route::prefix('saved-filters')->name('saved-filters.')->group(function () {
