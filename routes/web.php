@@ -22,13 +22,13 @@ Route::middleware([
 
     Route::prefix('kits')->name('kits.')->group(function () {
         Route::get('{kit}/overview', [KitController::class, 'show'])
-            ->whereNumber('kit')
+            ->whereUlid('kit')
             ->name('overview');
         Route::get('{kit}/assets', [KitController::class, 'assets'])
-            ->whereNumber('kit')
+            ->whereUlid('kit')
             ->name('assets');
         Route::get('{kit}/assets/add-assets', [KitController::class, 'addAssets'])
-            ->whereNumber('kit')
+            ->whereUlid('kit')
             ->name('add-assets');
     });
 
@@ -38,34 +38,34 @@ Route::middleware([
     Route::resource('tags', TagController::class)->except(['create', 'edit']);
     Route::prefix('locations')->name('locations.')->group(function () {
         Route::get('{location}/overview', [LocationController::class, 'show'])
-            ->whereNumber('location')
+            ->whereUlid('location')
             ->name('overview');
         Route::get('{location}/assets', [LocationController::class, 'assets'])
-            ->whereNumber('location')
+            ->whereUlid('location')
             ->name('assets');
         Route::get('{location}/assets/add-assets', [LocationController::class, 'addAssets'])
-            ->whereNumber('location')
+            ->whereUlid('location')
             ->name('add-assets');
         Route::get('{location}/kits', [LocationController::class, 'kits'])
-            ->whereNumber('location')
+            ->whereUlid('location')
             ->name('kits');
         Route::get('{location}/kits/add-kits', [LocationController::class, 'addKits'])
-            ->whereNumber('location')
+            ->whereUlid('location')
             ->name('add-kits');
 
         Route::get('{location}/activity', [LocationActivityController::class, 'index'])
-            ->whereNumber('location')
+            ->whereUlid('location')
             ->name('activity');
         Route::post('{location}/activity', [LocationActivityController::class, 'store'])
-            ->whereNumber('location')
+            ->whereUlid('location')
             ->name('activity.store');
         Route::delete('{location}/activity/{activity}', [LocationActivityController::class, 'destroy'])
-            ->whereNumber('location')
+            ->whereUlid('location')
             ->name('activity.destroy');
 
         Route::get('{location}', function (Location $location) {
             return redirect()->route('locations.overview', $location);
-        })->whereNumber('location');
+        })->whereUlid('location');
     });
 
     Route::resource('locations', LocationController::class)->except(['show']);

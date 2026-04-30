@@ -14,13 +14,17 @@ return new class extends Migration
         Schema::create('locations', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignUlid('parent_location_id')->nullable()->constrained('locations')->nullOnDelete();
+            $table->ulid('parent_location_id')->nullable();
             $table->string('name');
             $table->text('description')->nullable();
             $table->text('address')->nullable();
             $table->decimal('latitude', 10, 8)->nullable();
             $table->decimal('longitude', 11, 8)->nullable();
             $table->timestamps();
+        });
+
+        Schema::table('locations', function (Blueprint $table) {
+            $table->foreign('parent_location_id')->references('id')->on('locations')->nullOnDelete();
         });
     }
 
