@@ -9,35 +9,33 @@ export default function KitOverview() {
         <>
             <Head title={`${kit?.name || 'Kit'} - Overview`} />
             <div className="p-4">
-                <div className="max-w-3xl">
-                    <div className="rounded border bg-background">
-                        <dl className="divide-y">
-                            <div className="flex items-center justify-between px-6 py-4">
-                                <dt className="text-sm text-muted-foreground">ID</dt>
-                                <dd className="ml-4 text-sm text-foreground wrap-break-word">{kit?.id ?? '-'}</dd>
-                            </div>
+                <div className="rounded border bg-background">
+                    <dl className="divide-y">
+                        <div className="flex items-center justify-between px-6 py-4">
+                            <dt className="text-sm text-muted-foreground">ID</dt>
+                            <dd className="ml-4 text-sm text-foreground wrap-break-word">{kit?.id ?? '-'}</dd>
+                        </div>
 
-                            <div className="flex items-center justify-between px-6 py-4">
-                                <dt className="text-sm text-muted-foreground">Status</dt>
-                                <dd className="ml-4 text-sm text-foreground">{kit?.status ?? '-'}</dd>
-                            </div>
+                        <div className="flex items-center justify-between px-6 py-4">
+                            <dt className="text-sm text-muted-foreground">Status</dt>
+                            <dd className="ml-4 text-sm text-foreground">{kit?.status ?? '-'}</dd>
+                        </div>
 
-                            <div className="flex items-center justify-between px-6 py-4">
-                                <dt className="text-sm text-muted-foreground">Description</dt>
-                                <dd className="ml-4 text-sm text-foreground">{kit?.description || '-'}</dd>
-                            </div>
+                        <div className="flex items-center justify-between px-6 py-4">
+                            <dt className="text-sm text-muted-foreground">Description</dt>
+                            <dd className="ml-4 text-sm text-foreground">{kit?.description || '-'}</dd>
+                        </div>
 
-                            <div className="flex items-center justify-between px-6 py-4">
-                                <dt className="text-sm text-muted-foreground">Created</dt>
-                                <dd className="ml-4 text-sm text-foreground">{kit?.created_at ? new Date(kit.created_at).toLocaleString() : '-'}</dd>
-                            </div>
+                        <div className="flex items-center justify-between px-6 py-4">
+                            <dt className="text-sm text-muted-foreground">Created</dt>
+                            <dd className="ml-4 text-sm text-foreground">{kit?.created_at ? new Date(kit.created_at).toLocaleString() : '-'}</dd>
+                        </div>
 
-                            <div className="flex items-center justify-between px-6 py-4">
-                                <dt className="text-sm text-muted-foreground">Updated</dt>
-                                <dd className="ml-4 text-sm text-foreground">{kit?.updated_at ? new Date(kit.updated_at).toLocaleString() : '-'}</dd>
-                            </div>
-                        </dl>
-                    </div>
+                        <div className="flex items-center justify-between px-6 py-4">
+                            <dt className="text-sm text-muted-foreground">Updated</dt>
+                            <dd className="ml-4 text-sm text-foreground">{kit?.updated_at ? new Date(kit.updated_at).toLocaleString() : '-'}</dd>
+                        </div>
+                    </dl>
                 </div>
             </div>
         </>

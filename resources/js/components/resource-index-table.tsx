@@ -191,82 +191,86 @@ export function ResourceIndexTable<T extends { id: number }>({
             ) : null}
 
             {hasItems ? (
-                <div className="mx-4 mt-4 mb-4 flex flex-1 min-h-0 flex-col overflow-y-auto rounded border bg-background shadow-sm">
-                    <Table className={tableClassName}>
-                        <TableHeader>
-                            <TableRow className="sticky top-0 z-10 bg-background hover:bg-background">
-                                {selection ? (
-                                    <TableHead className="w-11 px-3">
-                                        <div className="flex items-center justify-center">
-                                            <Checkbox
-                                                aria-label="Select all"
-                                                checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                                                onCheckedChange={(value) => selection.onToggleAll(!!value)}
-                                            />
-                                        </div>
-                                    </TableHead>
-                                ) : null}
-
-                                {columns.map((column, index) => (
-                                    <TableHead key={column.key} className={cn(index === 0 && 'pl-0', column.headerClassName)}>
-                                        {column.header}
-                                    </TableHead>
-                                ))}
-
-                                {rowActions ? (
-                                    <TableHead className={cn('w-1 whitespace-nowrap text-right', rowActions.headerClassName)}>
-                                        {rowActions.header ?? 'Actions'}
-                                    </TableHead>
-                                ) : null}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {items.map((item) => (
-                                <TableRow
-                                    key={item.id}
-                                    className={onRowClick ? 'cursor-pointer' : undefined}
-                                    onClick={(event) => {
-                                        if (!onRowClick || isInteractiveTarget(event.target)) {
-                                            return;
-                                        }
-
-                                        onRowClick(item);
-                                    }}
-                                >
+                <div className="mx-4 mt-4 mb-4 flex flex-1 min-h-0 flex-col overflow-hidden rounded border bg-background shadow-sm">
+                    <div className="flex-1 overflow-y-auto">
+                        <Table className={tableClassName}>
+                            <TableHeader>
+                                <TableRow className="sticky top-0 z-10 bg-background hover:bg-background">
                                     {selection ? (
-                                        <TableCell className="w-11 px-3">
+                                        <TableHead className="w-11 px-3">
                                             <div className="flex items-center justify-center">
                                                 <Checkbox
-                                                    aria-label={selection.getLabel(item)}
-                                                    checked={selection.selectedIds.includes(item.id)}
-                                                    onCheckedChange={(value) => selection.onToggleOne(item, !!value)}
-                                                    onClick={(event) => event.stopPropagation()}
+                                                    aria-label="Select all"
+                                                    checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                                                    onCheckedChange={(value) => selection.onToggleAll(!!value)}
                                                 />
                                             </div>
-                                        </TableCell>
+                                        </TableHead>
                                     ) : null}
 
-                                    {columns.map((column, index) => {
-                                        const cellClassName = typeof column.cellClassName === 'function'
-                                            ? column.cellClassName(item)
-                                            : column.cellClassName;
-
-                                        return (
-                                            <TableCell key={column.key} className={cn(index === 0 && 'pl-0', cellClassName)}>
-                                                {column.render(item)}
-                                            </TableCell>
-                                        );
-                                    })}
+                                    {columns.map((column, index) => (
+                                        <TableHead key={column.key} className={cn(index === 0 && 'pl-0', column.headerClassName)}>
+                                            {column.header}
+                                        </TableHead>
+                                    ))}
 
                                     {rowActions ? (
-                                        <TableCell className={cn('text-right', rowActions.cellClassName)}>
-                                            {rowActions.render(item)}
-                                        </TableCell>
+                                        <TableHead className={cn('w-1 whitespace-nowrap text-right', rowActions.headerClassName)}>
+                                            {rowActions.header ?? 'Actions'}
+                                        </TableHead>
                                     ) : null}
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {items.map((item) => (
+                                    <TableRow
+                                        key={item.id}
+                                        className={onRowClick ? 'cursor-pointer' : undefined}
+                                        onClick={(event) => {
+                                            if (!onRowClick || isInteractiveTarget(event.target)) {
+                                                return;
+                                            }
+
+                                            onRowClick(item);
+                                        }}
+                                    >
+                                        {selection ? (
+                                            <TableCell className="w-11 px-3">
+                                                <div className="flex items-center justify-center">
+                                                    <Checkbox
+                                                        aria-label={selection.getLabel(item)}
+                                                        checked={selection.selectedIds.includes(item.id)}
+                                                        onCheckedChange={(value) => selection.onToggleOne(item, !!value)}
+                                                        onClick={(event) => event.stopPropagation()}
+                                                    />
+                                                </div>
+                                            </TableCell>
+                                        ) : null}
+
+                                        {columns.map((column, index) => {
+                                            const cellClassName = typeof column.cellClassName === 'function'
+                                                ? column.cellClassName(item)
+                                                : column.cellClassName;
+
+                                            return (
+                                                <TableCell key={column.key} className={cn(index === 0 && 'pl-0', cellClassName)}>
+                                                    {column.render(item)}
+                                                </TableCell>
+                                            );
+                                        })}
+
+                                        {rowActions ? (
+                                            <TableCell className={cn('text-right', rowActions.cellClassName)}>
+                                                {rowActions.render(item)}
+                                            </TableCell>
+                                        ) : null}
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    {hasItems ? <DataTablePagination pagination={pagination} onPerPageChange={handlePerPageChange} /> : null}
                 </div>
             ) : (
                 <div className="mx-4 mb-4 mt-4 flex flex-1 items-center justify-center rounded border border-dashed bg-background p-6 text-center shadow-sm">
@@ -278,8 +282,6 @@ export function ResourceIndexTable<T extends { id: number }>({
                     </div>
                 </div>
             )}
-
-            {hasItems ? <DataTablePagination pagination={pagination} onPerPageChange={handlePerPageChange} /> : null}
         </div>
     );
 }

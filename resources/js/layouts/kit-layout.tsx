@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { Package } from 'lucide-react';
+import { Download, Package, Printer } from 'lucide-react';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 
 export interface KitResource {
     id: number;
@@ -11,6 +12,7 @@ export interface KitResource {
     status?: string | null;
     created_at?: string | null;
     updated_at?: string | null;
+    qr_code_svg?: string | null;
 }
 
 export interface KitPageProps {
@@ -66,7 +68,38 @@ export default function KitLayout({ children, activeTab, headerAction }: KitLayo
                         </TabsList>
                     </Tabs>
 
-                    {children}
+                    <div className="flex flex-1 flex-col lg:flex-row lg:gap-0">
+                        <div className="flex-1 overflow-hidden">
+                            {children}
+                        </div>
+                        <aside className="w-full lg:w-96 bg-card">
+                            <div className="sticky top-0 p-4 lg:pl-0 space-y-4">
+                                <div className="overflow-hidden rounded border bg-background">
+                                    <div className="border-b px-4 py-2 bg-muted/50">
+                                        <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Kit QR Code</h3>
+                                    </div>
+                                    <div className="p-8 flex flex-col items-center justify-center space-y-6">
+                                        <div className="w-full max-w-[280px] overflow-hidden aspect-square border-8 rounded p-6 flex flex-col items-center justify-between bg-white">
+                                            <div
+                                                className="w-full flex-1 rounded flex items-center justify-center p-14 min-h-0 [&>svg]:max-w-full [&>svg]:h-auto"
+                                                dangerouslySetInnerHTML={{ __html: kit.qr_code_svg || '' }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4 w-full border-t p-4">
+                                        <Button variant="outline" size="sm" className="w-full gap-2">
+                                            <Download size={14} />
+                                            Download
+                                        </Button>
+                                        <Button variant="outline" size="sm" className="w-full gap-2">
+                                            <Printer size={14} />
+                                            Print
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </aside>
+                    </div>
                 </>
             }
         />

@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { MapPin } from 'lucide-react';
+import { Download, MapPin, Printer } from 'lucide-react';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import LocationMap from '@/components/location-map';
 
 export interface LocationResource {
@@ -83,22 +84,18 @@ export default function LocationLayout({ children, activeTab, headerAction }: Lo
                     </Tabs>
 
                     <div className="flex flex-1 flex-col lg:flex-row lg:gap-0">
-                        <div className="flex-1">
+                        <div className="flex-1 overflow-hidden">
                             {children}
                         </div>
-                        {location?.latitude && location?.longitude && (
-                            <aside className="w-full lg:w-96 bg-card">
-                                <div className="sticky top-0 p-4 lg:pl-0 space-y-4">
-                                    {location.address && (
-                                        <div className="p-4 rounded border bg-muted/20 flex items-center justify-between">
-                                            <h4 className="text-xs font-bold text-muted-foreground uppercase">Address</h4>
-                                            <p className="text-sm">{location.address}</p>
-                                        </div>
-                                    )}
+                        <aside className="w-full lg:w-96 bg-card">
+                            <div className="sticky top-0 p-4 lg:pl-0 space-y-4">
+
+
+                                {location?.latitude && location?.longitude && (
                                     <LocationMap location={location} />
-                                </div>
-                            </aside>
-                        )}
+                                )}
+                            </div>
+                        </aside>
                     </div>
                 </div>
             }

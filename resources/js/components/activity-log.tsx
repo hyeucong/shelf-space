@@ -191,7 +191,7 @@ export function ActivityLog({ activity, resourceId, storeUrl, destroyUrl, emptyM
                     ) : (
                         activity.map((item) => (
                             <div key={item.id} className="rounded border bg-background flex flex-col text-sm shadow-sm">
-                                <div className="flex items-start justify-between gap-3 p-4">
+                                <div className="flex justify-between gap-3 p-3 items-center">
                                     <div className="flex min-w-0 items-center gap-2">
                                         <Badge variant="outline">
                                             {item.created_at && (

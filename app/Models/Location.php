@@ -9,9 +9,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Http;
 
+
+
 class Location extends Model
 {
     use BelongsToUser, HasFactory;
+
+    protected $appends = [];
+
+
 
     protected $fillable = [
         'user_id',

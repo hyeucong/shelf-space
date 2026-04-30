@@ -5,9 +5,21 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
 
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+
 class Kit extends Model
 {
     use BelongsToUser;
+
+    protected $appends = ['qr_code_svg'];
+
+    public function getQrCodeSvgAttribute(): string
+    {
+        return QrCode::size(200)
+            ->format('svg')
+            ->generate(route('kits.overview', $this->id))
+            ->toHtml();
+    }
 
     protected $fillable = [
         'user_id',
