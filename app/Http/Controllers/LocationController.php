@@ -264,7 +264,24 @@ class LocationController extends Controller
     {
         $location->delete();
 
-        return redirect()->route('locations.index');
+        return redirect()->route('assets.index');
+    }
+
+    public function duplicate(Request $request, Location $location)
+    {
+        $request->validate([
+            'count' => ['required', 'integer', 'min:1', 'max:10'],
+        ]);
+
+        $count = (int) $request->input('count');
+
+        for ($i = 1; $i <= $count; $i++) {
+            $clone = $location->replicate();
+            $clone->name = $location->name . " (Copy {$i})";
+            $clone->save();
+        }
+
+        return redirect()->route('assets.index')->with('success', "Successfully created {$count} duplicates.");
     }
 
     /**

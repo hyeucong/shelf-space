@@ -1,8 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { MapPin, Pencil, Trash2 } from 'lucide-react';
+import { Copy, MapPin, Pencil, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AssetSelectionActions } from '@/components/asset-selection-actions';
-import { ResourceDeleteDialog } from '@/components/resource-form-dialog';
+import { ResourceDeleteDialog, ResourceDuplicateDialog } from '@/components/resource-form-dialog';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import type { ResourceIndexColumn, ResourceIndexSortOption } from '@/components/resource-index-table';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,9 @@ interface PageProps {
 
 export default function Locations({ locations, filters }: PageProps) {
     const [locationToDelete, setLocationToDelete] = useState<Location | null>(null);
+    const [locationToDuplicate, setLocationToDuplicate] = useState<Location | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [deletedLocationIds, setDeletedLocationIds] = useState<string[]>([]);
 
@@ -76,6 +78,21 @@ export default function Locations({ locations, filters }: PageProps) {
                 setLocationToDelete(null);
             },
             onFinish: () => setIsDeleting(false),
+        });
+    };
+
+    const handleDuplicate = (count: number) => {
+        if (!locationToDuplicate || isDuplicating) {
+            return;
+        }
+
+        router.post(`/locations/${locationToDuplicate.id}/duplicate`, { count }, {
+            preserveScroll: true,
+            onBefore: () => setIsDuplicating(true),
+            onSuccess: () => {
+                setLocationToDuplicate(null);
+            },
+            onFinish: () => setIsDuplicating(false),
         });
     };
 
@@ -174,6 +191,15 @@ export default function Locations({ locations, filters }: PageProps) {
                     <Button
                         variant="ghost"
                         size="icon"
+                        className="h-8 w-8 border"
+                        onClick={() => setLocationToDuplicate(location)}
+                    >
+                        <Copy className="h-4 w-4" />
+                        <span className="sr-only">Duplicate</span>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         className="h-8 w-8 border text-destructive hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => setLocationToDelete(location)}
                         disabled={isDeleting}
@@ -246,6 +272,14 @@ export default function Locations({ locations, filters }: PageProps) {
                 processing={isDeleting}
                 onConfirm={handleDelete}
                 confirmLabel="Delete location"
+            />
+
+            <ResourceDuplicateDialog
+                open={!!locationToDuplicate}
+                onOpenChange={(open) => !open && setLocationToDuplicate(null)}
+                itemName={locationToDuplicate?.name}
+                processing={isDuplicating}
+                onConfirm={handleDuplicate}
             />
         </>
     );

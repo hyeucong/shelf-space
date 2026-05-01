@@ -1,8 +1,9 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
-import { Eye, Package2, Trash2 } from 'lucide-react';
+import { Eye, Package2, Trash2, Pencil, Copy } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AssetSelectionActions } from '@/components/asset-selection-actions';
+import { ResourceDeleteDialog, ResourceDuplicateDialog } from '@/components/resource-form-dialog';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import type { ResourceIndexColumn } from '@/components/resource-index-table';
 import { Button } from '@/components/ui/button';
@@ -36,9 +37,47 @@ export default function Kits({ kits, filters }: PageProps) {
         () => localKits.filter((kit) => activeSelectedIds.includes(kit.id)),
         [activeSelectedIds, localKits],
     );
+    const [kitToDelete, setKitToDelete] = useState<Kit | null>(null);
+    const [kitToDuplicate, setKitToDuplicate] = useState<Kit | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
+
     const primarySelectedKit = activeSelectedIds.length === 1
         ? selectedKits[0] ?? null
         : null;
+
+    const handleDelete = () => {
+        if (!kitToDelete || isDeleting) {
+            return;
+        }
+
+        const id = kitToDelete.id;
+
+        router.delete(`/kits/${id}`, {
+            preserveScroll: true,
+            onBefore: () => setIsDeleting(true),
+            onSuccess: () => {
+                setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
+                setKitToDelete(null);
+            },
+            onFinish: () => setIsDeleting(false),
+        });
+    };
+
+    const handleDuplicate = (count: number) => {
+        if (!kitToDuplicate || isDuplicating) {
+            return;
+        }
+
+        router.post(`/kits/${kitToDuplicate.id}/duplicate`, { count }, {
+            preserveScroll: true,
+            onBefore: () => setIsDuplicating(true),
+            onSuccess: () => {
+                setKitToDuplicate(null);
+            },
+            onFinish: () => setIsDuplicating(false),
+        });
+    };
 
 
     const toggleOne = (id: string, checked: boolean) => {
@@ -94,6 +133,41 @@ export default function Kits({ kits, filters }: PageProps) {
             cellClassName: 'hidden whitespace-nowrap capitalize text-muted-foreground sm:table-cell',
             render: (kit) => kit.status,
         },
+        {
+            key: 'actions',
+            header: 'Actions',
+            headerClassName: 'w-24 text-right',
+            cellClassName: 'w-24 text-right',
+            render: (kit) => (
+                <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 border" asChild>
+                        <Link href={`/kits/${kit.id}/edit`}>
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                        </Link>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 border"
+                        onClick={() => setKitToDuplicate(kit)}
+                    >
+                        <Copy className="h-4 w-4" />
+                        <span className="sr-only">Duplicate</span>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 border text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => setKitToDelete(kit)}
+                        disabled={isDeleting}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                    </Button>
+                </div>
+            ),
+        },
     ];
 
     return (
@@ -137,6 +211,24 @@ export default function Kits({ kits, filters }: PageProps) {
                     />
                 )}
             // Sorting removed for Kits index
+            />
+
+            <ResourceDeleteDialog
+                open={!!kitToDelete}
+                onOpenChange={(open) => !open && setKitToDelete(null)}
+                title="Delete Kit"
+                itemName={kitToDelete?.name}
+                processing={isDeleting}
+                onConfirm={handleDelete}
+                confirmLabel="Delete kit"
+            />
+
+            <ResourceDuplicateDialog
+                open={!!kitToDuplicate}
+                onOpenChange={(open) => !open && setKitToDuplicate(null)}
+                itemName={kitToDuplicate?.name}
+                processing={isDuplicating}
+                onConfirm={handleDuplicate}
             />
         </>
     );

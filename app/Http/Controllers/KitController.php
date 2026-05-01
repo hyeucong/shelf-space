@@ -137,7 +137,26 @@ class KitController extends Controller
      */
     public function destroy(Kit $kit)
     {
-        //
+        $kit->delete();
+
+        return redirect()->route('assets.index');
+    }
+
+    public function duplicate(Request $request, Kit $kit)
+    {
+        $request->validate([
+            'count' => ['required', 'integer', 'min:1', 'max:10'],
+        ]);
+
+        $count = (int) $request->input('count');
+
+        for ($i = 1; $i <= $count; $i++) {
+            $clone = $kit->replicate();
+            $clone->name = $kit->name . " (Copy {$i})";
+            $clone->save();
+        }
+
+        return redirect()->route('assets.index')->with('success', "Successfully created {$count} duplicates.");
     }
 
     public function addAssets(Request $request, Kit $kit, AssetQuery $assetQuery)
