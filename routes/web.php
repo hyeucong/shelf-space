@@ -10,6 +10,7 @@ Route::middleware([
     ValidateSessionWithWorkOS::class,
 ])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('quick-find', \App\Http\Controllers\QuickFindController::class)->name('quick-find');
 
     require __DIR__.'/web/assets.php';
     require __DIR__.'/web/kits.php';
