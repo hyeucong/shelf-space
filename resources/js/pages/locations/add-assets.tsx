@@ -6,6 +6,7 @@ import { AssetQueryBuilder } from '@/components/asset-query-builder';
 import type { AssetFilterOption, AssetFiltersQuery, AssetQueryValue, AssetSavedFilter, AssetSortDraft } from '@/components/asset-query-builder';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import type { LocationPageProps } from '@/layouts/location-layout';
 import {
@@ -41,6 +42,8 @@ export default function AddAssets({ location, assets: availableAssets, categorie
     );
     const [selectedIds, setSelectedIds] = useState<string[]>(() => existingAssetIds ?? []);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [conflictCount, setConflictCount] = useState(0);
+    const [showConflictDialog, setShowConflictDialog] = useState(false);
 
     const selectedCount = useMemo(
         () => availableAssets.data.filter((asset) => selectedIds.includes(asset.id)).length,
@@ -79,14 +82,25 @@ export default function AddAssets({ location, assets: availableAssets, categorie
         setSelectedIds((previous) => previous.filter((id) => !currentPageIds.has(id)));
     };
 
-    const handleConfirm = () => {
+    const submit = (force = false) => {
         setIsSubmitting(true);
         router.post(addAssets(location.id).url, {
             asset_ids: selectedIds,
+            force,
         }, {
             preserveScroll: true,
             onFinish: () => setIsSubmitting(false),
+            onError: (errors) => {
+                if (errors.conflicts) {
+                    setConflictCount(Number(errors.conflicts));
+                    setShowConflictDialog(true);
+                }
+            }
         });
+    };
+
+    const handleConfirm = () => {
+        submit(false);
     };
 
     const handleCancel = () => {
@@ -199,6 +213,28 @@ export default function AddAssets({ location, assets: availableAssets, categorie
                     description: 'No assets match the current search or filter criteria.',
                 }}
             />
+
+            <Dialog open={showConflictDialog} onOpenChange={setShowConflictDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Asset Conflict</DialogTitle>
+                        <DialogDescription>
+                            {conflictCount} of the selected {conflictCount === 1 ? 'item' : 'items'} already {conflictCount === 1 ? 'belongs' : 'belong'} to another kit or location. Continuing will remove {conflictCount === 1 ? 'it' : 'them'} from {conflictCount === 1 ? 'its' : 'their'} current assignment. Do you want to proceed?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowConflictDialog(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={() => {
+                            setShowConflictDialog(false);
+                            submit(true);
+                        }}>
+                            Proceed
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

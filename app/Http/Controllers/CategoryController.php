@@ -62,7 +62,7 @@ class CategoryController extends Controller
 
         $category = Category::create($validated);
 
-        return redirect()->to($redirectTo)->with('createdCategory', [
+        return redirect()->to($redirectTo)->with('success', 'Category created successfully.')->with('createdCategory', [
             'id' => $category->id,
             'name' => $category->name,
         ]);
@@ -94,7 +94,7 @@ class CategoryController extends Controller
 
         $category->update($validated);
 
-        return redirect()->route('categories.index');
+        return redirect()->route('categories.index')->with('success', 'Category updated successfully.');
     }
 
     /**
@@ -105,7 +105,7 @@ class CategoryController extends Controller
         // Delete the category and redirect back to the index.
         $category->delete();
 
-        return redirect()->route('categories.index');
+        return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
     }
 
     /**

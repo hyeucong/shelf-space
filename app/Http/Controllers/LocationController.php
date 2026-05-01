@@ -97,7 +97,7 @@ class LocationController extends Controller
             $redirectTo = route('locations.index');
         }
 
-        return redirect()->to($redirectTo)->with('createdLocation', [
+        return redirect()->to($redirectTo)->with('success', 'Location created successfully.')->with('createdLocation', [
             'id' => $location->id,
             'name' => $location->name,
         ]);
@@ -138,6 +138,8 @@ class LocationController extends Controller
         ]);
     }
 
+
+
     public function addAssets(Request $request, Location $location, AssetQuery $assetQuery)
     {
         $indexState = $assetQuery->resolveIndexState($request);
@@ -159,7 +161,26 @@ class LocationController extends Controller
         $validated = $request->validate([
             'asset_ids' => ['present', 'array'],
             'asset_ids.*' => ['required', 'string'],
+            'force' => ['nullable', 'boolean'],
         ]);
+
+        if (! $request->boolean('force') && ! empty($validated['asset_ids'])) {
+            $conflictsCount = Asset::query()
+                ->where('user_id', $request->user()->id)
+                ->whereIn('id', $validated['asset_ids'])
+                ->where(function ($q) use ($location) {
+                    $q->where(function ($inner) use ($location) {
+                        $inner->whereNotNull('location_id')->where('location_id', '!=', $location->id);
+                    })->orWhereNotNull('kit_id');
+                })
+                ->count();
+
+            if ($conflictsCount > 0) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'conflicts' => $conflictsCount,
+                ]);
+            }
+        }
 
         // Clear existing location assignments and set new ones
         Asset::query()
@@ -254,7 +275,7 @@ class LocationController extends Controller
 
         $location->update($validated);
 
-        return redirect()->route('locations.index');
+        return redirect()->route('locations.index')->with('success', 'Location updated successfully.');
     }
 
     /**
@@ -264,7 +285,7 @@ class LocationController extends Controller
     {
         $location->delete();
 
-        return redirect()->route('assets.index');
+        return redirect()->route('locations.index')->with('success', 'Location deleted successfully.');
     }
 
     public function duplicate(Request $request, Location $location)
@@ -281,7 +302,7 @@ class LocationController extends Controller
             $clone->save();
         }
 
-        return redirect()->route('assets.index')->with('success', "Successfully created {$count} duplicates.");
+        return redirect()->route('locations.index')->with('success', "Successfully created {$count} duplicates.");
     }
 
     /**

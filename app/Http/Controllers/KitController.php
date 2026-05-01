@@ -81,7 +81,7 @@ class KitController extends Controller
             'description' => $validated['description'] ?? null,
         ]);
 
-        return redirect()->route('kits.index');
+        return redirect()->route('kits.index')->with('success', 'Kit created successfully.');
     }
 
     /**
@@ -139,7 +139,7 @@ class KitController extends Controller
     {
         $kit->delete();
 
-        return redirect()->route('assets.index');
+        return redirect()->route('kits.index')->with('success', 'Kit deleted successfully.');
     }
 
     public function duplicate(Request $request, Kit $kit)
@@ -152,12 +152,14 @@ class KitController extends Controller
 
         for ($i = 1; $i <= $count; $i++) {
             $clone = $kit->replicate();
-            $clone->name = $kit->name . " (Copy {$i})";
+            $clone->name = $kit->name." (Copy {$i})";
             $clone->save();
         }
 
-        return redirect()->route('assets.index')->with('success', "Successfully created {$count} duplicates.");
+        return redirect()->route('kits.index')->with('success', "Successfully created {$count} duplicates.");
     }
+
+
 
     public function addAssets(Request $request, Kit $kit, AssetQuery $assetQuery)
     {
@@ -180,7 +182,26 @@ class KitController extends Controller
         $validated = $request->validate([
             'asset_ids' => ['present', 'array'],
             'asset_ids.*' => ['required', 'string'],
+            'force' => ['nullable', 'boolean'],
         ]);
+
+        if (! $request->boolean('force') && ! empty($validated['asset_ids'])) {
+            $conflictsCount = Asset::query()
+                ->where('user_id', $request->user()->id)
+                ->whereIn('id', $validated['asset_ids'])
+                ->where(function ($q) use ($kit) {
+                    $q->where(function ($inner) use ($kit) {
+                        $inner->whereNotNull('kit_id')->where('kit_id', '!=', $kit->id);
+                    })->orWhereNotNull('location_id');
+                })
+                ->count();
+
+            if ($conflictsCount > 0) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'conflicts' => $conflictsCount,
+                ]);
+            }
+        }
 
         // Clear existing kit assignments and set new ones
         Asset::query()

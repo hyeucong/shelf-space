@@ -64,7 +64,7 @@ class TagController extends Controller
 
         $tag = Tag::create($validated);
 
-        return redirect()->to($redirectTo)->with('createdTag', [
+        return redirect()->to($redirectTo)->with('success', 'Tag created successfully.')->with('createdTag', [
             'id' => $tag->id,
             'name' => $tag->name,
         ]);
@@ -85,7 +85,7 @@ class TagController extends Controller
     {
         $tag->update($this->validatedData($request, $tag));
 
-        return redirect()->route('tags.index');
+        return redirect()->route('tags.index')->with('success', 'Tag updated successfully.');
     }
 
     /**
@@ -95,7 +95,7 @@ class TagController extends Controller
     {
         $tag->delete();
 
-        return redirect()->route('tags.index');
+        return redirect()->route('tags.index')->with('success', 'Tag deleted successfully.');
     }
 
     /**

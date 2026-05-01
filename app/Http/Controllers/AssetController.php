@@ -230,7 +230,7 @@ class AssetController extends Controller
             $asset->tags()->sync(array_values(array_unique($tagIds)));
         }
 
-        return redirect()->route('assets.index');
+        return redirect()->route('assets.index')->with('success', 'Asset created successfully.');
     }
 
     /**
@@ -275,7 +275,7 @@ class AssetController extends Controller
         $asset->update($validated);
         $asset->tags()->sync($this->resolveTagIds($request, $tags));
 
-        return redirect()->route('assets.index');
+        return redirect()->route('assets.index')->with('success', 'Asset updated successfully.');
     }
 
     /**
@@ -285,7 +285,7 @@ class AssetController extends Controller
     {
         $asset->delete();
 
-        return redirect()->route('assets.index');
+        return redirect()->route('assets.index')->with('success', 'Asset deleted successfully.');
     }
 
     public function duplicate(Request $request, Asset $asset)
