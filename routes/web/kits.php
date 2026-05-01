@@ -19,6 +19,8 @@ Route::prefix('kits')->name('kits.')->group(function () {
     Route::post('{kit}/duplicate', [KitController::class, 'duplicate'])
         ->whereUlid('kit')
         ->name('duplicate');
+    Route::delete('select-delete', [KitController::class, 'selectDelete'])
+        ->name('selectDelete');
 });
 
 Route::resource('kits', KitController::class);

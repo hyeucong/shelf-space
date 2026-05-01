@@ -7,7 +7,7 @@ import { ColumnVisibilityPanel } from '@/components/asset-column-visibility-pane
 import { AssetQueryBuilder } from '@/components/asset-query-builder';
 import type { AssetFilterOption, AssetFiltersQuery, AssetQueryValue, AssetSavedFilter, AssetSortDraft } from '@/components/asset-query-builder';
 import { AssetSelectionActions } from '@/components/asset-selection-actions';
-import { ResourceDeleteDialog, ResourceDuplicateDialog } from '@/components/resource-form-dialog';
+import { ResourceDeleteDialog, ResourceDuplicateDialog, ResourceSelectDeleteDialog } from '@/components/resource-form-dialog';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
@@ -45,6 +45,8 @@ export default function Assets({ assets, categories, columnPreferences, location
     const [deletedAssetIds, setDeletedAssetIds] = useState<string[]>([]);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isDuplicating, setIsDuplicating] = useState(false);
+    const [isSelectingDelete, setIsSelectingDelete] = useState(false);
+    const [showSelectDelete, setShowSelectDelete] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [optimisticColumns, setOptimisticColumns] = useState<AssetColumnPreference[] | null>(null);
     const [draftColumns, setDraftColumns] = useState<AssetColumnPreference[]>(persistedColumns);
@@ -217,6 +219,23 @@ export default function Assets({ assets, categories, columnPreferences, location
             onFinish: () => setIsDeleting(false),
         });
     };
+
+    const handleSelectDelete = () => {
+        if (activeSelectedIds.length === 0 || isSelectingDelete) {
+            return;
+        }
+
+        router.delete('/assets/select-delete', {
+            data: { ids: activeSelectedIds },
+            preserveScroll: true,
+            onBefore: () => setIsSelectingDelete(true),
+            onSuccess: () => {
+                setSelectedIds([]);
+                setShowSelectDelete(false);
+            },
+            onFinish: () => setIsSelectingDelete(false),
+        });
+    };
  
     const handleDuplicate = (count: number) => {
         if (!assetToDuplicate || isDuplicating) {
@@ -371,14 +390,8 @@ export default function Assets({ assets, categories, columnPreferences, location
                                 key: 'delete',
                                 label: 'Delete',
                                 icon: <Trash2 className="h-4 w-4" />,
-                                onClick: () => {
-                                    if (!primarySelectedAsset) {
-                                        return;
-                                    }
-
-                                    setAssetToDelete(primarySelectedAsset);
-                                },
-                                disabled: !primarySelectedAsset,
+                                onClick: () => setShowSelectDelete(true),
+                                disabled: activeSelectedIds.length === 0,
                                 destructive: true,
                             },
                         ]}
@@ -401,6 +414,17 @@ export default function Assets({ assets, categories, columnPreferences, location
                 confirmLabel="Delete asset"
                 confirmPendingLabel="Deleting asset..."
                 contentClassName="sm:max-w-106.25 rounded"
+            />
+
+            <ResourceSelectDeleteDialog
+                open={showSelectDelete}
+                onOpenChange={setShowSelectDelete}
+                title="Delete Assets"
+                resourceName="Asset"
+                count={activeSelectedIds.length}
+                processing={isSelectingDelete}
+                onConfirm={handleSelectDelete}
+                confirmLabel="Delete selected"
             />
 
             <ResourceDuplicateDialog

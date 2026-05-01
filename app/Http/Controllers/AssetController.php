@@ -288,6 +288,18 @@ class AssetController extends Controller
         return redirect()->route('assets.index')->with('success', 'Asset deleted successfully.');
     }
 
+    public function selectDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'string'],
+        ]);
+
+        $request->user()->assets()->whereIn('id', $validated['ids'])->delete();
+
+        return redirect()->route('assets.index')->with('success', 'Selected assets deleted successfully.');
+    }
+
     public function duplicate(Request $request, Asset $asset)
     {
         // 1. Validate that the count is a number between 1 and 10

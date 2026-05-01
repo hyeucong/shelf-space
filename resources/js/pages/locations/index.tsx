@@ -2,7 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Copy, MapPin, Pencil, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AssetSelectionActions } from '@/components/asset-selection-actions';
-import { ResourceDeleteDialog, ResourceDuplicateDialog } from '@/components/resource-form-dialog';
+import { ResourceDeleteDialog, ResourceDuplicateDialog, ResourceSelectDeleteDialog } from '@/components/resource-form-dialog';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import type { ResourceIndexColumn, ResourceIndexSortOption } from '@/components/resource-index-table';
 import { Button } from '@/components/ui/button';
@@ -41,6 +41,8 @@ export default function Locations({ locations, filters }: PageProps) {
     const [locationToDuplicate, setLocationToDuplicate] = useState<Location | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isDuplicating, setIsDuplicating] = useState(false);
+    const [isSelectingDelete, setIsSelectingDelete] = useState(false);
+    const [showSelectDelete, setShowSelectDelete] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [deletedLocationIds, setDeletedLocationIds] = useState<string[]>([]);
 
@@ -78,6 +80,23 @@ export default function Locations({ locations, filters }: PageProps) {
                 setLocationToDelete(null);
             },
             onFinish: () => setIsDeleting(false),
+        });
+    };
+
+    const handleSelectDelete = () => {
+        if (activeSelectedIds.length === 0 || isSelectingDelete) {
+            return;
+        }
+
+        router.delete('/locations/select-delete', {
+            data: { ids: activeSelectedIds },
+            preserveScroll: true,
+            onBefore: () => setIsSelectingDelete(true),
+            onSuccess: () => {
+                setSelectedIds([]);
+                setShowSelectDelete(false);
+            },
+            onFinish: () => setIsSelectingDelete(false),
         });
     };
 
@@ -250,14 +269,8 @@ export default function Locations({ locations, filters }: PageProps) {
                                 key: 'delete',
                                 label: 'Delete',
                                 icon: <Trash2 className="h-4 w-4" />,
-                                onClick: () => {
-                                    if (!primarySelectedLocation) {
-                                        return;
-                                    }
-
-                                    setLocationToDelete(primarySelectedLocation);
-                                },
-                                disabled: !primarySelectedLocation,
+                                onClick: () => setShowSelectDelete(true),
+                                disabled: activeSelectedIds.length === 0,
                                 destructive: true,
                             },
                         ]}
@@ -272,6 +285,17 @@ export default function Locations({ locations, filters }: PageProps) {
                 processing={isDeleting}
                 onConfirm={handleDelete}
                 confirmLabel="Delete location"
+            />
+
+            <ResourceSelectDeleteDialog
+                open={showSelectDelete}
+                onOpenChange={setShowSelectDelete}
+                title="Delete Locations"
+                resourceName="Location"
+                count={activeSelectedIds.length}
+                processing={isSelectingDelete}
+                onConfirm={handleSelectDelete}
+                confirmLabel="Delete selected"
             />
 
             <ResourceDuplicateDialog

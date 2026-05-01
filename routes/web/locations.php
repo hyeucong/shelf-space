@@ -44,6 +44,9 @@ Route::prefix('locations')->name('locations.')->group(function () {
     Route::get('{location}', function (Location $location) {
         return redirect()->route('locations.overview', $location);
     })->whereUlid('location');
+
+    Route::delete('select-delete', [LocationController::class, 'selectDelete'])
+        ->name('selectDelete');
 });
 
 Route::resource('locations', LocationController::class)->except(['show']);

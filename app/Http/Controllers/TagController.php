@@ -98,6 +98,18 @@ class TagController extends Controller
         return redirect()->route('tags.index')->with('success', 'Tag deleted successfully.');
     }
 
+    public function selectDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'string'],
+        ]);
+
+        $request->user()->tags()->whereIn('id', $validated['ids'])->delete();
+
+        return redirect()->route('tags.index')->with('success', 'Selected tags deleted successfully.');
+    }
+
     /**
      * Validate and normalize tag input.
      *

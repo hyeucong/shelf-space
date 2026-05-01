@@ -59,6 +59,18 @@ interface ResourceDuplicateDialogProps {
     maxCopies?: number;
 }
 
+interface ResourceSelectDeleteDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    title: string;
+    resourceName: string;
+    count: number;
+    processing?: boolean;
+    onConfirm: () => void;
+    confirmLabel: string;
+    confirmPendingLabel?: string;
+}
+
 export function ResourceHeaderAction({ label, onClick, visible = true }: ResourceHeaderActionProps) {
     if (!visible) {
         return null;
@@ -258,6 +270,40 @@ export function ResourceDuplicateDialog({
                         </Button>
                     </DialogFooter>
                 </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+export function ResourceSelectDeleteDialog({
+    open,
+    onOpenChange,
+    title,
+    resourceName,
+    count,
+    processing = false,
+    onConfirm,
+    confirmLabel,
+    confirmPendingLabel = 'Deleting...',
+}: ResourceSelectDeleteDialogProps) {
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-106.25 rounded">
+                <DialogHeader>
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>
+                        This will permanently remove <span className="font-semibold text-foreground">{count} {count === 1 ? resourceName : `${resourceName}s`}</span>.
+                        This action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="gap-2">
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded">
+                        Cancel
+                    </Button>
+                    <Button variant="destructive" onClick={onConfirm} className="rounded" disabled={processing}>
+                        {processing ? confirmPendingLabel : confirmLabel}
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

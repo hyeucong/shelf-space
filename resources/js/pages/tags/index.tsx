@@ -2,7 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { AssetSelectionActions } from '@/components/asset-selection-actions';
-import { ResourceDeleteDialog, ResourceHeaderAction } from '@/components/resource-form-dialog';
+import { ResourceDeleteDialog, ResourceHeaderAction, ResourceSelectDeleteDialog } from '@/components/resource-form-dialog';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import type { ResourceIndexColumn, ResourceIndexSortOption } from '@/components/resource-index-table';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,8 @@ export default function Tags({ tags, filters }: PageProps) {
     const [activeTag, setActiveTag] = useState<Tag | null>(null);
     const [tagToDelete, setTagToDelete] = useState<Tag | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isSelectingDelete, setIsSelectingDelete] = useState(false);
+    const [showSelectDelete, setShowSelectDelete] = useState(false);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [deletedTagIds, setDeletedTagIds] = useState<number[]>([]);
 
@@ -94,6 +96,23 @@ export default function Tags({ tags, filters }: PageProps) {
                 setTagToDelete(null);
             },
             onFinish: () => setIsDeleting(false),
+        });
+    };
+
+    const handleSelectDelete = () => {
+        if (activeSelectedIds.length === 0 || isSelectingDelete) {
+            return;
+        }
+
+        router.delete('/tags/select-delete', {
+            data: { ids: activeSelectedIds },
+            preserveScroll: true,
+            onBefore: () => setIsSelectingDelete(true),
+            onSuccess: () => {
+                setSelectedIds([]);
+                setShowSelectDelete(false);
+            },
+            onFinish: () => setIsSelectingDelete(false),
         });
     };
 
@@ -233,14 +252,8 @@ export default function Tags({ tags, filters }: PageProps) {
                                 key: 'delete',
                                 label: 'Delete',
                                 icon: <Trash2 className="h-4 w-4" />,
-                                onClick: () => {
-                                    if (!primarySelectedTag) {
-                                        return;
-                                    }
-
-                                    setTagToDelete(primarySelectedTag);
-                                },
-                                disabled: !primarySelectedTag,
+                                onClick: () => setShowSelectDelete(true),
+                                disabled: activeSelectedIds.length === 0,
                                 destructive: true,
                             },
                         ]}
@@ -269,6 +282,17 @@ export default function Tags({ tags, filters }: PageProps) {
                 processing={isDeleting}
                 onConfirm={handleDelete}
                 confirmLabel="Delete tag"
+            />
+
+            <ResourceSelectDeleteDialog
+                open={showSelectDelete}
+                onOpenChange={setShowSelectDelete}
+                title="Delete Tags"
+                resourceName="Tag"
+                count={activeSelectedIds.length}
+                processing={isSelectingDelete}
+                onConfirm={handleSelectDelete}
+                confirmLabel="Delete selected"
             />
         </>
     );

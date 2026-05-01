@@ -108,6 +108,18 @@ class CategoryController extends Controller
         return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
     }
 
+    public function selectDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'string'],
+        ]);
+
+        $request->user()->categories()->whereIn('id', $validated['ids'])->delete();
+
+        return redirect()->route('categories.index')->with('success', 'Selected categories deleted successfully.');
+    }
+
     /**
      * Validate and normalize category input.
      *

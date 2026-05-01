@@ -142,6 +142,18 @@ class KitController extends Controller
         return redirect()->route('kits.index')->with('success', 'Kit deleted successfully.');
     }
 
+    public function selectDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'string'],
+        ]);
+
+        $request->user()->kits()->whereIn('id', $validated['ids'])->delete();
+
+        return redirect()->route('kits.index')->with('success', 'Selected kits deleted successfully.');
+    }
+
     public function duplicate(Request $request, Kit $kit)
     {
         $request->validate([

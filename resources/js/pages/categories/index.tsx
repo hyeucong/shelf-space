@@ -2,7 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { AssetSelectionActions } from '@/components/asset-selection-actions';
-import { ResourceDeleteDialog, ResourceHeaderAction } from '@/components/resource-form-dialog';
+import { ResourceDeleteDialog, ResourceHeaderAction, ResourceSelectDeleteDialog } from '@/components/resource-form-dialog';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import type { ResourceIndexColumn } from '@/components/resource-index-table';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,8 @@ export default function Categories({ categories, filters }: PageProps) {
 
     const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isSelectingDelete, setIsSelectingDelete] = useState(false);
+    const [showSelectDelete, setShowSelectDelete] = useState(false);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [deletedCategoryIds, setDeletedCategoryIds] = useState<number[]>([]);
 
@@ -113,6 +115,23 @@ export default function Categories({ categories, filters }: PageProps) {
                 setCategoryToDelete(null);
             },
             onFinish: () => setIsDeleting(false),
+        });
+    };
+
+    const handleSelectDelete = () => {
+        if (activeSelectedIds.length === 0 || isSelectingDelete) {
+            return;
+        }
+
+        router.delete('/categories/select-delete', {
+            data: { ids: activeSelectedIds },
+            preserveScroll: true,
+            onBefore: () => setIsSelectingDelete(true),
+            onSuccess: () => {
+                setSelectedIds([]);
+                setShowSelectDelete(false);
+            },
+            onFinish: () => setIsSelectingDelete(false),
         });
     };
 
@@ -227,14 +246,8 @@ export default function Categories({ categories, filters }: PageProps) {
                                 key: 'delete',
                                 label: 'Delete',
                                 icon: <Trash2 className="h-4 w-4" />,
-                                onClick: () => {
-                                    if (!primarySelectedCategory) {
-                                        return;
-                                    }
-
-                                    setCategoryToDelete(primarySelectedCategory);
-                                },
-                                disabled: !primarySelectedCategory,
+                                onClick: () => setShowSelectDelete(true),
+                                disabled: activeSelectedIds.length === 0,
                                 destructive: true,
                             },
                         ]}
@@ -263,6 +276,17 @@ export default function Categories({ categories, filters }: PageProps) {
                 processing={isDeleting}
                 onConfirm={handleDelete}
                 confirmLabel="Delete category"
+            />
+
+            <ResourceSelectDeleteDialog
+                open={showSelectDelete}
+                onOpenChange={setShowSelectDelete}
+                title="Delete Categories"
+                resourceName="Category"
+                count={activeSelectedIds.length}
+                processing={isSelectingDelete}
+                onConfirm={handleSelectDelete}
+                confirmLabel="Delete selected"
             />
         </>
     );

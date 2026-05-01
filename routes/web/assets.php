@@ -15,6 +15,7 @@ Route::prefix('assets')->name('assets.')->group(function () {
     Route::post('/', [AssetController::class, 'store'])->name('store');
     Route::post('layout', [LayoutController::class, 'store'])->name('layout.store');
     Route::post('/assets/{asset}/duplicate', [AssetController::class, 'duplicate'])->name('assets.duplicate');
+    Route::delete('select-delete', [AssetController::class, 'selectDelete'])->name('selectDelete');
 
     // --- 2. Saved Filters ---
     Route::prefix('saved-filters')->name('saved-filters.')->group(function () {

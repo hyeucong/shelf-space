@@ -14,8 +14,8 @@ trait HasResourceLimit
         static::creating(function ($model) {
             $limit = 10000;
             $userId = $model->user_id ?? auth()->id();
-            
-            if (!$userId) {
+
+            if (! $userId) {
                 return; // Can't enforce limit without a user
             }
 
@@ -23,9 +23,9 @@ trait HasResourceLimit
 
             if ($count >= $limit) {
                 $resourceName = strtolower((new \ReflectionClass($model))->getShortName());
-                
+
                 throw ValidationException::withMessages([
-                    'limit' => "Action denied. You have reached the limit of {$limit} {$resourceName}s."
+                    'limit' => "Action denied. You have reached the limit of {$limit} {$resourceName}s.",
                 ]);
             }
         });

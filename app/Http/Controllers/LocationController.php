@@ -285,6 +285,18 @@ class LocationController extends Controller
         return redirect()->route('locations.index')->with('success', 'Location deleted successfully.');
     }
 
+    public function selectDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'string'],
+        ]);
+
+        $request->user()->locations()->whereIn('id', $validated['ids'])->delete();
+
+        return redirect()->route('locations.index')->with('success', 'Selected locations deleted successfully.');
+    }
+
     public function duplicate(Request $request, Location $location)
     {
         $request->validate([

@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/react';
 import { Eye, Package2, Trash2, Pencil, Copy } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AssetSelectionActions } from '@/components/asset-selection-actions';
-import { ResourceDeleteDialog, ResourceDuplicateDialog } from '@/components/resource-form-dialog';
+import { ResourceDeleteDialog, ResourceDuplicateDialog, ResourceSelectDeleteDialog } from '@/components/resource-form-dialog';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import type { ResourceIndexColumn } from '@/components/resource-index-table';
 import { Button } from '@/components/ui/button';
@@ -41,6 +41,8 @@ export default function Kits({ kits, filters }: PageProps) {
     const [kitToDuplicate, setKitToDuplicate] = useState<Kit | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isDuplicating, setIsDuplicating] = useState(false);
+    const [isSelectingDelete, setIsSelectingDelete] = useState(false);
+    const [showSelectDelete, setShowSelectDelete] = useState(false);
 
     const primarySelectedKit = activeSelectedIds.length === 1
         ? selectedKits[0] ?? null
@@ -61,6 +63,23 @@ export default function Kits({ kits, filters }: PageProps) {
                 setKitToDelete(null);
             },
             onFinish: () => setIsDeleting(false),
+        });
+    };
+
+    const handleSelectDelete = () => {
+        if (activeSelectedIds.length === 0 || isSelectingDelete) {
+            return;
+        }
+
+        router.delete('/kits/select-delete', {
+            data: { ids: activeSelectedIds },
+            preserveScroll: true,
+            onBefore: () => setIsSelectingDelete(true),
+            onSuccess: () => {
+                setSelectedIds([]);
+                setShowSelectDelete(false);
+            },
+            onFinish: () => setIsSelectingDelete(false),
         });
     };
 
@@ -204,7 +223,8 @@ export default function Kits({ kits, filters }: PageProps) {
                                 key: 'delete',
                                 label: 'Delete',
                                 icon: <Trash2 className="h-4 w-4" />,
-                                disabled: true,
+                                onClick: () => setShowSelectDelete(true),
+                                disabled: activeSelectedIds.length === 0,
                                 destructive: true,
                             },
                         ]}
@@ -221,6 +241,17 @@ export default function Kits({ kits, filters }: PageProps) {
                 processing={isDeleting}
                 onConfirm={handleDelete}
                 confirmLabel="Delete kit"
+            />
+
+            <ResourceSelectDeleteDialog
+                open={showSelectDelete}
+                onOpenChange={setShowSelectDelete}
+                title="Delete Kits"
+                resourceName="Kit"
+                count={activeSelectedIds.length}
+                processing={isSelectingDelete}
+                onConfirm={handleSelectDelete}
+                confirmLabel="Delete selected"
             />
 
             <ResourceDuplicateDialog
