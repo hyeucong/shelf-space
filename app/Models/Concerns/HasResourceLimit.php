@@ -12,7 +12,7 @@ trait HasResourceLimit
     protected static function bootHasResourceLimit(): void
     {
         static::creating(function ($model) {
-            $limit = 1000;
+            $limit = 10000;
             $userId = $model->user_id ?? auth()->id();
             
             if (!$userId) {

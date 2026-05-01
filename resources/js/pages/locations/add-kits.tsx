@@ -14,7 +14,9 @@ interface KitRecord {
     id: string;
     name: string;
     created_at?: string | null;
-    category_name?: string | null;
+    location?: {
+        name: string;
+    } | null;
 }
 
 interface AddKitsPageProps extends LocationPageProps {
@@ -90,8 +92,6 @@ export default function AddKits({ location, kits: availableKits, existingKitIds,
         router.visit(locationKits(location.id).url);
     };
 
-    const locationName = location?.name ?? '—';
-
     const columns = useMemo<ResourceIndexColumn<KitRecord>[]>(() => [
         {
             key: 'name',
@@ -114,17 +114,10 @@ export default function AddKits({ location, kits: availableKits, existingKitIds,
             header: 'Location',
             headerClassName: 'w-56 whitespace-nowrap',
             cellClassName: 'w-56 whitespace-nowrap text-muted-foreground',
-            render: () => locationName,
-        },
-        {
-            key: 'category',
-            header: 'Category',
-            headerClassName: 'w-56 whitespace-nowrap',
-            cellClassName: 'w-56 whitespace-nowrap text-muted-foreground',
-            render: (kit) => kit.category_name ?? 'Unassigned',
+            render: (kit) => kit.location?.name ?? 'Unassigned',
         },
     ],
-        [locationName],
+        [],
     );
 
     return (

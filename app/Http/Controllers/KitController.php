@@ -189,11 +189,8 @@ class KitController extends Controller
             $conflictsCount = Asset::query()
                 ->where('user_id', $request->user()->id)
                 ->whereIn('id', $validated['asset_ids'])
-                ->where(function ($q) use ($kit) {
-                    $q->where(function ($inner) use ($kit) {
-                        $inner->whereNotNull('kit_id')->where('kit_id', '!=', $kit->id);
-                    })->orWhereNotNull('location_id');
-                })
+                ->whereNotNull('kit_id')
+                ->where('kit_id', '!=', $kit->id)
                 ->count();
 
             if ($conflictsCount > 0) {

@@ -19,6 +19,11 @@ class Kit extends Model
         return $this->hasMany(Asset::class);
     }
 
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
+    }
+
     protected $appends = ['qr_code_svg'];
 
     public function getQrCodeSvgAttribute(): string

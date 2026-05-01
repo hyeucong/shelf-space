@@ -168,15 +168,12 @@ class LocationController extends Controller
             $conflictsCount = Asset::query()
                 ->where('user_id', $request->user()->id)
                 ->whereIn('id', $validated['asset_ids'])
-                ->where(function ($q) use ($location) {
-                    $q->where(function ($inner) use ($location) {
-                        $inner->whereNotNull('location_id')->where('location_id', '!=', $location->id);
-                    })->orWhereNotNull('kit_id');
-                })
+                ->whereNotNull('location_id')
+                ->where('location_id', '!=', $location->id)
                 ->count();
 
             if ($conflictsCount > 0) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'conflicts' => $conflictsCount,
                 ]);
             }
@@ -412,6 +409,7 @@ class LocationController extends Controller
     private function buildKitIndexQuery(Request $request, string $sort, string $order)
     {
         return $request->user()->kits()
+            ->with('location:id,name')
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })

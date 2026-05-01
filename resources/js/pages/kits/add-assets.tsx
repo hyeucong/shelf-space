@@ -217,9 +217,9 @@ export default function AddAssets({ kit, assets: availableAssets, categories, co
             <Dialog open={showConflictDialog} onOpenChange={setShowConflictDialog}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Asset Conflict</DialogTitle>
+                        <DialogTitle>Update Assignment</DialogTitle>
                         <DialogDescription>
-                            {conflictCount} of the selected {conflictCount === 1 ? 'item' : 'items'} already {conflictCount === 1 ? 'belongs' : 'belong'} to another kit or location. Continuing will remove {conflictCount === 1 ? 'it' : 'them'} from {conflictCount === 1 ? 'its' : 'their'} current assignment. Do you want to proceed?
+                            {conflictCount} of the selected {conflictCount === 1 ? 'item' : 'items'} already {conflictCount === 1 ? 'belongs' : 'belong'} to another kit. Proceeding will move {conflictCount === 1 ? 'it' : 'them'} into this kit. Do you want to proceed?
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
