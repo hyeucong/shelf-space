@@ -137,6 +137,7 @@ class KitController extends Controller
      */
     public function destroy(Kit $kit)
     {
+        $kit->assets()->update(['kit_id' => null]);
         $kit->delete();
 
         return redirect()->route('kits.index')->with('success', 'Kit deleted successfully.');
@@ -148,6 +149,10 @@ class KitController extends Controller
             'ids' => ['required', 'array'],
             'ids.*' => ['required', 'string'],
         ]);
+
+        Asset::query()
+            ->whereIn('kit_id', $validated['ids'])
+            ->update(['kit_id' => null]);
 
         $request->user()->kits()->whereIn('id', $validated['ids'])->delete();
 

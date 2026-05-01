@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asset;
+use App\Models\Kit;
 use App\Models\Location;
 use App\Queries\AssetQuery;
 use App\Services\GeocodingService;
@@ -280,6 +281,8 @@ class LocationController extends Controller
      */
     public function destroy(Location $location)
     {
+        $location->assets()->update(['location_id' => null]);
+        $location->kits()->update(['location_id' => null]);
         $location->delete();
 
         return redirect()->route('locations.index')->with('success', 'Location deleted successfully.');
@@ -291,6 +294,14 @@ class LocationController extends Controller
             'ids' => ['required', 'array'],
             'ids.*' => ['required', 'string'],
         ]);
+
+        Asset::query()
+            ->whereIn('location_id', $validated['ids'])
+            ->update(['location_id' => null]);
+
+        Kit::query()
+            ->whereIn('location_id', $validated['ids'])
+            ->update(['location_id' => null]);
 
         $request->user()->locations()->whereIn('id', $validated['ids'])->delete();
 
