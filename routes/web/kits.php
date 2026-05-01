@@ -21,6 +21,9 @@ Route::prefix('kits')->name('kits.')->group(function () {
         ->name('duplicate');
     Route::delete('select-delete', [KitController::class, 'selectDelete'])
         ->name('selectDelete');
+    Route::patch('{kit}/status', [KitController::class, 'updateStatus'])
+        ->whereUlid('kit')
+        ->name('status.update');
 });
 
 Route::resource('kits', KitController::class);

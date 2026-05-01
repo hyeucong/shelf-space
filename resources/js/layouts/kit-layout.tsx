@@ -6,6 +6,13 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { HeaderActions } from '@/components/header-action';
 import { ResourceDeleteDialog, ResourceDuplicateDialog } from '@/components/resource-form-dialog';
+import { Badge } from '@/components/ui/badge';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -53,6 +60,17 @@ export default function KitLayout({ children, activeTab, headerAction }: KitLayo
         router.post(`/kits/${kit.id}/duplicate`, { count }, {
             onSuccess: () => {
                 setIsDuplicateDialogOpen(false);
+                setProcessing(false);
+            },
+            onError: () => setProcessing(false),
+            onFinish: () => setProcessing(false),
+        });
+    };
+
+    const handleStatusUpdate = (status: string) => {
+        setProcessing(true);
+        router.patch(`/kits/${kit.id}/status`, { status }, {
+            onSuccess: () => {
                 setProcessing(false);
             },
             onError: () => setProcessing(false),
@@ -126,6 +144,24 @@ export default function KitLayout({ children, activeTab, headerAction }: KitLayo
                 </div>
                 <aside className="w-full lg:w-96 bg-card">
                     <div className="sticky top-0 p-4 lg:pl-0 space-y-4">
+                        <div className="overflow-hidden rounded border bg-background flex items-center justify-between px-4 h-[52px]">
+                            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</span>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-8 gap-2 p-2 font-normal hover:bg-muted/50 border shadow-none" disabled={processing}>
+                                        <Badge variant="outline" className="capitalize border-none p-0 px-2 text-sm font-medium">
+                                            {kit.status || 'Available'}
+                                        </Badge>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                    <DropdownMenuItem onClick={() => handleStatusUpdate('available')}>Available</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStatusUpdate('assigned')}>Assigned</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStatusUpdate('maintenance')}>In Maintenance</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStatusUpdate('retired')}>Retired</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                         <div className="overflow-hidden rounded border bg-background">
                             <div className="border-b px-4 py-2 bg-muted/50">
                                 <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Kit QR Code</h3>

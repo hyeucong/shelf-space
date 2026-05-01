@@ -35,6 +35,7 @@ Route::prefix('assets')->name('assets.')->group(function () {
         // Core CRUD
         Route::get('edit', [AssetController::class, 'edit'])->name('edit');
         Route::match(['put', 'patch'], '/', [AssetController::class, 'update'])->name('update');
+        Route::patch('status', [AssetController::class, 'updateStatus'])->name('status.update');
         Route::delete('/', [AssetController::class, 'destroy'])->name('destroy');
 
         // Nested Features: Activity

@@ -260,4 +260,20 @@ class KitController extends Controller
             'columnPreferences' => $assetQuery->loadColumnPreference($request),
         ];
     }
+    /**
+     * Update the status of the specified resource.
+     */
+    public function updateStatus(Request $request, Kit $kit)
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'string', 'max:255'],
+        ]);
+
+        $kit->update($validated);
+
+        // Also update all assets in this kit
+        $kit->assets()->update(['status' => $validated['status']]);
+
+        return back()->with('success', 'Kit and associated assets status updated successfully.');
+    }
 }

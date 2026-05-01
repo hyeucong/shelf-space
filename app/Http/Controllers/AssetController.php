@@ -75,6 +75,7 @@ class AssetController extends Controller
                 Rule::exists('locations', 'id')->where(fn ($query) => $query->where('user_id', $request->user()->id)),
             ],
             'description' => ['nullable', 'string'],
+            'status' => ['nullable', 'string', 'max:255'],
             'tags' => ['nullable', 'array'],
             'tags.*' => [
                 'nullable',
@@ -299,6 +300,21 @@ class AssetController extends Controller
 
         return redirect()->route('assets.index')->with('success', 'Selected assets deleted successfully.');
     }
+
+    /**
+     * Update the status of the specified resource.
+     */
+    public function updateStatus(Request $request, Asset $asset)
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'string', 'max:255'],
+        ]);
+
+        $asset->update($validated);
+
+        return back()->with('success', 'Status updated successfully.');
+    }
+
 
     public function duplicate(Request $request, Asset $asset)
     {
