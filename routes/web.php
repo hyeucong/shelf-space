@@ -1,14 +1,19 @@
 <?php
 
 use App\Http\Controllers\QuickFindController;
+use App\Http\Middleware\ValidateWorkOSSession;
 use Illuminate\Support\Facades\Route;
-use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
 
 Route::inertia('/', 'landing/welcome')->name('home');
 
+Route::post('/login/demo', [\App\Http\Controllers\Auth\DemoLoginController::class, 'store'])
+    ->middleware('guest')
+    ->name('login.demo');
+
+
 Route::middleware([
     'auth',
-    ValidateSessionWithWorkOS::class,
+    ValidateWorkOSSession::class,
 ])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
     Route::get('quick-find', QuickFindController::class)->name('quick-find');

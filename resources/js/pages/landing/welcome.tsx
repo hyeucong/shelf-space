@@ -1,5 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { dashboard, login } from '@/routes';
+import { store as loginDemo } from '@/actions/App/Http/Controllers/Auth/DemoLoginController';
+
 import { Button } from '@/components/ui/button';
 
 function FeatureCard({ title, desc }: { title: string; desc: string }) {
@@ -26,23 +28,26 @@ export default function Welcome() {
             <div className="flex min-h-screen flex-col items-center bg-[#FDFDFC] p-6 text-[#1b1b18] dark:bg-[#0a0a0a]">
                 <header className="w-full text-sm not-has-[nav]:hidden lg:max-w-4xl">
                     <nav className="flex items-center justify-end gap-2">
-                        <Link href="">
-                            <Button>
+                        <Button asChild>
+                            <Link href={loginDemo().url} method="post">
                                 Demo
-                            </Button>
-                        </Link>
+                            </Link>
+                        </Button>
+
+
+
                         {auth.user ? (
-                            <Link href={dashboard()}>
-                                <Button variant="outline">
+                            <Button variant="outline" asChild>
+                                <Link href={dashboard()}>
                                     Dashboard
-                                </Button>
-                            </Link>
+                                </Link>
+                            </Button>
                         ) : (
-                            <Link href={login()}>
-                                <Button variant="outline">
+                            <Button variant="outline" asChild>
+                                <Link href={login()}>
                                     Log in
-                                </Button>
-                            </Link>
+                                </Link>
+                            </Button>
                         )}
                     </nav>
                 </header>
@@ -57,9 +62,10 @@ export default function Welcome() {
                             Track, manage, and scale your hardware and software inventory with a unified dashboard built for speed and precision.
                         </p>
                         <div className="flex justify-center gap-4 pt-4">
-                            <Link href={login()}>
-                                <Button size="lg" className="rounded-full px-8">Get Started</Button>
-                            </Link>
+                            <Button size="lg" className="rounded-full px-8" asChild>
+                                <Link href={login()}>Get Started</Link>
+                            </Button>
+
                             <Button size="lg" variant="ghost" className="rounded-full">
                                 View Documentation
                             </Button>
