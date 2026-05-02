@@ -10,6 +10,7 @@ use App\Services\GeocodingService;
 use App\Services\UserResourceCache;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -109,6 +110,8 @@ class LocationController extends Controller
      */
     public function show(Location $location)
     {
+        Gate::authorize('view', $location);
+
         $location->load('parent:id,name')
             ->loadCount(['assets', 'children']);
 
@@ -119,6 +122,8 @@ class LocationController extends Controller
 
     public function assets(Request $request, Location $location, AssetQuery $assetQuery)
     {
+        Gate::authorize('view', $location);
+
         $indexState = $assetQuery->resolveIndexState($request);
 
         $assets = $assetQuery->handle($request)
@@ -143,6 +148,8 @@ class LocationController extends Controller
 
     public function addAssets(Request $request, Location $location, AssetQuery $assetQuery)
     {
+        Gate::authorize('update', $location);
+
         $indexState = $assetQuery->resolveIndexState($request);
         $assets = $assetQuery->handle($request)
             ->paginate($indexState['perPage'])
@@ -159,6 +166,8 @@ class LocationController extends Controller
 
     public function storeAssets(Request $request, Location $location)
     {
+        Gate::authorize('update', $location);
+
         $validated = $request->validate([
             'asset_ids' => ['present', 'array'],
             'asset_ids.*' => ['required', 'string'],
@@ -196,6 +205,8 @@ class LocationController extends Controller
 
     public function kits(Request $request, Location $location)
     {
+        Gate::authorize('view', $location);
+
         [$sort, $order, $perPage] = $this->resolveKitIndexState($request);
 
         $kits = $this->buildKitIndexQuery($request, $sort, $order)
@@ -211,6 +222,8 @@ class LocationController extends Controller
 
     public function addKits(Request $request, Location $location)
     {
+        Gate::authorize('update', $location);
+
         [$sort, $order, $perPage] = $this->resolveKitIndexState($request);
 
         $kits = $this->buildKitIndexQuery($request, $sort, $order)
@@ -228,6 +241,8 @@ class LocationController extends Controller
 
     public function storeKits(Request $request, Location $location)
     {
+        Gate::authorize('update', $location);
+
         $validated = $request->validate([
             'kit_ids' => ['present', 'array'],
             'kit_ids.*' => ['required', 'string'],
@@ -250,6 +265,8 @@ class LocationController extends Controller
      */
     public function edit(Request $request, Location $location)
     {
+        Gate::authorize('update', $location);
+
         return Inertia::render('locations/create', [
             'location' => $location,
             'parentOptions' => $this->parentOptions($request, $location),
@@ -261,6 +278,8 @@ class LocationController extends Controller
      */
     public function update(Request $request, Location $location, GeocodingService $geocoding)
     {
+        Gate::authorize('update', $location);
+
         $validated = $this->validatedData($request, $location);
 
         if ($request->filled('address') && ($request->input('address') !== $location->address || is_null($location->latitude))) {
@@ -281,6 +300,8 @@ class LocationController extends Controller
      */
     public function destroy(Location $location)
     {
+        Gate::authorize('delete', $location);
+
         $location->assets()->update(['location_id' => null]);
         $location->kits()->update(['location_id' => null]);
         $location->delete();
@@ -310,6 +331,8 @@ class LocationController extends Controller
 
     public function duplicate(Request $request, Location $location)
     {
+        Gate::authorize('view', $location);
+
         $request->validate([
             'count' => ['required', 'integer', 'min:1', 'max:10'],
         ]);

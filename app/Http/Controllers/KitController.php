@@ -8,6 +8,7 @@ use App\Queries\AssetQuery;
 use App\Services\UserResourceCache;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class KitController extends Controller
@@ -89,6 +90,8 @@ class KitController extends Controller
      */
     public function show(Kit $kit)
     {
+        Gate::authorize('view', $kit);
+
         return Inertia::render('kits/overview', [
             'kit' => $kit,
         ]);
@@ -96,6 +99,8 @@ class KitController extends Controller
 
     public function assets(Request $request, Kit $kit, AssetQuery $assetQuery)
     {
+        Gate::authorize('view', $kit);
+
         $indexState = $assetQuery->resolveIndexState($request);
 
         $assets = $assetQuery->handle($request)
@@ -137,6 +142,8 @@ class KitController extends Controller
      */
     public function destroy(Kit $kit)
     {
+        Gate::authorize('delete', $kit);
+
         $kit->assets()->update(['kit_id' => null]);
         $kit->delete();
 
@@ -161,6 +168,8 @@ class KitController extends Controller
 
     public function duplicate(Request $request, Kit $kit)
     {
+        Gate::authorize('view', $kit);
+
         $request->validate([
             'count' => ['required', 'integer', 'min:1', 'max:10'],
         ]);
@@ -180,6 +189,8 @@ class KitController extends Controller
 
     public function addAssets(Request $request, Kit $kit, AssetQuery $assetQuery)
     {
+        Gate::authorize('update', $kit);
+
         $indexState = $assetQuery->resolveIndexState($request);
         $assets = $assetQuery->handle($request)
             ->paginate($indexState['perPage'])
@@ -196,6 +207,8 @@ class KitController extends Controller
 
     public function storeAssets(Request $request, Kit $kit)
     {
+        Gate::authorize('update', $kit);
+
         $validated = $request->validate([
             'asset_ids' => ['present', 'array'],
             'asset_ids.*' => ['required', 'string'],
@@ -265,6 +278,8 @@ class KitController extends Controller
      */
     public function updateStatus(Request $request, Kit $kit)
     {
+        Gate::authorize('update', $kit);
+
         $validated = $request->validate([
             'status' => ['required', 'string', 'max:255'],
         ]);

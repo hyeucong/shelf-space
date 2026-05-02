@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Tag;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -83,6 +84,8 @@ class TagController extends Controller
      */
     public function update(Request $request, Tag $tag)
     {
+        Gate::authorize('update', $tag);
+
         $tag->update($this->validatedData($request, $tag));
 
         return redirect()->route('tags.index')->with('success', 'Tag updated successfully.');
@@ -93,6 +96,8 @@ class TagController extends Controller
      */
     public function destroy(Tag $tag)
     {
+        Gate::authorize('delete', $tag);
+
         $tag->delete();
 
         return redirect()->route('tags.index')->with('success', 'Tag deleted successfully.');

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -239,6 +240,8 @@ class AssetController extends Controller
      */
     public function show(Asset $asset)
     {
+        Gate::authorize('view', $asset);
+
         $asset->load([
             'category:id,name',
             'location:id,name,latitude,longitude',
@@ -257,6 +260,8 @@ class AssetController extends Controller
      */
     public function edit(Request $request, Asset $asset)
     {
+        Gate::authorize('update', $asset);
+
         return Inertia::render('assets/edit', [
             'asset' => $this->assetFormData($asset),
             ...$this->assetFormOptions($request),
@@ -268,6 +273,8 @@ class AssetController extends Controller
      */
     public function update(Request $request, Asset $asset)
     {
+        Gate::authorize('update', $asset);
+
         $validated = $this->validateAssetPayload($request, $asset);
 
         $tags = $validated['tags'] ?? [];
@@ -284,6 +291,8 @@ class AssetController extends Controller
      */
     public function destroy(Asset $asset)
     {
+        Gate::authorize('delete', $asset);
+
         $asset->delete();
 
         return redirect()->route('assets.index')->with('success', 'Asset deleted successfully.');
@@ -306,6 +315,8 @@ class AssetController extends Controller
      */
     public function updateStatus(Request $request, Asset $asset)
     {
+        Gate::authorize('update', $asset);
+
         $validated = $request->validate([
             'status' => ['required', 'string', 'max:255'],
         ]);
@@ -318,6 +329,8 @@ class AssetController extends Controller
 
     public function duplicate(Request $request, Asset $asset)
     {
+        Gate::authorize('view', $asset);
+
         // 1. Validate that the count is a number between 1 and 10
         $request->validate([
             'count' => ['required', 'integer', 'min:1', 'max:10'],
