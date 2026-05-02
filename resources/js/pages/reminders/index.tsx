@@ -59,7 +59,6 @@ export default function Reminders({ reminders, filters }: PageProps) {
         {
             key: 'remind_at',
             header: 'Alert date',
-            cellClassName: 'whitespace-nowrap',
             render: (reminder: Reminder) => reminder.remind_at ? new Date(reminder.remind_at).toLocaleDateString() : '—',
         },
     ];

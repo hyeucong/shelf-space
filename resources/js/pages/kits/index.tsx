@@ -130,8 +130,8 @@ export default function Kits({ kits, filters }: PageProps) {
                     <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded border bg-muted/10">
                         <Package2 className="text-muted-foreground" size={18} />
                     </div>
-                    <div className="min-w-0">
-                        <Link href={`/kits/${kit.id}/assets`} className="block line-clamp-2 transition-colors hover:text-primary">
+                    <div className="min-w-0 flex-1">
+                        <Link href={`/kits/${kit.id}/assets`} className="block truncate transition-colors hover:text-primary">
                             {kit.name}
                         </Link>
                     </div>
@@ -142,14 +142,14 @@ export default function Kits({ kits, filters }: PageProps) {
             key: 'description',
             header: 'Description',
             headerClassName: 'hidden lg:table-cell',
-            cellClassName: 'hidden max-w-120 whitespace-normal text-muted-foreground lg:table-cell',
+            cellClassName: 'hidden text-muted-foreground lg:table-cell',
             render: (kit) => kit.description || '-',
         },
         {
             key: 'status',
             header: 'Status',
             headerClassName: 'hidden sm:table-cell',
-            cellClassName: 'hidden whitespace-nowrap capitalize text-muted-foreground sm:table-cell',
+            cellClassName: 'hidden capitalize text-muted-foreground sm:table-cell',
             render: (kit) => kit.status,
         },
         {

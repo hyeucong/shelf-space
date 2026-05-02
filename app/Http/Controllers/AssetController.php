@@ -3,12 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asset;
-use App\Models\Category;
-use App\Models\Location;
 use App\Models\Tag;
 use App\Queries\AssetQuery;
 use App\Services\UserResourceCache;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -325,7 +322,6 @@ class AssetController extends Controller
 
         return back()->with('success', 'Status updated successfully.');
     }
-
 
     public function duplicate(Request $request, Asset $asset)
     {

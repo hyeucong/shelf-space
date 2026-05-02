@@ -153,8 +153,8 @@ export default function Locations({ locations, filters }: PageProps) {
                     <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded border bg-muted/10">
                         <MapPin className="text-muted-foreground" size={18} />
                     </div>
-                    <div className="min-w-0">
-                        <Link href={`/locations/${location.id}/overview`} className="block line-clamp-2 transition-colors hover:text-primary">
+                    <div className="min-w-0 flex-1">
+                        <Link href={`/locations/${location.id}/overview`} className="block truncate transition-colors hover:text-primary">
                             {location.name}
                         </Link>
                     </div>
@@ -165,28 +165,28 @@ export default function Locations({ locations, filters }: PageProps) {
             key: 'description',
             header: 'Description',
             headerClassName: 'hidden lg:table-cell',
-            cellClassName: 'hidden max-w-120 whitespace-normal text-muted-foreground lg:table-cell',
+            cellClassName: 'hidden text-muted-foreground lg:table-cell',
             render: (location) => location.description || '-',
         },
         {
             key: 'assets',
             header: 'Assets',
             headerClassName: 'hidden md:table-cell',
-            cellClassName: 'hidden whitespace-nowrap font-medium text-muted-foreground md:table-cell',
+            cellClassName: 'hidden font-medium text-muted-foreground md:table-cell',
             render: (location) => String(location.assets_count),
         },
         {
             key: 'parent',
             header: 'Parent location',
             headerClassName: 'hidden lg:table-cell',
-            cellClassName: 'hidden whitespace-normal text-muted-foreground lg:table-cell',
+            cellClassName: 'hidden text-muted-foreground lg:table-cell',
             render: (location) => location.parent?.name || '-',
         },
         {
             key: 'children',
             header: 'Child locations',
             headerClassName: 'hidden md:table-cell',
-            cellClassName: 'hidden whitespace-nowrap font-medium text-muted-foreground md:table-cell',
+            cellClassName: 'hidden font-medium text-muted-foreground md:table-cell',
             render: (location) => String(location.children_count),
         },
         {

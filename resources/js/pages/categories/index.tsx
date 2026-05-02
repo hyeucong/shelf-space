@@ -147,14 +147,14 @@ export default function Categories({ categories, filters }: PageProps) {
             key: 'description',
             header: 'Description',
             headerClassName: 'hidden lg:table-cell',
-            cellClassName: 'hidden max-w-120 whitespace-normal text-muted-foreground lg:table-cell',
+            cellClassName: 'hidden text-muted-foreground lg:table-cell',
             render: (category) => category.description || 'No description yet.',
         },
         {
             key: 'assets',
             header: 'Assets',
             headerClassName: 'hidden sm:table-cell',
-            cellClassName: 'hidden whitespace-nowrap font-medium text-muted-foreground sm:table-cell',
+            cellClassName: 'hidden font-medium text-muted-foreground sm:table-cell',
             render: (category) => `${category.assets_count} asset${category.assets_count === 1 ? '' : 's'}`,
         },
         {

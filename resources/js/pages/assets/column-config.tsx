@@ -113,8 +113,8 @@ export function createAssetTableColumns({
                             <Camera className="text-muted-foreground" size={18} />
                         )}
                     </div>
-                    <div className="min-w-0">
-                        <Link href={`/assets/${asset.id}/overview`} className="block line-clamp-2 hover:underline">
+                    <div className="min-w-0 flex-1">
+                        <Link href={`/assets/${asset.id}/overview`} className="block truncate hover:underline">
                             {asset.name}
                         </Link>
                     </div>
@@ -127,7 +127,7 @@ export function createAssetTableColumns({
             header: 'Asset ID',
             isOptional: true,
             headerClassName: 'hidden md:table-cell',
-            cellClassName: 'hidden whitespace-nowrap font-medium text-muted-foreground md:table-cell',
+            cellClassName: 'hidden font-medium text-muted-foreground md:table-cell',
             render: (asset) => asset.asset_id,
         },
         {
@@ -146,11 +146,7 @@ export function createAssetTableColumns({
             isOptional: true,
             headerClassName: 'hidden lg:table-cell',
             cellClassName: 'hidden lg:table-cell',
-            render: (asset) => (
-                <div className="min-w-32 whitespace-normal">
-                    <div>{asset.category?.name || '-'}</div>
-                </div>
-            ),
+            render: (asset) => asset.category?.name || '-',
         },
         {
             key: 'location',
@@ -158,18 +154,14 @@ export function createAssetTableColumns({
             isOptional: true,
             headerClassName: 'hidden lg:table-cell',
             cellClassName: 'hidden lg:table-cell',
-            render: (asset) => (
-                <div className="min-w-32 whitespace-normal">
-                    <div>{asset.location?.name || '-'}</div>
-                </div>
-            ),
+            render: (asset) => asset.location?.name || '-',
         },
         {
             key: 'tags',
             header: 'Tags',
             isOptional: true,
             headerClassName: 'hidden xl:table-cell',
-            cellClassName: 'hidden min-w-40 whitespace-normal xl:table-cell',
+            cellClassName: 'hidden min-w-40 xl:table-cell',
             render: (asset) => (
                 asset.tags && asset.tags.length > 0 ? (
                     <div className="flex flex-wrap gap-1">
@@ -187,7 +179,7 @@ export function createAssetTableColumns({
             header: 'Description',
             isOptional: true,
             headerClassName: 'hidden xl:table-cell',
-            cellClassName: 'hidden min-w-56 max-w-80 whitespace-normal text-muted-foreground xl:table-cell',
+            cellClassName: 'hidden text-muted-foreground xl:table-cell',
             render: (asset) => asset.description || '-',
         },
         {
@@ -195,7 +187,7 @@ export function createAssetTableColumns({
             header: 'Value',
             isOptional: true,
             headerClassName: 'hidden text-right md:table-cell',
-            cellClassName: 'hidden whitespace-nowrap text-right font-medium md:table-cell',
+            cellClassName: 'hidden text-right font-medium md:table-cell',
             render: (asset) => formatCurrency(asset.value),
         },
         {
@@ -203,7 +195,7 @@ export function createAssetTableColumns({
             header: 'Created',
             isOptional: true,
             headerClassName: 'hidden xl:table-cell',
-            cellClassName: 'hidden whitespace-nowrap xl:table-cell',
+            cellClassName: 'hidden xl:table-cell',
             render: (asset) => formatDate(asset.created_at),
         },
         {
@@ -211,7 +203,7 @@ export function createAssetTableColumns({
             header: 'Updated',
             isOptional: true,
             headerClassName: 'hidden xl:table-cell',
-            cellClassName: 'hidden whitespace-nowrap xl:table-cell',
+            cellClassName: 'hidden xl:table-cell',
             render: (asset) => formatDate(asset.updated_at),
         },
         {

@@ -27,12 +27,57 @@ import type { PaginatedData } from '@/types/pagination';
 
 type FilterValue = string | number | undefined;
 
+export type ColumnCellType = 'text' | 'longtext' | 'numeric' | 'date' | 'status' | 'id' | 'email' | 'url';
+
 export interface ResourceIndexColumn<T> {
     key: string;
     header: ReactNode;
     headerClassName?: string;
     cellClassName?: string | ((item: T) => string | undefined);
     render: (item: T) => ReactNode;
+    cellType?: ColumnCellType;
+}
+
+const DEFAULT_COLUMN_TYPES: Record<string, ColumnCellType> = {
+    'description': 'longtext',
+    'notes': 'longtext',
+    'message': 'longtext',
+    'email': 'email',
+    'url': 'url',
+    'value': 'numeric',
+    'price': 'numeric',
+    'amount': 'numeric',
+    'status': 'status',
+    'id': 'id',
+    'asset_id': 'id',
+    'created_at': 'date',
+    'updated_at': 'date',
+    'remind_at': 'date',
+    'alert_date': 'date',
+    'assets': 'numeric',
+    'children': 'numeric',
+    'name': 'longtext',
+    'color': 'text',
+    'category': 'longtext',
+    'location': 'longtext',
+};
+
+function getCellClassesForType(key: string, type?: ColumnCellType) {
+    const resolvedType = type || DEFAULT_COLUMN_TYPES[key.toLowerCase()];
+
+    switch (resolvedType) {
+        case 'longtext':
+        case 'email':
+        case 'url':
+            return 'truncate min-w-0 max-w-[150px] lg:max-w-[250px]';
+        case 'numeric':
+        case 'date':
+        case 'status':
+        case 'id':
+            return 'whitespace-nowrap';
+        default:
+            return '';
+    }
 }
 
 export interface ResourceIndexSortOption {
@@ -253,14 +298,16 @@ export function ResourceIndexTable<T extends { id: string | number }>({
                                         ) : null}
 
                                         {columns.map((column, index) => {
-                                            const cellClassName = typeof column.cellClassName === 'function'
+                                            const baseCellClassName = getCellClassesForType(column.key, column.cellType);
+                                            const customCellClassName = typeof column.cellClassName === 'function'
                                                 ? column.cellClassName(item)
                                                 : column.cellClassName;
 
                                             return (
                                                 <TableCell key={column.key} className={cn(
                                                     index === 0 && (addPaddingLeft ? 'pl-4' : !selection && 'pl-0'),
-                                                    cellClassName
+                                                    baseCellClassName,
+                                                    customCellClassName
                                                 )}>
                                                     {column.render(item)}
                                                 </TableCell>

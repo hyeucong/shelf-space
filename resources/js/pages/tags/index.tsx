@@ -155,14 +155,14 @@ export default function Tags({ tags, filters }: PageProps) {
             key: 'description',
             header: 'Description',
             headerClassName: 'hidden lg:table-cell',
-            cellClassName: 'hidden max-w-120 whitespace-normal text-muted-foreground lg:table-cell',
+            cellClassName: 'hidden text-muted-foreground lg:table-cell',
             render: (tag) => tag.description || 'No description yet.',
         },
         {
             key: 'assets',
             header: 'Assets',
             headerClassName: 'hidden sm:table-cell',
-            cellClassName: 'hidden whitespace-nowrap font-medium text-muted-foreground sm:table-cell',
+            cellClassName: 'hidden font-medium text-muted-foreground sm:table-cell',
             render: (tag) => `${tag.assets_count} asset${tag.assets_count === 1 ? '' : 's'}`,
         },
         {

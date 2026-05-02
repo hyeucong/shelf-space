@@ -28,6 +28,7 @@ class Asset extends Model
         'user_id',
         'category_id',
         'location_id',
+        'kit_id',
         'asset_id',
         'name',
         'description',
@@ -89,6 +90,11 @@ class Asset extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class)->withTimestamps();
+    }
+
+    public function kit(): BelongsTo
+    {
+        return $this->belongsTo(Kit::class);
     }
 
     public function reminders(): HasMany

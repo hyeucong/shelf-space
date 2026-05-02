@@ -124,8 +124,8 @@ export default function AddAssets({ location, assets: availableAssets, categorie
                                     <Camera className="h-5 w-5 text-muted-foreground/50" />
                                 )}
                             </div>
-                            <div className="min-w-0">
-                                <div className="block line-clamp-2">{asset.name}</div>
+                            <div className="min-w-0 flex-1">
+                                <div className="block truncate">{asset.name}</div>
                             </div>
                         </div>
                     ),
