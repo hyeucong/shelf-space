@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEventHandler, type ReactNode } from 'react';
+import { AssetSelectField, type AssetSelectOption } from '@/components/asset-select-field';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -69,6 +70,24 @@ interface ResourceSelectDeleteDialogProps {
     onConfirm: () => void;
     confirmLabel: string;
     confirmPendingLabel?: string;
+}
+
+interface ResourceSelectUpdateTagDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    count: number;
+    options: AssetSelectOption[];
+    processing?: boolean;
+    onConfirm: (tagId: string) => void;
+}
+
+interface ResourceSelectUpdateCategoryDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    count: number;
+    options: AssetSelectOption[];
+    processing?: boolean;
+    onConfirm: (categoryId: string) => void;
 }
 
 export function ResourceHeaderAction({ label, onClick, visible = true }: ResourceHeaderActionProps) {
@@ -304,6 +323,128 @@ export function ResourceSelectDeleteDialog({
                         {processing ? confirmPendingLabel : confirmLabel}
                     </Button>
                 </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+export function ResourceSelectUpdateTagDialog({
+    open,
+    onOpenChange,
+    count,
+    options,
+    processing = false,
+    onConfirm,
+}: ResourceSelectUpdateTagDialogProps) {
+    const [tagId, setTagId] = useState('');
+    const [isSelectOpen, setIsSelectOpen] = useState(false);
+
+    const handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
+        e.preventDefault();
+        onConfirm(tagId);
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[500px] rounded">
+                <DialogHeader>
+                    <DialogTitle>Update Tags</DialogTitle>
+                    <DialogDescription>
+                        Select a tag to apply to <span className="font-semibold text-foreground">{count} {count === 1 ? 'asset' : 'assets'}</span>.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={handleSubmit} className="space-y-6 pt-2">
+                    <AssetSelectField
+                        label="Tag"
+                        description="Choose a tag to sync to all selected assets."
+                        open={isSelectOpen}
+                        onOpenChange={setIsSelectOpen}
+                        value={tagId}
+                        onValueChange={setTagId}
+                        placeholder="Select tag"
+                        options={options}
+                        emptyLabel="No tags yet."
+                        createValue="create_tag"
+                        createLabel="Create new tag"
+                        showCreate={false}
+                        hideLabel={true}
+                    />
+
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" type="button" onClick={() => onOpenChange(false)} className="rounded">
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            className={cn('rounded border-none bg-[#f0642d] text-white hover:bg-[#d95627]')}
+                            disabled={processing}
+                        >
+                            {processing ? 'Updating...' : 'Update'}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+export function ResourceSelectUpdateCategoryDialog({
+    open,
+    onOpenChange,
+    count,
+    options,
+    processing = false,
+    onConfirm,
+}: ResourceSelectUpdateCategoryDialogProps) {
+    const [categoryId, setCategoryId] = useState('');
+    const [isSelectOpen, setIsSelectOpen] = useState(false);
+
+    const handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
+        e.preventDefault();
+        onConfirm(categoryId);
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[500px] rounded">
+                <DialogHeader>
+                    <DialogTitle>Update Category</DialogTitle>
+                    <DialogDescription>
+                        Select a category to apply to <span className="font-semibold text-foreground">{count} {count === 1 ? 'asset' : 'assets'}</span>.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={handleSubmit} className="space-y-6 pt-2">
+                    <AssetSelectField
+                        label="Category"
+                        description="Choose a category to set for all selected assets."
+                        open={isSelectOpen}
+                        onOpenChange={setIsSelectOpen}
+                        value={categoryId}
+                        onValueChange={setCategoryId}
+                        placeholder="Select category"
+                        options={options}
+                        emptyLabel="No categories yet."
+                        createValue="create_category"
+                        createLabel="Create new category"
+                        showCreate={false}
+                        hideLabel={true}
+                    />
+
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" type="button" onClick={() => onOpenChange(false)} className="rounded">
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            className={cn('rounded border-none bg-[#f0642d] text-white hover:bg-[#d95627]')}
+                            disabled={processing}
+                        >
+                            {processing ? 'Updating...' : 'Update'}
+                        </Button>
+                    </DialogFooter>
+                </form>
             </DialogContent>
         </Dialog>
     );

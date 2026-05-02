@@ -80,17 +80,11 @@ class AssetController extends Controller
             'tags' => ['nullable', 'array'],
             'tags.*' => [
                 'nullable',
-                function (string $attribute, mixed $value, \Closure $fail) use ($request): void {
-                    if (is_numeric($value)) {
-                        if (! $request->user()->tags()->whereKey((int) $value)->exists()) {
-                            $fail('The selected tag is invalid.');
-                        }
-
-                        return;
-                    }
-
-                    if (! is_string($value) || trim($value) === '') {
-                        $fail('Each tag must be an existing tag ID or a non-empty tag name.');
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    // Just verify it's a number or a valid string.
+                    // We let resolveTagIds() securely handle the DB relationship later.
+                    if (! is_numeric($value) && (! is_string($value) || trim($value) === '')) {
+                        $fail('Each tag must be a valid ID or a non-empty name.');
                     }
                 },
             ],
@@ -103,26 +97,26 @@ class AssetController extends Controller
      */
     private function resolveTagIds(Request $request, array $tags): array
     {
+        // 1. Separate numbers (existing IDs) and strings (new tags)
+        $numericTags = array_filter($tags, 'is_numeric');
+        $stringTags = array_filter($tags, fn ($tag) => is_string($tag) && trim($tag) !== '');
+
         $tagIds = [];
 
-        foreach ($tags as $tagValue) {
-            if (is_numeric($tagValue)) {
-                if ($request->user()->tags()->whereKey((int) $tagValue)->exists()) {
-                    $tagIds[] = (int) $tagValue;
-                }
+        // 2. Fetch all valid existing Tag IDs in ONE single query
+        if (! empty($numericTags)) {
+            $tagIds = $request->user()->tags()
+                ->whereIn('id', $numericTags)
+                ->pluck('id')
+                ->toArray();
+        }
 
-                continue;
-            }
-
-            if (! is_string($tagValue) || trim($tagValue) === '') {
-                continue;
-            }
-
+        // 3. Create any new string tags
+        foreach ($stringTags as $tagValue) {
             $tag = Tag::firstOrCreate([
                 'user_id' => $request->user()->id,
                 'name' => trim($tagValue),
             ]);
-
             $tagIds[] = $tag->id;
         }
 
@@ -172,6 +166,7 @@ class AssetController extends Controller
             'sorts' => $indexState['sorts'],
             'categories' => UserResourceCache::categoriesForSelect($request->user()->id),
             'locations' => UserResourceCache::locationsForSelect($request->user()->id),
+            'tags' => UserResourceCache::tagsForSelect($request->user()->id),
             'savedFilters' => $assetQuery->loadSavedFilters($request),
             'columnPreferences' => $assetQuery->loadColumnPreference($request),
         ];
@@ -242,14 +237,19 @@ class AssetController extends Controller
     {
         Gate::authorize('view', $asset);
 
+        // 1. Core Data: Loads instantly for the "Overview" tab
         $asset->load([
             'category:id,name',
-            'location:id,name,latitude,longitude',
+            'location:id,name',
             'tags:id,name',
         ]);
 
         return Inertia::render('assets/overview', [
             'asset' => $asset,
+
+            // v3 Standard: Replaces lazy(). Only loads when explicitly requested by router.reload()
+            'activities' => Inertia::optional(fn () => $asset->activities()->latest()->get()),
+            'reminders' => Inertia::optional(fn () => $asset->reminders()->get()),
         ]);
     }
 
@@ -376,5 +376,46 @@ class AssetController extends Controller
         });
 
         return redirect()->route('assets.index')->with('success', "Successfully created {$count} duplicates.");
+    }
+
+    public function selectUpdateTags(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'string'],
+            'tag_id' => ['nullable', 'string', 'exists:tags,id'],
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            // 1. Remove all existing tag relationships for these assets in one query
+            DB::table('asset_tag')->whereIn('asset_id', $validated['ids'])->delete();
+
+            // 2. If a tag was selected, attach it to all assets in one query
+            if ($validated['tag_id']) {
+                $insertData = array_map(fn ($assetId) => [
+                    'asset_id' => $assetId,
+                    'tag_id' => $validated['tag_id'],
+                ], $validated['ids']);
+
+                DB::table('asset_tag')->insert($insertData);
+            }
+        });
+
+        return back()->with('success', 'Selected tags updated successfully.');
+    }
+
+    public function selectUpdateCategory(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'string'],
+            'category_id' => ['nullable', 'string', 'exists:categories,id'],
+        ]);
+
+        $request->user()->assets()
+            ->whereIn('id', $validated['ids'])
+            ->update(['category_id' => $validated['category_id']]);
+
+        return back()->with('success', 'Selected category updated successfully.');
     }
 }

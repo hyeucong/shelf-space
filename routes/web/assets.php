@@ -16,6 +16,8 @@ Route::prefix('assets')->name('assets.')->group(function () {
     Route::post('layout', [LayoutController::class, 'store'])->name('layout.store');
     Route::post('/assets/{asset}/duplicate', [AssetController::class, 'duplicate'])->name('assets.duplicate');
     Route::delete('select-delete', [AssetController::class, 'selectDelete'])->name('selectDelete');
+    Route::patch('select-update-tags', [AssetController::class, 'selectUpdateTags'])->name('selectUpdateTags');
+    Route::patch('select-update-category', [AssetController::class, 'selectUpdateCategory'])->name('selectUpdateCategory');
 
     // --- 2. Saved Filters ---
     Route::prefix('saved-filters')->name('saved-filters.')->group(function () {

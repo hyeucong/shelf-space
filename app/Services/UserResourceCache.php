@@ -90,6 +90,18 @@ class UserResourceCache
         );
     }
 
+    /**
+     * @return array<int, array{id: mixed, name: string}>
+     */
+    public static function tagsForSelect(int $userId): array
+    {
+        return Cache::remember(
+            self::tagsKey($userId).':select',
+            self::TTL,
+            fn () => Tag::where('user_id', $userId)->orderBy('name')->get(['id', 'name'])->toArray()
+        );
+    }
+
     // --- Invalidators ---
 
     public static function forgetCategories(int $userId): void
@@ -101,6 +113,7 @@ class UserResourceCache
     public static function forgetTags(int $userId): void
     {
         Cache::forget(self::tagsKey($userId));
+        Cache::forget(self::tagsKey($userId).':select');
     }
 
     public static function forgetLocations(int $userId): void

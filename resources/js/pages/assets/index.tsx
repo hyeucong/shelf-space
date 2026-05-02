@@ -1,13 +1,13 @@
 import type { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { Head, Link, router } from '@inertiajs/react';
-import { Columns3, Copy, Trash2 } from 'lucide-react';
+import { Columns3, Copy, Folder, Tag, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ColumnVisibilityPanel } from '@/components/asset-column-visibility-panel';
 import { AssetQueryBuilder } from '@/components/asset-query-builder';
 import type { AssetFilterOption, AssetFiltersQuery, AssetQueryValue, AssetSavedFilter, AssetSortDraft } from '@/components/asset-query-builder';
 import { AssetSelectionActions } from '@/components/asset-selection-actions';
-import { ResourceDeleteDialog, ResourceDuplicateDialog, ResourceSelectDeleteDialog } from '@/components/resource-form-dialog';
+import { ResourceDeleteDialog, ResourceDuplicateDialog, ResourceSelectDeleteDialog, ResourceSelectUpdateTagDialog, ResourceSelectUpdateCategoryDialog } from '@/components/resource-form-dialog';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import { Button } from '@/components/ui/button';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
@@ -24,6 +24,7 @@ interface PageProps {
     categories: AssetFilterOption[];
     columnPreferences: AssetColumnPreference[];
     locations: AssetFilterOption[];
+    tags: AssetFilterOption[];
     savedFilters: AssetSavedFilter[];
     filters: AssetFiltersQuery;
     sorts: AssetSortDraft[];
@@ -35,7 +36,7 @@ const sanitizeQuery = (query: Record<string, AssetQueryValue>) => (
     ) as Record<string, string | number>
 );
 
-export default function Assets({ assets, categories, columnPreferences, locations, savedFilters, filters, sorts }: PageProps) {
+export default function Assets({ assets, categories, columnPreferences, locations, tags, savedFilters, filters, sorts }: PageProps) {
     const persistedColumns = useMemo(
         () => cloneColumnPreferences(columnPreferences.length > 0 ? columnPreferences : DEFAULT_ASSET_COLUMN_PREFERENCES),
         [columnPreferences],
@@ -47,6 +48,10 @@ export default function Assets({ assets, categories, columnPreferences, location
     const [isDuplicating, setIsDuplicating] = useState(false);
     const [isSelectingDelete, setIsSelectingDelete] = useState(false);
     const [showSelectDelete, setShowSelectDelete] = useState(false);
+    const [showSelectUpdateTag, setShowSelectUpdateTag] = useState(false);
+    const [showSelectUpdateCategory, setShowSelectUpdateCategory] = useState(false);
+    const [isUpdatingTags, setIsUpdatingTags] = useState(false);
+    const [isUpdatingCategory, setIsUpdatingCategory] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [optimisticColumns, setOptimisticColumns] = useState<AssetColumnPreference[] | null>(null);
     const [draftColumns, setDraftColumns] = useState<AssetColumnPreference[]>(persistedColumns);
@@ -236,6 +241,44 @@ export default function Assets({ assets, categories, columnPreferences, location
             onFinish: () => setIsSelectingDelete(false),
         });
     };
+
+    const handleSelectUpdateTag = (tagId: string) => {
+        if (activeSelectedIds.length === 0 || isUpdatingTags) {
+            return;
+        }
+
+        router.patch('/assets/select-update-tags', {
+            ids: activeSelectedIds,
+            tag_id: tagId,
+        }, {
+            preserveScroll: true,
+            onBefore: () => setIsUpdatingTags(true),
+            onSuccess: () => {
+                setSelectedIds([]);
+                setShowSelectUpdateTag(false);
+            },
+            onFinish: () => setIsUpdatingTags(false),
+        });
+    };
+
+    const handleSelectUpdateCategory = (categoryId: string) => {
+        if (activeSelectedIds.length === 0 || isUpdatingCategory) {
+            return;
+        }
+
+        router.patch('/assets/select-update-category', {
+            ids: activeSelectedIds,
+            category_id: categoryId,
+        }, {
+            preserveScroll: true,
+            onBefore: () => setIsUpdatingCategory(true),
+            onSuccess: () => {
+                setSelectedIds([]);
+                setShowSelectUpdateCategory(false);
+            },
+            onFinish: () => setIsUpdatingCategory(false),
+        });
+    };
  
     const handleDuplicate = (count: number) => {
         if (!assetToDuplicate || isDuplicating) {
@@ -387,6 +430,20 @@ export default function Assets({ assets, categories, columnPreferences, location
                                 disabled: selectedAssets.length === 0,
                             },
                             {
+                                key: 'updateTag',
+                                label: 'Select tag',
+                                icon: <Tag className="h-4 w-4" />,
+                                onClick: () => setShowSelectUpdateTag(true),
+                                disabled: activeSelectedIds.length === 0,
+                            },
+                            {
+                                key: 'updateCategory',
+                                label: 'Select category',
+                                icon: <Folder className="h-4 w-4" />,
+                                onClick: () => setShowSelectUpdateCategory(true),
+                                disabled: activeSelectedIds.length === 0,
+                            },
+                            {
                                 key: 'delete',
                                 label: 'Delete',
                                 icon: <Trash2 className="h-4 w-4" />,
@@ -434,6 +491,24 @@ export default function Assets({ assets, categories, columnPreferences, location
                 itemMeta={assetToDuplicate?.asset_id}
                 processing={isDuplicating}
                 onConfirm={handleDuplicate}
+            />
+
+            <ResourceSelectUpdateTagDialog
+                open={showSelectUpdateTag}
+                onOpenChange={setShowSelectUpdateTag}
+                count={activeSelectedIds.length}
+                options={tags}
+                processing={isUpdatingTags}
+                onConfirm={handleSelectUpdateTag}
+            />
+
+            <ResourceSelectUpdateCategoryDialog
+                open={showSelectUpdateCategory}
+                onOpenChange={setShowSelectUpdateCategory}
+                count={activeSelectedIds.length}
+                options={categories}
+                processing={isUpdatingCategory}
+                onConfirm={handleSelectUpdateCategory}
             />
         </>
     );

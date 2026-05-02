@@ -24,6 +24,8 @@ interface AssetSelectFieldProps {
     createLabel: string;
     clearValue?: string;
     clearLabel?: string;
+    showCreate?: boolean;
+    hideLabel?: boolean;
 }
 
 export function AssetSelectField({
@@ -40,16 +42,20 @@ export function AssetSelectField({
     createLabel,
     clearValue,
     clearLabel,
+    showCreate = true,
+    hideLabel = false,
 }: AssetSelectFieldProps) {
     const selectedOption = options.find((option) => String(option.id) === value);
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-            <div>
-                <Label>{label}</Label>
-                <p className="text-sm text-muted-foreground mt-1">{description}</p>
-            </div>
-            <div className="md:col-span-2">
+        <div className={cn("grid gap-4 items-start", hideLabel ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3")}>
+            {!hideLabel && (
+                <div>
+                    <Label>{label}</Label>
+                    <p className="text-sm text-muted-foreground mt-1">{description}</p>
+                </div>
+            )}
+            <div className={cn(hideLabel ? "" : "md:col-span-2")}>
                 <Popover open={open} onOpenChange={onOpenChange}>
                     <PopoverTrigger asChild>
                         <Button
@@ -64,7 +70,7 @@ export function AssetSelectField({
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded overflow-hidden" align="start">
+                    <PopoverContent className="w-(--radix-popover-trigger-width) p-0 rounded overflow-hidden" align="start">
                         <Command className="rounded">
                             <CommandInput placeholder={`Search ${label.toLowerCase()}...`} />
                             <CommandList>
@@ -108,20 +114,24 @@ export function AssetSelectField({
                                         </CommandItem>
                                     ))}
                                 </CommandGroup>
-                                <CommandSeparator />
-                                <CommandGroup>
-                                    <CommandItem
-                                        value={createValue}
-                                        onSelect={() => {
-                                            onValueChange(createValue);
-                                            onOpenChange(false);
-                                        }}
-                                        className="text-primary"
-                                    >
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        {createLabel}
-                                    </CommandItem>
-                                </CommandGroup>
+                                {showCreate && (
+                                    <>
+                                        <CommandSeparator />
+                                        <CommandGroup>
+                                            <CommandItem
+                                                value={createValue}
+                                                onSelect={() => {
+                                                    onValueChange(createValue);
+                                                    onOpenChange(false);
+                                                }}
+                                                className="text-primary"
+                                            >
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                {createLabel}
+                                            </CommandItem>
+                                        </CommandGroup>
+                                    </>
+                                )}
                             </CommandList>
                         </Command>
                     </PopoverContent>
