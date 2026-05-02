@@ -26,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->respond(function (Response $response, \Throwable $exception, Request $request) {
+        $exceptions->respond(function (Response $response, Throwable $exception, Request $request) {
             if (in_array($response->getStatusCode(), [500, 503, 403, 404])) {
                 if ($response->getStatusCode() === 403 || $response->getStatusCode() === 404 || ! app()->isLocal()) {
                     return Inertia::render('errors/error', [

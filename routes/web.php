@@ -23,5 +23,9 @@ Route::get('/ping', function () {
     return response('Awake', 200);
 });
 
+Route::fallback(function () {
+    abort(404);
+})->middleware('auth');
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
