@@ -395,20 +395,21 @@ class LocationController extends Controller
 
     private function createsHierarchyCycle(Location $location, string $candidateParentId): bool
     {
-        $currentParent = Location::query()
+        // 1. Fetch the entire parent/child map for this user in ONE query
+        $hierarchy = \Illuminate\Support\Facades\DB::table('locations')
             ->where('user_id', $location->user_id)
-            ->select(['id', 'parent_location_id'])
-            ->find($candidateParentId);
+            ->pluck('parent_location_id', 'id')
+            ->toArray();
 
-        while ($currentParent) {
-            if ($currentParent->id === $location->id) {
+        $currentParentId = $candidateParentId;
+
+        // 2. Traverse the tree instantly in memory
+        while ($currentParentId) {
+            if ((string) $currentParentId === (string) $location->id) {
                 return true;
             }
 
-            $nextParentId = $currentParent->parent_location_id;
-            $currentParent = $nextParentId
-                ? Location::query()->where('user_id', $location->user_id)->select(['id', 'parent_location_id'])->find($nextParentId)
-                : null;
+            $currentParentId = $hierarchy[$currentParentId] ?? null;
         }
 
         return false;
@@ -416,10 +417,18 @@ class LocationController extends Controller
 
     private function parentOptions(Request $request, ?Location $excludeLocation = null)
     {
-        return $request->user()->locations()
-            ->when($excludeLocation, fn ($query) => $query->whereKeyNot($excludeLocation->id))
-            ->orderBy('name')
-            ->get(['id', 'name']);
+        // 1. Instantly load from your existing cache layer
+        $cachedLocations = UserResourceCache::locationsForSelect($request->user()->id);
+
+        // 2. Filter out the excluded location in PHP if necessary
+        if ($excludeLocation) {
+            return array_values(array_filter(
+                $cachedLocations,
+                fn ($loc) => (string) $loc['id'] !== (string) $excludeLocation->id
+            ));
+        }
+
+        return $cachedLocations;
     }
 
     /**

@@ -94,27 +94,40 @@ class AssetController extends Controller
      */
     private function resolveTagIds(Request $request, array $tags): array
     {
-        // 1. Separate numbers (existing IDs) and strings (new tags)
+        $userId = $request->user()->id;
+        $allTags = UserResourceCache::tags($userId);
+
         $numericTags = array_filter($tags, 'is_numeric');
-        $stringTags = array_filter($tags, fn ($tag) => is_string($tag) && trim($tag) !== '');
+        $stringTags = array_map('trim', array_filter($tags, fn ($tag) => is_string($tag) && trim($tag) !== ''));
 
         $tagIds = [];
+        $existingNamesMap = []; // lowercase name => id
+        $existingIds = [];
 
-        // 2. Fetch all valid existing Tag IDs in ONE single query
-        if (! empty($numericTags)) {
-            $tagIds = $request->user()->tags()
-                ->whereIn('id', $numericTags)
-                ->pluck('id')
-                ->toArray();
+        foreach ($allTags as $t) {
+            $existingNamesMap[strtolower($t['name'])] = $t['id'];
+            $existingIds[] = (string) $t['id'];
         }
 
-        // 3. Create any new string tags
-        foreach ($stringTags as $tagValue) {
-            $tag = Tag::firstOrCreate([
-                'user_id' => $request->user()->id,
-                'name' => trim($tagValue),
-            ]);
-            $tagIds[] = $tag->id;
+        // 1. Add IDs that are valid for this user
+        foreach ($numericTags as $id) {
+            if (in_array((string) $id, $existingIds)) {
+                $tagIds[] = $id;
+            }
+        }
+
+        // 2. Add names if they exist, or create new ones
+        foreach ($stringTags as $name) {
+            $lowerName = strtolower($name);
+            if (isset($existingNamesMap[$lowerName])) {
+                $tagIds[] = $existingNamesMap[$lowerName];
+            } else {
+                $tag = Tag::create([
+                    'user_id' => $userId,
+                    'name' => $name,
+                ]);
+                $tagIds[] = $tag->id;
+            }
         }
 
         return array_values(array_unique($tagIds));

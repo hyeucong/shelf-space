@@ -52,9 +52,14 @@ class CategoryController extends Controller
         }
 
         $baseSlug = Str::slug($validated['name']);
+        $existingSlugs = $request->user()->categories()
+            ->where('slug', 'LIKE', "{$baseSlug}%")
+            ->pluck('slug')
+            ->toArray();
+
         $slug = $baseSlug;
         $counter = 1;
-        while ($request->user()->categories()->where('slug', $slug)->exists()) {
+        while (in_array($slug, $existingSlugs)) {
             $slug = $baseSlug.'-'.$counter++;
         }
 
@@ -87,9 +92,15 @@ class CategoryController extends Controller
         $validated = $this->validatedData($request);
 
         $baseSlug = Str::slug($validated['name']);
+        $existingSlugs = $request->user()->categories()
+            ->where('id', '!=', $category->id)
+            ->where('slug', 'LIKE', "{$baseSlug}%")
+            ->pluck('slug')
+            ->toArray();
+
         $slug = $baseSlug;
         $counter = 1;
-        while ($request->user()->categories()->where('slug', $slug)->where('id', '!=', $category->id)->exists()) {
+        while (in_array($slug, $existingSlugs)) {
             $slug = $baseSlug.'-'.$counter++;
         }
 

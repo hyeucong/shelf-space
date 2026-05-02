@@ -28,8 +28,8 @@ class DashboardController extends Controller
             'reminders' => $reminders,
             'stats' => [
                 'total_assets' => Asset::where('user_id', $userId)->count(),
-                'total_categories' => \App\Models\Category::where('user_id', $userId)->count(),
-                'total_locations' => \App\Models\Location::where('user_id', $userId)->count(),
+                'total_categories' => count(\App\Services\UserResourceCache::categories($userId)),
+                'total_locations' => count(\App\Services\UserResourceCache::locations($userId)),
                 'total_value' => Asset::where('user_id', $userId)->sum('value'),
             ],
         ]);
