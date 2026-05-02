@@ -15,7 +15,7 @@ Route::middleware([
     'auth',
     ValidateWorkOSSession::class,
 ])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::get('quick-find', QuickFindController::class)->name('quick-find');
 
     require __DIR__.'/web/assets.php';

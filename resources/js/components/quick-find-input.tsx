@@ -39,6 +39,7 @@ import * as LocationActions from '@/actions/App/Http/Controllers/LocationControl
 import * as CategoryActions from '@/actions/App/Http/Controllers/CategoryController';
 import * as TagActions from '@/actions/App/Http/Controllers/TagController';
 import * as ReminderActions from '@/actions/App/Http/Controllers/ReminderController';
+import * as DashboardActions from '@/actions/App/Http/Controllers/DashboardController';
 import QuickFindController from '@/actions/App/Http/Controllers/QuickFindController';
 import InertiaController from '@/actions/Inertia/Controller';
 
@@ -170,7 +171,7 @@ export function QuickFindInput({ className }: { className?: string }) {
                     {query.length === 0 && (
                         <>
                             <CommandGroup heading="Navigation">
-                                <CommandItem onSelect={() => runCommand(() => router.visit(InertiaController['/dashboard'].url()))}>
+                                <CommandItem onSelect={() => runCommand(() => router.visit(DashboardActions.index.url()))}>
                                     <Home className="mr-2 h-4 w-4" />
                                     <div className="flex flex-col">
                                         <span className="font-medium text-sm">Dashboard</span>
