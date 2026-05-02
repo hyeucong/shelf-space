@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\SvgWriter;
 
 class Kit extends Model
 {
@@ -28,10 +29,12 @@ class Kit extends Model
 
     public function getQrCodeSvgAttribute(): string
     {
-        return QrCode::size(200)
-            ->format('svg')
-            ->generate(route('kits.overview', $this->id))
-            ->toHtml();
+        return (new Builder(
+            writer: new SvgWriter(),
+            data: route('kits.overview', $this->id),
+            size: 200,
+            margin: 0
+        ))->build()->getString();
     }
 
     protected $fillable = [

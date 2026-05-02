@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\SvgWriter;
 use Spatie\Activitylog\Models\Concerns\HasActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -39,10 +40,12 @@ class Asset extends Model
 
     public function getQrCodeSvgAttribute(): string
     {
-        return QrCode::size(200)
-            ->format('svg')
-            ->generate(route('assets.overview', $this->id))
-            ->toHtml();
+        return (new Builder(
+            writer: new SvgWriter(),
+            data: route('assets.overview', $this->id),
+            size: 200,
+            margin: 0
+        ))->build()->getString();
     }
 
     public function getActivitylogOptions(): LogOptions
