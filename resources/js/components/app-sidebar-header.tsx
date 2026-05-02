@@ -18,7 +18,7 @@ export function AppSidebarHeader({
 
                 <div className="flex-1" />
 
-                <QuickFindInput />
+                <QuickFindInput className="hidden md:flex" />
 
                 {headerAction && (
                     <div className="flex items-center gap-2">

@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { 
-    Home, 
-    Package, 
-    ShoppingBag, 
-    Layers, 
-    Tags, 
-    MapPin, 
-    AlarmClock, 
+import {
+    Home,
+    Package,
+    ShoppingBag,
+    Layers,
+    Tags,
+    MapPin,
+    AlarmClock,
     Plus,
     PlusCircle,
     Search,
@@ -42,8 +42,9 @@ import * as ReminderActions from '@/actions/App/Http/Controllers/ReminderControl
 import QuickFindController from '@/actions/App/Http/Controllers/QuickFindController';
 import InertiaController from '@/actions/Inertia/Controller';
 
-export function QuickFindInput() {
+export function QuickFindInput({ className }: { className?: string }) {
     const [open, setOpen] = React.useState(false);
+    // ... rest of state ...
     const [query, setQuery] = React.useState('');
     const [results, setResults] = React.useState<Record<string, any[]>>({});
     const [isLoading, setIsLoading] = React.useState(false);
@@ -97,7 +98,7 @@ export function QuickFindInput() {
     }, []);
 
     return (
-        <div className="hidden md:flex">
+        <div className={cn("flex", className)}>
             <Button
                 variant="outline"
                 className={cn(
@@ -108,8 +109,8 @@ export function QuickFindInput() {
                 <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
                 <span className="inline-flex">Quick find...</span>
                 <div className="pointer-events-none absolute right-[0.3rem] top-[0.3rem] hidden h-[22px] items-center gap-1 sm:flex">
-                    <Badge 
-                        variant="outline" 
+                    <Badge
+                        variant="outline"
                         className="h-full px-2 font-mono text-[10px] font-semibold bg-background/80 text-muted-foreground/80 border-muted-foreground/20 shadow-xs rounded"
                     >
                         Ctrl K
@@ -117,20 +118,20 @@ export function QuickFindInput() {
                 </div>
             </Button>
 
-            <CommandDialog 
-                open={open} 
-                onOpenChange={setOpen} 
+            <CommandDialog
+                open={open}
+                onOpenChange={setOpen}
                 className="max-w-2xl"
                 shouldFilter={false}
             >
-                <CommandInput 
-                    placeholder="Type to search assets, kits..." 
+                <CommandInput
+                    placeholder="Type to search assets, kits..."
                     value={query}
                     onValueChange={setQuery}
                 />
                 <CommandList className={cn(
                     "max-h-[450px] transition-all duration-200",
-                    query.length > 0 ? "min-h-[300px]" : "min-h-[auto]"
+                    query.length > 0 ? "min-h-[300px]" : "min-h-auto"
                 )}>
                     <CommandEmpty>
                         {isLoading ? (
@@ -147,8 +148,8 @@ export function QuickFindInput() {
                     {Object.entries(results).map(([group, items]) => (
                         <CommandGroup key={group} heading={group}>
                             {items.map((item) => (
-                                <CommandItem 
-                                    key={`${group}-${item.id}`} 
+                                <CommandItem
+                                    key={`${group}-${item.id}`}
                                     onSelect={() => runCommand(() => router.visit(item.url))}
                                 >
                                     {group === 'Assets' ? (

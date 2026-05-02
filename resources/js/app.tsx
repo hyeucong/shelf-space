@@ -11,6 +11,7 @@ createInertiaApp({
     layout: (name) => {
         switch (true) {
             case name.startsWith('landing/'):
+            case name.startsWith('errors/'):
                 return null;
             case name.startsWith('settings/'):
                 return [AppLayout, SettingsLayout];
