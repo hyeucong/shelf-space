@@ -92,7 +92,7 @@ export default function Dashboard({ assets, reminders, stats }: PageProps) {
                                                         <Bell className="text-muted-foreground" size={18} />
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <span className="block font-semibold line-clamp-1 text-base">
+                                                        <span className="block font-semibold truncate min-w-0 max-w-[200px] lg:max-w-[300px] text-base">
                                                             {reminder.name}
                                                         </span>
                                                     </div>
@@ -159,7 +159,7 @@ export default function Dashboard({ assets, reminders, stats }: PageProps) {
                                                         )}
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <Link href={`/assets/${asset.id}/overview`} className="block font-semibold hover:underline line-clamp-1 text-base">
+                                                        <Link href={`/assets/${asset.id}/overview`} className="block font-semibold hover:underline truncate min-w-0 max-w-[200px] lg:max-w-[300px] text-base">
                                                             {asset.name}
                                                         </Link>
                                                     </div>
