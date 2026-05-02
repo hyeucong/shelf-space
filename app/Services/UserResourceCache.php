@@ -38,7 +38,7 @@ class UserResourceCache
         return Cache::remember(
             self::categoriesKey($userId),
             self::TTL,
-            fn () => Category::query()->orderBy('name')->get()->toArray()
+            fn () => Category::where('user_id', $userId)->orderBy('name')->get()->toArray()
         );
     }
 
@@ -50,7 +50,7 @@ class UserResourceCache
         return Cache::remember(
             self::tagsKey($userId),
             self::TTL,
-            fn () => Tag::query()->orderBy('name')->get()->toArray()
+            fn () => Tag::where('user_id', $userId)->orderBy('name')->get()->toArray()
         );
     }
 
@@ -62,7 +62,7 @@ class UserResourceCache
         return Cache::remember(
             self::locationsKey($userId),
             self::TTL,
-            fn () => Location::query()->orderBy('name')->get()->toArray()
+            fn () => Location::where('user_id', $userId)->orderBy('name')->get()->toArray()
         );
     }
 
@@ -74,7 +74,7 @@ class UserResourceCache
         return Cache::remember(
             self::locationsKey($userId).':select',
             self::TTL,
-            fn () => Location::query()->orderBy('name')->get(['id', 'name'])->toArray()
+            fn () => Location::where('user_id', $userId)->orderBy('name')->get(['id', 'name'])->toArray()
         );
     }
 
@@ -86,7 +86,7 @@ class UserResourceCache
         return Cache::remember(
             self::categoriesKey($userId).':select',
             self::TTL,
-            fn () => Category::query()->orderBy('name')->get(['id', 'name'])->toArray()
+            fn () => Category::where('user_id', $userId)->orderBy('name')->get(['id', 'name'])->toArray()
         );
     }
 
