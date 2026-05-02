@@ -1,5 +1,9 @@
+import { Button } from '@/components/ui/button';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 
 export interface AssetSelectOption {
     id: string | number;
@@ -37,6 +41,8 @@ export function AssetSelectField({
     clearValue,
     clearLabel,
 }: AssetSelectFieldProps) {
+    const selectedOption = options.find((option) => String(option.id) === value);
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             <div>
@@ -44,34 +50,82 @@ export function AssetSelectField({
                 <p className="text-sm text-muted-foreground mt-1">{description}</p>
             </div>
             <div className="md:col-span-2">
-                <Select open={open} onOpenChange={onOpenChange} value={value} onValueChange={onValueChange}>
-                    <SelectTrigger className="w-full">
-                        <SelectValue placeholder={placeholder} />
-                    </SelectTrigger>
-                    <SelectContent side="top">
-                        {clearValue && clearLabel ? (
-                            <>
-                                <SelectItem value={clearValue}>{clearLabel}</SelectItem>
-                                <SelectSeparator />
-                            </>
-                        ) : null}
-
-                        {options.length ? (
-                            options.map((option) => (
-                                <SelectItem key={option.id} value={String(option.id)}>
-                                    {option.name}
-                                </SelectItem>
-                            ))
-                        ) : (
-                            <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                                {emptyLabel}
-                            </div>
-                        )}
-
-                        <SelectSeparator />
-                        <SelectItem value={createValue}>{createLabel}</SelectItem>
-                    </SelectContent>
-                </Select>
+                <Popover open={open} onOpenChange={onOpenChange}>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={open}
+                            className="w-full justify-between rounded font-normal bg-transparent hover:bg-transparent"
+                        >
+                            <span className="truncate">
+                                {selectedOption ? selectedOption.name : placeholder}
+                            </span>
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded overflow-hidden" align="start">
+                        <Command className="rounded">
+                            <CommandInput placeholder={`Search ${label.toLowerCase()}...`} />
+                            <CommandList>
+                                <CommandEmpty>{emptyLabel}</CommandEmpty>
+                                <CommandGroup>
+                                    {clearValue && clearLabel && (
+                                        <CommandItem
+                                            value={clearValue}
+                                            onSelect={() => {
+                                                onValueChange('');
+                                                onOpenChange(false);
+                                            }}
+                                        >
+                                            <Check
+                                                className={cn(
+                                                    "mr-2 h-4 w-4",
+                                                    !value ? "opacity-100" : "opacity-0"
+                                                )}
+                                            />
+                                            {clearLabel}
+                                        </CommandItem>
+                                    )}
+                                    {options.map((option) => (
+                                        <CommandItem
+                                            key={option.id}
+                                            value={option.name}
+                                            onSelect={() => {
+                                                const stringId = String(option.id);
+                                                // If same value is selected, clear it (undo)
+                                                onValueChange(stringId === value ? '' : stringId);
+                                                onOpenChange(false);
+                                            }}
+                                        >
+                                            <Check
+                                                className={cn(
+                                                    "mr-2 h-4 w-4",
+                                                    value === String(option.id) ? "opacity-100" : "opacity-0"
+                                                )}
+                                            />
+                                            {option.name}
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                                <CommandSeparator />
+                                <CommandGroup>
+                                    <CommandItem
+                                        value={createValue}
+                                        onSelect={() => {
+                                            onValueChange(createValue);
+                                            onOpenChange(false);
+                                        }}
+                                        className="text-primary"
+                                    >
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        {createLabel}
+                                    </CommandItem>
+                                </CommandGroup>
+                            </CommandList>
+                        </Command>
+                    </PopoverContent>
+                </Popover>
             </div>
         </div>
     );

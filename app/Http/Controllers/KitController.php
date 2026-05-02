@@ -74,12 +74,16 @@ class KitController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'category_id' => ['nullable', 'exists:categories,id'],
+            'location_id' => ['nullable', 'exists:locations,id'],
         ]);
 
         $kit = Kit::create([
             'user_id' => $request->user()->id,
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
+            'category_id' => $validated['category_id'] ?? null,
+            'location_id' => $validated['location_id'] ?? null,
         ]);
 
         return redirect()->route('kits.index')->with('success', 'Kit created successfully.');
@@ -124,9 +128,18 @@ class KitController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Kit $kit)
+    public function edit(Request $request, Kit $kit)
     {
-        //
+        Gate::authorize('update', $kit);
+
+        $categories = UserResourceCache::categoriesForSelect($request->user()->id);
+        $locations = UserResourceCache::locationsForSelect($request->user()->id);
+
+        return Inertia::render('kits/edit', [
+            'kit' => $kit,
+            'categories' => $categories,
+            'locations' => $locations,
+        ]);
     }
 
     /**
@@ -134,7 +147,18 @@ class KitController extends Controller
      */
     public function update(Request $request, Kit $kit)
     {
-        //
+        Gate::authorize('update', $kit);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'category_id' => ['nullable', 'exists:categories,id'],
+            'location_id' => ['nullable', 'exists:locations,id'],
+        ]);
+
+        $kit->update($validated);
+
+        return redirect()->route('kits.index')->with('success', 'Kit updated successfully.');
     }
 
     /**
