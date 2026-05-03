@@ -55,7 +55,7 @@ LocationAssets.layout = (page: ReactNode) => {
         <LocationLayout
             activeTab="assets"
             headerAction={
-                <Button asChild>
+                <Button variant="outline" className="rounded" asChild>
                     <Link href={location ? addAssets(location.id).url : '#'}>
                         Add asset
                     </Link>

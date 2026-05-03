@@ -142,7 +142,7 @@ export default function Create() {
                                 <Button
                                     type="submit"
                                     disabled={processing}
-                                    className="rounded bg-white text-black hover:bg-zinc-200 border border-zinc-200"
+                                    className="rounded bg-white text-black hover:bg-zinc-200 border border-border"
                                 >
                                     {isEditing ? 'Update' : 'Save'}
                                 </Button>

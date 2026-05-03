@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Demo User']
         );
 
-
+        $this->call(DemoSeeder::class);
         $this->call(PerformanceSeeder::class);
 
     }

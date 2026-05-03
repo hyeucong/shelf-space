@@ -16,6 +16,7 @@ import {
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import LocationMap from '@/components/location-map';
+import { downloadQrAsPng, printQr } from '@/lib/qr-utils';
 
 export interface AssetResource {
     id: string;
@@ -157,7 +158,7 @@ export default function AssetLayout({ children, activeTab, headerAction }: Asset
                     <div className="flex-1 overflow-hidden">
                         {children}
                     </div>
-                    <aside className="w-full lg:w-96 bg-card">
+                    <aside className="w-full lg:w-96">
                         <div className="sticky top-0 p-4 lg:pl-0 space-y-4">
                             <div className="overflow-hidden rounded border bg-background flex items-center justify-between px-4 h-[52px]">
                                 <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</span>
@@ -191,11 +192,21 @@ export default function AssetLayout({ children, activeTab, headerAction }: Asset
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4 w-full border-t p-4">
-                                    <Button variant="outline" size="sm" className="w-full gap-2">
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="w-full gap-2 cursor-pointer"
+                                        onClick={() => downloadQrAsPng(asset.qr_code_svg || '', asset.name)}
+                                    >
                                         <Download size={14} />
                                         Download
                                     </Button>
-                                    <Button variant="outline" size="sm" className="w-full gap-2">
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="w-full gap-2 cursor-pointer"
+                                        onClick={() => printQr(asset.qr_code_svg || '', asset.name, asset.asset_id)}
+                                    >
                                         <Printer size={14} />
                                         Print
                                     </Button>

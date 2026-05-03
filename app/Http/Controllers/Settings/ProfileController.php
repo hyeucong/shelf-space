@@ -38,6 +38,10 @@ class ProfileController extends Controller
      */
     public function destroy(AuthKitAccountDeletionRequest $request): RedirectResponse
     {
+        if ($request->user()->email === 'demo@shelfspace.com') {
+            return back()->with('error', 'The demo account cannot be deleted.');
+        }
+
         return $request->delete(
             using: fn (User $user) => $user->delete(),
         );

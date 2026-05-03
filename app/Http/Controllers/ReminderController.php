@@ -89,11 +89,10 @@ class ReminderController extends Controller
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Reminder $reminder)
     {
-        //
+        $reminder->delete();
+
+        return redirect()->back();
     }
 }

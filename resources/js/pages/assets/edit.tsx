@@ -176,7 +176,7 @@ export default function Edit({ asset }: { asset: Asset }) {
                                     </Button>
                                 </div>
 
-                                <Button type="submit" disabled={processing} className={`rounded bg-white text-black hover:bg-zinc-200 border border-zinc-200`}>
+                                <Button type="submit" disabled={processing} className={`rounded bg-white text-black hover:bg-zinc-200 border border-border`}>
                                     Save
                                 </Button>
                             </div>

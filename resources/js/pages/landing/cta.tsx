@@ -6,11 +6,11 @@ import { login } from '@/routes';
 import { motion } from 'motion/react';
 
 const LIST_ITEMS = [
-    { title: 'est non ut', status: 'Maintenance', color: 'text-amber-400' },
-    { title: 'reiciendis rem cupiditate', status: 'In_use', color: 'text-blue-400' },
-    { title: 'quidem perferendis recusandae', status: 'In_use', color: 'text-blue-400' },
-    { title: 'debitis quaerat non', status: 'Available', color: 'text-emerald-400' },
-    { title: 'modi alias error', status: 'Retired', color: 'text-zinc-500' },
+    { title: 'MacBook Pro M3 Max', status: 'In_Use', color: 'text-white' },
+    { title: 'Sony A7IV Camera Body', status: 'Maintenance', color: 'text-amber-400' },
+    { title: 'Dell UltraSharp 32" 4K', status: 'In_Use', color: 'text-white' },
+    { title: 'Herman Miller Aeron', status: 'Available', color: 'text-white' },
+    { title: 'Logitech MX Master 3S', status: 'Retired', color: 'text-zinc-500' },
 ];
 
 export default function CTA() {

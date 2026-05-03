@@ -125,7 +125,7 @@ export default function Edit({ kit }: { kit: Kit }) {
                                 <Button
                                     type="submit"
                                     disabled={processing}
-                                    className="rounded bg-white text-black hover:bg-zinc-200 border border-zinc-200"
+                                    className="rounded bg-white text-black hover:bg-zinc-200 border border-border"
                                 >
                                     Save Changes
                                 </Button>

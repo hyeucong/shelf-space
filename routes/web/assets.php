@@ -48,5 +48,6 @@ Route::prefix('assets')->name('assets.')->group(function () {
         // Nested Features: Reminders
         Route::get('reminders', [AssetReminderController::class, 'index'])->name('reminders');
         Route::post('reminders', [AssetReminderController::class, 'store'])->name('reminders.store');
+        Route::delete('reminders/{reminder}', [AssetReminderController::class, 'destroy'])->name('reminders.destroy');
     });
 });

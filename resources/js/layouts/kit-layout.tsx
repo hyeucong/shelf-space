@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
+import { downloadQrAsPng, printQr } from '@/lib/qr-utils';
 
 export interface KitResource {
     id: string;
@@ -142,7 +143,7 @@ export default function KitLayout({ children, activeTab, headerAction }: KitLayo
                 <div className="flex-1 overflow-hidden">
                     {children}
                 </div>
-                <aside className="w-full lg:w-96 bg-card">
+                <aside className="w-full lg:w-96">
                     <div className="sticky top-0 p-4 lg:pl-0 space-y-4">
                         <div className="overflow-hidden rounded border bg-background flex items-center justify-between px-4 h-[52px]">
                             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</span>
@@ -175,11 +176,21 @@ export default function KitLayout({ children, activeTab, headerAction }: KitLayo
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4 w-full border-t p-4">
-                                <Button variant="outline" size="sm" className="w-full gap-2">
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="w-full gap-2 cursor-pointer"
+                                    onClick={() => downloadQrAsPng(kit.qr_code_svg || '', kit.name)}
+                                >
                                     <Download size={14} />
                                     Download
                                 </Button>
-                                <Button variant="outline" size="sm" className="w-full gap-2">
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="w-full gap-2 cursor-pointer"
+                                    onClick={() => printQr(kit.qr_code_svg || '', kit.name)}
+                                >
                                     <Printer size={14} />
                                     Print
                                 </Button>

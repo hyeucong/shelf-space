@@ -1,13 +1,19 @@
 import type { FormEvent, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { CalendarIcon, Ellipsis } from 'lucide-react';
+import { CalendarIcon, Ellipsis, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AssetLayout, { type AssetPageProps } from '@/layouts/asset-layout';
 import { ResourceIndexTable } from '@/components/resource-index-table';
-import { ResourceFormDialog } from '@/components/resource-form-dialog';
+import { ResourceFormDialog, ResourceDeleteDialog } from '@/components/resource-form-dialog';
 import type { PaginatedData } from '@/types/pagination';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
@@ -40,6 +46,8 @@ const initialValues: ReminderFormValues = {
 export default function AssetReminders() {
     const { asset, reminders } = usePage<AssetPageProps & { reminders?: PaginatedData<ReminderRecord> }>().props;
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [reminderToDelete, setReminderToDelete] = useState<ReminderRecord | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const { data, setData, post, processing, errors, clearErrors, reset } = useForm(initialValues);
     const selectedReminderDate = data.remind_at ? new Date(data.remind_at) : undefined;
 
@@ -86,6 +94,21 @@ export default function AssetReminders() {
             onSuccess: () => {
                 setIsCreateOpen(false);
             },
+        });
+    };
+
+    const handleDelete = () => {
+        if (!reminderToDelete || isDeleting) {
+            return;
+        }
+
+        router.delete(`/assets/${asset.id}/reminders/${reminderToDelete.id}`, {
+            preserveScroll: true,
+            onBefore: () => setIsDeleting(true),
+            onSuccess: () => {
+                setReminderToDelete(null);
+            },
+            onFinish: () => setIsDeleting(false),
         });
     };
 
@@ -228,18 +251,42 @@ export default function AssetReminders() {
                 columns={columns}
                 rowActions={{
                     render: (reminder) => (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Open actions for ${reminder.name}`}
-                            className="h-8 w-8 rounded"
-                        >
-                            <Ellipsis className="h-4 w-4" />
-                        </Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={`Open actions for ${reminder.name}`}
+                                    className="h-8 w-8 rounded"
+                                >
+                                    <Ellipsis className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem
+                                    className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                    onClick={() => setReminderToDelete(reminder)}
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     ),
                 }}
                 emptyState={{ title: 'No reminders found', description: 'There are no reminders for this asset.' }}
+            />
+
+            <ResourceDeleteDialog
+                open={!!reminderToDelete}
+                onOpenChange={(open) => !open && setReminderToDelete(null)}
+                title="Delete Reminder"
+                itemName={reminderToDelete?.name}
+                processing={isDeleting}
+                onConfirm={handleDelete}
+                confirmLabel="Delete reminder"
+                confirmPendingLabel="Deleting..."
             />
         </>
     );
@@ -249,7 +296,7 @@ AssetReminders.layout = (page: ReactNode) => (
     <AssetLayout
         activeTab="reminders"
         headerAction={
-            <Button onClick={() => window.dispatchEvent(new Event('asset-reminders:create'))}>
+            <Button variant="outline" className="rounded" onClick={() => window.dispatchEvent(new Event('asset-reminders:create'))}>
                 New reminder
             </Button>
         }

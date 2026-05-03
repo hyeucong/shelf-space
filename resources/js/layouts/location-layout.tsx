@@ -140,7 +140,7 @@ export default function LocationLayout({ children, activeTab, headerAction }: Lo
                     <div className="flex-1 overflow-hidden">
                         {children}
                     </div>
-                    <aside className="w-full lg:w-96 bg-card">
+                    <aside className="w-full lg:w-96">
                         <div className="sticky top-0 p-4 lg:pl-0 space-y-4">
 
 

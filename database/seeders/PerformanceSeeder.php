@@ -133,7 +133,10 @@ class PerformanceSeeder extends Seeder
             
             if (empty($userCats) || empty($userLocs)) continue;
 
-            $count = ($user->email === 'demo@shelfspace.com') ? 1000 : 100;
+            // Skip demo account as it's handled by DemoSeeder
+            if ($user->email === 'demo@shelfspace.com') continue;
+
+            $count = 100;
             
             for ($i = 0; $i < $count; $i++) {
                 $assetUlid = (string) Str::ulid();

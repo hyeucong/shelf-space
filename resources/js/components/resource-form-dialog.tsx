@@ -96,7 +96,7 @@ export function ResourceHeaderAction({ label, onClick, visible = true }: Resourc
     }
 
     return (
-        <Button className="rounded border border-border" onClick={onClick}>
+        <Button variant="outline" className="rounded" onClick={onClick}>
             {label}
         </Button>
     );
@@ -143,7 +143,7 @@ export function ResourceFormDialog({
                         <Button
                             type="submit"
                             disabled={processing}
-                            className={cn('rounded bg-white text-black hover:bg-zinc-200 border border-zinc-200', submitButtonClassName)}
+                            className={cn('rounded bg-white text-black hover:bg-zinc-200 border border-border', submitButtonClassName)}
                         >
                             {resolvedSubmitLabel}
                         </Button>
@@ -282,7 +282,7 @@ export function ResourceDuplicateDialog({
                         </Button>
                         <Button
                             type="submit"
-                            className="rounded bg-white text-black hover:bg-zinc-200 border border-zinc-200"
+                            className="rounded bg-white text-black hover:bg-zinc-200 border border-border"
                             disabled={processing}
                         >
                             {processing ? 'Duplicating...' : 'Duplicate'}

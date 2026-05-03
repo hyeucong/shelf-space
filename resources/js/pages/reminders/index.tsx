@@ -8,6 +8,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Ellipsis, Trash2 } from 'lucide-react';
+import { ResourceDeleteDialog } from '@/components/resource-form-dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { router } from '@inertiajs/react';
 import { ResourceIndexTable } from '@/components/resource-index-table';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import type { PaginatedData } from '@/types/pagination';
@@ -37,6 +47,23 @@ interface PageProps {
 
 export default function Reminders({ reminders, filters }: PageProps) {
     const [selectedSort, setSelectedSort] = useState('date-created-desc');
+    const [reminderToDelete, setReminderToDelete] = useState<Reminder | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleDelete = () => {
+        if (!reminderToDelete || isDeleting) {
+            return;
+        }
+
+        router.delete(`/reminders/${reminderToDelete.id}`, {
+            preserveScroll: true,
+            onBefore: () => setIsDeleting(true),
+            onSuccess: () => {
+                setReminderToDelete(null);
+            },
+            onFinish: () => setIsDeleting(false),
+        });
+    };
 
     const columns = [
         {
@@ -93,6 +120,43 @@ export default function Reminders({ reminders, filters }: PageProps) {
                     title: 'No reminders yet',
                     description: 'Reminders will appear here when assets are due for return or maintenance.',
                 }}
+                rowActions={{
+                    render: (reminder) => (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={`Open actions for ${reminder.name}`}
+                                    className="h-8 w-8 rounded"
+                                >
+                                    <Ellipsis className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem
+                                    className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                    onClick={() => setReminderToDelete(reminder)}
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ),
+                }}
+            />
+
+            <ResourceDeleteDialog
+                open={!!reminderToDelete}
+                onOpenChange={(open) => !open && setReminderToDelete(null)}
+                title="Delete Reminder"
+                itemName={reminderToDelete?.name}
+                processing={isDeleting}
+                onConfirm={handleDelete}
+                confirmLabel="Delete reminder"
+                confirmPendingLabel="Deleting..."
             />
         </>
     );

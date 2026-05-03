@@ -11,7 +11,7 @@ export function AppSidebarHeader({
     headerAction?: React.ReactNode; // Type it
 }) {
     return (
-        <header className="flex h-16 shrink-0 items-center border-b border-border px-4 transition-[padding] duration-200 ease-linear ">
+        <header className="flex h-16 shrink-0 items-center border-b border-border bg-background px-4 transition-[padding] duration-200 ease-linear ">
             <div className="flex w-full items-center gap-2">
                 <SidebarTrigger className="-ml-1" />
                 <Breadcrumbs breadcrumbs={breadcrumbs} />

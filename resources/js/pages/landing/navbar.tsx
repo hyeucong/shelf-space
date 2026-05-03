@@ -8,7 +8,7 @@ export default function Navbar() {
 
     return (
         <header className="w-full bg-[#09090b] text-sm border-b border-white/10 not-has-[nav]:hidden">
-            <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between border-l border-r px-4">
+            <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between border-l border-r px-4 border-white/10">
 
                 {/* Left: Logo */}
                 <div className="flex shrink-0 items-center">
@@ -22,9 +22,6 @@ export default function Navbar() {
 
                 {/* Right: Your 2 Buttons (Variables kept exactly the same) */}
                 <div className="flex items-center gap-3">
-                    <Link href="#overview" className="hover:text-white transition-colors">Overview</Link>
-                    <Link href="#features" className="hover:text-white transition-colors">Features</Link>
-                    <Link href="#about" className="hover:text-white transition-colors">About</Link>
                     {auth.user ? (
                         <Button
                             variant="outline"

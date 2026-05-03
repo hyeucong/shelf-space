@@ -1,4 +1,4 @@
-import { Bell, QrCode, ShieldCheck, LucideIcon } from 'lucide-react';
+import { Bell, QrCode, ShieldCheck, History, Laptop, Calendar, LucideIcon } from 'lucide-react';
 
 function AdvancedFeatureCard({ title, desc, icon: Icon }: { title: string; desc: string; icon: LucideIcon }) {
     return (
@@ -15,21 +15,39 @@ function AdvancedFeatureCard({ title, desc, icon: Icon }: { title: string; desc:
 }
 
 export default function AdvancedFeatures() {
-    const features = [
+    const row1Features = [
         {
-            title: "Custom alerts and notifications",
-            desc: "Set alerts for low stock, reorders, delayed shipments, or even demand spikes, and push notifications where it matters most",
+            title: "Smart Alerts",
+            desc: "Set automated alerts for maintenance schedules, low stock, or checkout deadlines.",
             icon: Bell
         },
         {
-            title: "Batch and Serial Number tracking",
-            desc: "Adjust to your industry's needs, improve traceability and ensure compliance with regulatory standards",
+            title: "Dynamic QR Tags",
+            desc: "Generate and print unique QR codes for every asset to bridge the physical and digital gap.",
             icon: QrCode
         },
         {
-            title: "Custom User Roles and Permissions",
-            desc: "Implement highly specific user roles and permissions to ensure that employees only have access to relevant parts of the system",
+            title: "Granular Security",
+            desc: "Implement field-level permissions to ensure sensitive asset data is only seen by the right eyes.",
             icon: ShieldCheck
+        }
+    ];
+
+    const row2Features = [
+        {
+            title: "Full Audit History",
+            desc: "Track every change, checkout, and movement with a permanent, immutable audit trail.",
+            icon: History
+        },
+        {
+            title: "Bulk Operations",
+            desc: "Manage thousands of assets at once with powerful bulk editing and import tools.",
+            icon: Laptop
+        },
+        {
+            title: "Lifecycle Tracking",
+            desc: "Monitor assets from procurement to retirement with automated depreciation and health scoring.",
+            icon: Calendar
         }
     ];
 
@@ -43,7 +61,7 @@ export default function AdvancedFeatures() {
                         Manage your inventory exactly how you want
                     </h2>
                     <p className="text-lg text-zinc-400 leading-relaxed">
-                        Create custom inventory management software that mirrors your operations
+                        Create custom inventory management workflows that mirror your business operations.
                     </p>
                 </div>
             </div>
@@ -63,7 +81,7 @@ export default function AdvancedFeatures() {
                 {/* Row 1 */}
                 <div className="w-full border-t border-dashed border-white/20">
                     <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3">
-                        {features.map((feature, idx) => (
+                        {row1Features.map((feature, idx) => (
                             <div key={`row1-${idx}`} className={`border-l border-dashed border-white/20 ${idx === 2 ? 'md:border-r' : ''}`}>
                                 <AdvancedFeatureCard title={feature.title} desc={feature.desc} icon={feature.icon} />
                             </div>
@@ -74,7 +92,7 @@ export default function AdvancedFeatures() {
                 {/* Row 2 */}
                 <div className="w-full border-t border-dashed border-white/20">
                     <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3">
-                        {features.map((feature, idx) => (
+                        {row2Features.map((feature, idx) => (
                             <div key={`row2-${idx}`} className={`border-l border-dashed border-white/20 ${idx === 2 ? 'md:border-r' : ''}`}>
                                 <AdvancedFeatureCard title={feature.title} desc={feature.desc} icon={feature.icon} />
                             </div>

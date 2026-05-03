@@ -50,4 +50,10 @@ class AssetReminderController extends Controller
 
         return redirect()->route('assets.reminders', $asset);
     }
+    public function destroy(Asset $asset, \App\Models\Reminder $reminder)
+    {
+        $reminder->delete();
+
+        return redirect()->route('assets.reminders', $asset);
+    }
 }

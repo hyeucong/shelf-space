@@ -279,7 +279,7 @@ export default function Assets({ assets, categories, columnPreferences, location
             onFinish: () => setIsUpdatingCategory(false),
         });
     };
- 
+
     const handleDuplicate = (count: number) => {
         if (!assetToDuplicate || isDuplicating) {
             return;

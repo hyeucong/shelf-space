@@ -6,19 +6,19 @@ const ITEMS = [
     {
         title: 'Global Command Palette',
         point: 'Navigate at the speed of thought.',
-        desc: 'Press CMD+K to instantly locate any asset, user, or location globally globally.',
+        desc: 'Press CMD+K to instantly locate any asset, user, or location globally.',
         image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=2072',
     },
     {
         title: 'Intelligent Kitting',
         point: 'Deploy bundles safely.',
-        desc: 'Group assets into deployable kits with built-in relational logic globally globally.',
+        desc: 'Group assets into deployable kits with built-in relational logic for complex workflows.',
         image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2070',
     },
     {
         title: 'Frictionless Audits',
         point: 'Bridge physical and digital.',
-        desc: 'Every registered item automatically generates a unique, non-sequential Asset Tag.',
+        desc: 'Every registered item automatically generates a unique, non-sequential Asset Tag for scanning.',
         image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=2070',
     },
     {
@@ -68,7 +68,7 @@ export default function Features() {
                                         {/* The precise vertical line indicator */}
                                         <div className={cn(
                                             "w-[3px] h-5 rounded mr-4 transition-colors duration-300",
-                                            isActive ? "bg-[#4ade80]" : "bg-zinc-800"
+                                            isActive ? "bg-white" : "bg-zinc-800"
                                         )} />
                                         <h3 className={cn(
                                             "text-lg tracking-tight transition-colors duration-300",
@@ -88,7 +88,7 @@ export default function Features() {
                                                 transition={{ duration: 0.2, ease: "easeInOut" }}
                                                 className="overflow-hidden"
                                             >
-                                                {/* Added pl-5 to align the text with the title (past the green line) */}
+                                                {/* Added pl-5 to align the text with the title (past the indicator) */}
                                                 <div className="pt-3 pl-5 flex flex-col gap-1">
                                                     <span className="text-sm font-medium text-zinc-300">
                                                         {item.point}

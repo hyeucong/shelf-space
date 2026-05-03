@@ -164,9 +164,9 @@ export function createAssetTableColumns({
             cellClassName: 'hidden min-w-40 xl:table-cell',
             render: (asset) => (
                 asset.tags && asset.tags.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-nowrap gap-1 overflow-x-auto no-scrollbar max-w-[200px] lg:max-w-[300px]">
                         {asset.tags.map((tag) => (
-                            <Badge key={tag.id} variant="outline">{tag.name}</Badge>
+                            <Badge key={tag.id} variant="outline" className="shrink-0 whitespace-nowrap">{tag.name}</Badge>
                         ))}
                     </div>
                 ) : (
