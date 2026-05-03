@@ -521,7 +521,7 @@ Assets.layout = (page: React.ReactNode) => (
             { title: 'Assets', href: '/assets' }
         ]}
         headerAction={
-            <Button className="rounded border-none" asChild>
+            <Button className="rounded border border-border" asChild>
                 <Link href="/assets/create">
                     New asset
                 </Link>

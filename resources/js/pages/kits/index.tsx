@@ -273,7 +273,7 @@ Kits.layout = (page: React.ReactNode) => (
         ]}
 
         headerAction={
-            <Button className="rounded border-none" asChild>
+            <Button className="rounded border border-border" asChild>
                 <Link href="/kits/create">New kit</Link>
             </Button>
         }

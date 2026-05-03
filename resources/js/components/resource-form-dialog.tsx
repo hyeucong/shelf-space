@@ -96,7 +96,7 @@ export function ResourceHeaderAction({ label, onClick, visible = true }: Resourc
     }
 
     return (
-        <Button className="rounded border-none" onClick={onClick}>
+        <Button className="rounded border border-border" onClick={onClick}>
             {label}
         </Button>
     );

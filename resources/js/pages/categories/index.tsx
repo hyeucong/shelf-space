@@ -194,7 +194,7 @@ export default function Categories({ categories, filters }: PageProps) {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 border text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        className="h-8 w-8 border border-primary/20 text-destructive hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => setCategoryToDelete(category)}
                         disabled={isDeleting}
                     >

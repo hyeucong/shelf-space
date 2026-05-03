@@ -72,7 +72,7 @@ export function HeaderActions({ actions = [], editHref }: HeaderActionsProps) {
             <Button
                 type="button"
                 variant="outline"
-                className={isOpen ? 'h-9 shrink-0 rounded bg-muted text-foreground' : 'h-9 shrink-0 rounded'}
+                className={isOpen ? 'h-9 shrink-0 rounded bg-muted text-foreground border-border' : 'h-9 shrink-0 rounded border-border'}
                 onClick={() => setIsOpen((prev) => !prev)}
                 aria-expanded={isOpen}
             >
