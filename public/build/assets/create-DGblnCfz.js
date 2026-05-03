@@ -1,1 +1,0 @@
-import{n as e,r as t,t as n}from"./create-CtfcL-9N.js";export{n as CATEGORY_CREATE_EVENT,e as CategoryFormDialog,t as dispatchCategoryCreateEvent};
