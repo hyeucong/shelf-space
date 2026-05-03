@@ -20,8 +20,8 @@ export default function Welcome() {
             <div className="flex min-h-screen flex-col bg-[#09090b]">
                 <main className="flex-1 w-full">
                     <Banner />
-                    <Features />
                     <AdvancedFeatures />
+                    <Features />
                 </main>
             </div>
         </>

@@ -14,7 +14,7 @@ function FeatureCard({ title, desc }: { title: string; desc: string }) {
 export default function Features() {
     return (
         <div className="relative w-full overflow-hidden bg-[#09090b] py-24 border-t border-white/5">
-            <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="relative z-10 max-w-5xl mx-auto">
                 {/* Feature Grid */}
                 <section className="grid grid-cols-1 gap-8 sm:grid-cols-3 w-full">
                     <FeatureCard

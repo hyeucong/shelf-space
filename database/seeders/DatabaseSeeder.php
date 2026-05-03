@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
         );
 
 
-        Asset::factory(100)->for($user)->create();
+        $this->call(PerformanceSeeder::class);
 
     }
 }

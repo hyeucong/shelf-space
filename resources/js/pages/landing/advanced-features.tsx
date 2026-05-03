@@ -2,7 +2,12 @@ import React from 'react';
 
 function AdvancedFeatureCard({ title, desc }: { title: string; desc: string }) {
     return (
-        <div className="flex flex-col gap-2 p-6 rounded border border-white/10 bg-white/2 hover:bg-white/4 transition-colors">
+        <div className="flex flex-col gap-2 p-6 bg-white/5 hover:bg-white/10 transition-colors h-full">
+            <img
+                src="https://pbs.twimg.com/media/HHXBc6AbwAETIje?format=jpg&name=large"
+                alt={title}
+                className="h-[200px] w-full object-cover rounded-sm mb-4"
+            />
             <h3 className="font-semibold text-lg text-white leading-tight">{title}</h3>
             <p className="text-sm text-zinc-400 leading-relaxed">{desc}</p>
         </div>
@@ -10,12 +15,27 @@ function AdvancedFeatureCard({ title, desc }: { title: string; desc: string }) {
 }
 
 export default function AdvancedFeatures() {
-    return (
-        <section id="advanced-features" className="relative w-full bg-[#09090b] py-24 border-t border-white/5">
-            <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    const features = [
+        {
+            title: "Custom alerts and notifications",
+            desc: "Set alerts for low stock, reorders, delayed shipments, or even demand spikes, and push notifications where it matters most"
+        },
+        {
+            title: "Batch and Serial Number tracking",
+            desc: "Adjust to your industry's needs, improve traceability and ensure compliance with regulatory standards"
+        },
+        {
+            title: "Custom User Roles and Permissions",
+            desc: "Implement highly specific user roles and permissions to ensure that employees only have access to relevant parts of the system"
+        }
+    ];
 
-                {/* Header */}
-                <div className="max-w-3xl mb-16">
+    return (
+        <section id="advanced-features" className="relative w-full bg-[#09090b] py-24">
+
+            {/* Header Area - Constrained */}
+            <div className="relative z-10 max-w-5xl mx-auto px-6 mb-16">
+                <div className="max-w-3xl">
                     <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-white mb-4">
                         Manage your inventory exactly how you want
                     </h2>
@@ -23,34 +43,51 @@ export default function AdvancedFeatures() {
                         Create custom inventory management software that mirrors your operations
                     </p>
                 </div>
+            </div>
 
-                {/* Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <AdvancedFeatureCard
-                        title="Custom alerts and notifications"
-                        desc="Set alerts for low stock, reorders, delayed shipments, or even demand spikes, and push notifications where it matters most"
-                    />
-                    <AdvancedFeatureCard
-                        title="Batch and Serial Number tracking"
-                        desc="Adjust to your industry's needs, improve traceability and ensure compliance with regulatory standards"
-                    />
-                    <AdvancedFeatureCard
-                        title="Custom User Roles and Permissions"
-                        desc="Implement highly specific user roles and permissions to ensure that employees only have access to relevant parts of the system"
-                    />
-                    <AdvancedFeatureCard
-                        title="Integration with IoT Devices"
-                        desc="Easily connect with Internet of Things (IoT) devices, such as smart shelves or sensors, to automate the tracking of inventory and improve accuracy"
-                    />
-                    <AdvancedFeatureCard
-                        title="Custom workflow automation"
-                        desc="Tailor and automate workflows like processing returns, reconciling discrepancies, or managing inventory transfers between locations"
-                    />
-                    <AdvancedFeatureCard
-                        title="API Integrations"
-                        desc="Ensure seamless synchronisation of stock levels, orders, and returns with e-commerce sites (e.g. Amazon, Shopify) and 3PLs"
-                    />
+            {/* Grid Area */}
+            <div className="w-full flex flex-col">
+
+                {/* Top Cap (The "1"s) - REMOVED border-t entirely */}
+                <div className="w-full">
+                    <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 px-6">
+                        <div className="flex justify-center border-l border-dashed border-white/20 py-2 text-zinc-600 text-sm">1</div>
+                        <div className="hidden md:flex justify-center border-l border-dashed border-white/20 py-2 text-zinc-600 text-sm">1</div>
+                        <div className="hidden md:flex justify-center border-x border-dashed border-white/20 py-2 text-zinc-600 text-sm">1</div>
+                    </div>
                 </div>
+
+                {/* Row 1 */}
+                <div className="w-full border-t border-dashed border-white/20">
+                    <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 px-6">
+                        {features.map((feature, idx) => (
+                            <div key={`row1-${idx}`} className={`border-l border-dashed border-white/20 ${idx === 2 ? 'md:border-r' : ''}`}>
+                                <AdvancedFeatureCard title={feature.title} desc={feature.desc} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Row 2 */}
+                <div className="w-full border-t border-dashed border-white/20">
+                    <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 px-6">
+                        {features.map((feature, idx) => (
+                            <div key={`row2-${idx}`} className={`border-l border-dashed border-white/20 ${idx === 2 ? 'md:border-r' : ''}`}>
+                                <AdvancedFeatureCard title={feature.title} desc={feature.desc} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Bottom Cap (The "1"s) - CHANGED border-y to border-t */}
+                <div className="w-full border-t border-dashed border-white/20">
+                    <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 px-6">
+                        <div className="flex justify-center border-l border-dashed border-white/20 py-2 text-zinc-600 text-sm">1</div>
+                        <div className="hidden md:flex justify-center border-l border-dashed border-white/20 py-2 text-zinc-600 text-sm">1</div>
+                        <div className="hidden md:flex justify-center border-x border-dashed border-white/20 py-2 text-zinc-600 text-sm">1</div>
+                    </div>
+                </div>
+
             </div>
         </section>
     );

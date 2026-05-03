@@ -2,14 +2,13 @@ import { Link, usePage } from '@inertiajs/react';
 import { dashboard, home, login } from '@/routes';
 import { store as loginDemo } from '@/actions/App/Http/Controllers/Auth/DemoLoginController';
 import { Button } from '@/components/ui/button';
-import { Fingerprint } from 'lucide-react';
 
 export default function Navbar() {
     const { auth } = usePage().props;
 
     return (
         <header className="w-full bg-[#09090b] text-sm border-b border-white/10 not-has-[nav]:hidden">
-            <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6 lg:px-8">
+            <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between border-l border-r px-4">
 
                 {/* Left: Logo */}
                 <div className="flex shrink-0 items-center">
