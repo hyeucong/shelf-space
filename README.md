@@ -1,4 +1,6 @@
-# Shelf Space
+# shelf-space
+
+![Landing Page Preview](public/assets/landing-page.webp)
 
 Shelf Space is a modern, high-performance physical asset management system. Designed for teams that move fast, it provides total visibility and control over hardware and software assets across every location.
 
@@ -76,6 +78,14 @@ composer test
 # or
 ./vendor/bin/pest
 ```
+
+## Screenshots
+
+### Location Mapping
+![Location Mapping](public/assets/location.webp)
+
+### Dashboard Overview
+![Dashboard Overview](public/assets/overview.webp)
 
 ---
 
