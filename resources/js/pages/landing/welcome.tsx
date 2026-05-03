@@ -1,6 +1,8 @@
 import { Head, usePage } from '@inertiajs/react';
 import Navbar from '@/pages/landing/navbar';
 import Banner from '@/pages/landing/banner';
+import Features from '@/pages/landing/features';
+import AdvancedFeatures from '@/pages/landing/advanced-features';
 
 export default function Welcome() {
     const { auth } = usePage().props;
@@ -15,13 +17,13 @@ export default function Welcome() {
                 />
             </Head>
             <Navbar />
-            <div className="flex min-h-screen flex-col items-center bg-[#FDFDFC] p-6 text-[#1b1b18] dark:bg-[#0a0a0a]">
-
-                <main className="flex flex-col items-center flex-1 w-full max-w-5xl px-6 py-12 lg:py-24">
+            <div className="flex min-h-screen flex-col bg-[#09090b]">
+                <main className="flex-1 w-full">
                     <Banner />
+                    <Features />
+                    <AdvancedFeatures />
                 </main>
             </div>
         </>
     );
 }
-
