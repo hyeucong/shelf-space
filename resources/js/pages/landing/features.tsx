@@ -163,7 +163,7 @@ function TimelineVisual() {
         <div className="p-4 h-full flex flex-col bg-[#09090b] text-zinc-300 select-none">
             {/* Editor Mock at Top */}
             <div className="mb-4 bg-[#0c0c0e] border border-white/10 rounded overflow-hidden shrink-0">
-                <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-white/[0.02]">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-white/2">
                     <div className="flex items-center gap-4 text-zinc-500">
                         <span className="text-[10px] font-bold uppercase tracking-widest">New Activity</span>
                     </div>
@@ -222,7 +222,7 @@ function TimelineVisual() {
 function CommandSearchVisual() {
     return (
         <div className="p-10 h-full flex flex-col bg-black/40 items-center justify-start pt-20">
-            <div className="w-full max-w-lg bg-[#0c0c0e] border border-white/10 rounded shadow-2xl overflow-hidden scale-110 origin-top">
+            <div className="w-full max-w-lg bg-[#0c0c0e] border border-white/10 rounded shadow-2xl overflow-hidden scale-100 origin-top">
                 <div className="p-5 border-b border-white/5 flex items-center gap-4">
                     <div className="w-5 h-5 rounded-full border-2 border-zinc-600 flex items-center justify-center">
                         <div className="w-1.5 h-1.5 bg-zinc-600 rounded-full" />

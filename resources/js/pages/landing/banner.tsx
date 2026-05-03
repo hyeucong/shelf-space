@@ -3,6 +3,8 @@ import { login } from '@/routes';
 import { Button } from '@/components/ui/button';
 import { ArrowUpRight } from 'lucide-react';
 import bannerImg from '@/assets/banner.webp';
+import { store as loginDemo } from '@/actions/App/Http/Controllers/Auth/DemoLoginController';
+
 
 export default function Banner() {
     return (
@@ -78,7 +80,10 @@ export default function Banner() {
                             </Link>
                         </Button>
 
-                        <button
+                        <Link
+                            href={loginDemo().url}
+                            method="post"
+                            as="button"
                             className="group relative flex flex-col items-center justify-center w-[180px] h-[48px] decoration-0 transition-transform active:scale-95 cursor-pointer outline-none"
                             type="button"
                             style={{
@@ -101,7 +106,7 @@ export default function Banner() {
                             ></div>
 
                             <div
-                                className="absolute inset-0 pointer-events-none transition-opacity ease-in-out duration-1200city-0 group-hover:opacity-100"
+                                className="absolute inset-0 pointer-events-none transition-opacity ease-in-out duration-1200 opacity-0 group-hover:opacity-100"
                                 data-framer-name="Glow Hover"
                                 style={{
                                     background: 'radial-gradient(60.6% 50% at 50% 100%, rgb(255, 255, 255) 0%, rgba(255, 255, 255, 0) 100%)',
@@ -111,7 +116,7 @@ export default function Banner() {
                             ></div>
 
                             <div
-                                className="absolute inset-0 pointer-events-none will-change-auto transition-opacity ease-in-out duration-1200city-100 group-hover:opacity-0"
+                                className="absolute inset-0 pointer-events-none will-change-auto transition-opacity ease-in-out duration-1200 opacity-100 group-hover:opacity-0"
                                 data-framer-name="Stroke"
                                 style={{
                                     background: 'radial-gradient(10.7% 50% at 50% 100%, rgb(255, 255, 255) 0%, rgba(255, 255, 255, 0) 100%)',
@@ -157,7 +162,7 @@ export default function Banner() {
                                     </p>
                                 </div>
                             </div>
-                        </button>
+                        </Link>
                         <div className="relative group/hint">
                             <style>
                                 {`@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&display=swap');`}
