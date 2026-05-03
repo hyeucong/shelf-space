@@ -72,7 +72,7 @@ export function HeaderActions({ actions = [], editHref }: HeaderActionsProps) {
             <Button
                 type="button"
                 variant="outline"
-                className={isOpen ? 'h-9 shrink-0 rounded bg-muted text-foreground shadow-none' : 'h-9 shrink-0 rounded shadow-none'}
+                className={isOpen ? 'h-9 shrink-0 rounded bg-muted text-foreground' : 'h-9 shrink-0 rounded'}
                 onClick={() => setIsOpen((prev) => !prev)}
                 aria-expanded={isOpen}
             >
@@ -80,7 +80,7 @@ export function HeaderActions({ actions = [], editHref }: HeaderActionsProps) {
             </Button>
 
             {isOpen && (
-                <div className="absolute right-0 top-full z-50 mt-3 w-56 overflow-hidden rounded border bg-background shadow-xl">
+                <div className="absolute right-0 top-full z-50 mt-3 w-56 overflow-hidden rounded border bg-background">
                     <div className="p-2">
                         <div className="space-y-1">
                             {allActions.map((action) => {

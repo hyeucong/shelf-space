@@ -86,7 +86,7 @@ export function AssetSelectionActions({
                 <Button
                     type="button"
                     variant="outline"
-                    className={isActionsPanelOpen ? 'h-9 shrink-0 rounded bg-muted text-foreground shadow-none' : 'h-9 shrink-0 rounded shadow-none'}
+                    className={isActionsPanelOpen ? 'h-9 shrink-0 rounded bg-muted text-foreground' : 'h-9 shrink-0 rounded'}
                     onClick={() => setIsActionsPanelOpen((current) => !current)}
                     aria-expanded={isActionsPanelOpen}
                     disabled={isActionsButtonDisabled}
@@ -95,7 +95,7 @@ export function AssetSelectionActions({
                 </Button>
 
                 {isActionsPanelOpen ? (
-                    <div className="absolute right-0 top-full z-50 mt-3 flex w-72 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded border bg-background shadow-xl">
+                    <div className="absolute right-0 top-full z-50 mt-3 flex w-72 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded border bg-background">
                         <div className="p-2">
                             <div className="space-y-1">
                                 {actions.map((action) => {

@@ -174,7 +174,7 @@ const FILTER_CONDITION_LABELS: Record<AssetFilterCondition, string> = {
     lte: '<=',
 };
 
-const PANEL_TOGGLE_BUTTON_CLASS = 'h-9 gap-2 border-white bg-background text-foreground shadow-none font-normal shrink-0 hover:bg-muted';
+const PANEL_TOGGLE_BUTTON_CLASS = 'h-9 gap-2 border-white bg-background text-foreground font-normal shrink-0 hover:bg-muted';
 const PANEL_ROW_CLASS = 'flex flex-col gap-2 md:flex-row md:items-center justify-between';
 const EMPTY_ROW_CLASS = 'flex h-11 items-center rounded border border-dashed px-4 text-sm text-muted-foreground';
 const DEFAULT_SORT: AssetSortDraft = {
@@ -871,13 +871,13 @@ export function AssetQueryBuilder({
 
     return (
         <>
-            <div ref={builderContainerRef} className="relative rounded bg-background shadow-sm">
+            <div ref={builderContainerRef} className="relative rounded bg-background">
                 <div className="flex flex-wrap items-center gap-2">
                     {showFilterButton ? (
                         <Button
                             type="button"
                             variant="outline"
-                            className={builderMode === 'filter' || activeFilterCount > 0 ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0'}
+                            className={builderMode === 'filter' || activeFilterCount > 0 ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 font-normal text-muted-foreground shrink-0'}
                             onClick={() => setBuilderMode((current) => current === 'filter' ? null : 'filter')}
                             aria-expanded={builderMode === 'filter'}
                         >
@@ -889,7 +889,7 @@ export function AssetQueryBuilder({
                         <Button
                             type="button"
                             variant="outline"
-                            className={builderMode === 'sort' ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0'}
+                            className={builderMode === 'sort' ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 font-normal text-muted-foreground shrink-0'}
                             onClick={() => setBuilderMode((current) => current === 'sort' ? null : 'sort')}
                             aria-expanded={builderMode === 'sort'}
                         >
@@ -900,7 +900,7 @@ export function AssetQueryBuilder({
                         <Button
                             type="button"
                             variant="outline"
-                            className={builderMode === 'saved' ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 shadow-none font-normal text-muted-foreground shrink-0'}
+                            className={builderMode === 'saved' ? PANEL_TOGGLE_BUTTON_CLASS : 'h-9 gap-2 font-normal text-muted-foreground shrink-0'}
                             onClick={() => setBuilderMode((current) => current === 'saved' ? null : 'saved')}
                             aria-expanded={builderMode === 'saved'}
                         >
@@ -911,7 +911,7 @@ export function AssetQueryBuilder({
                 </div>
                 {builderMode ? (
                     <div
-                        className="absolute left-0 top-full z-50 mt-3 max-w-[calc(100vw-2rem)] min-w-80 rounded border bg-background shadow-xl"
+                        className="absolute left-0 top-full z-50 mt-3 max-w-[calc(100vw-2rem)] min-w-80 rounded border bg-background"
                         style={{ width: overlayWidth }}
                     >
                         <div className="flex items-start justify-between border-b px-4 py-3">
@@ -1075,7 +1075,7 @@ export function AssetQueryBuilder({
                                                         type="button"
                                                         variant="ghost"
                                                         size="sm"
-                                                        className={sortRow.order === 'asc' ? 'h-7 bg-muted text-foreground shadow-none' : 'h-7 text-muted-foreground shadow-none'}
+                                                        className={sortRow.order === 'asc' ? 'h-7 bg-muted text-foreground' : 'h-7 text-muted-foreground'}
                                                         onClick={() => setSortRows((current) => current.map((row) => (
                                                             row.id === sortRow.id
                                                                 ? { ...row, order: 'asc' }
@@ -1088,7 +1088,7 @@ export function AssetQueryBuilder({
                                                         type="button"
                                                         variant="ghost"
                                                         size="sm"
-                                                        className={sortRow.order === 'desc' ? 'h-7 bg-muted text-foreground shadow-none' : 'h-7 text-muted-foreground shadow-none'}
+                                                        className={sortRow.order === 'desc' ? 'h-7 bg-muted text-foreground' : 'h-7 text-muted-foreground'}
                                                         onClick={() => setSortRows((current) => current.map((row) => (
                                                             row.id === sortRow.id
                                                                 ? { ...row, order: 'desc' }

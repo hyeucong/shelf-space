@@ -151,10 +151,10 @@ export function TagFormDialog({
                         style={{
                             backgroundColor: data.hex_color,
                         }}
-                        className="h-10 shrink-0 items-center justify-center gap-2 rounded border-2 border-border px-3 text-sm font-semibold text-white transition-shadow hover:shadow-md"
+                        className="h-10 shrink-0 items-center justify-center gap-2 rounded border-2 border-border px-3 text-sm font-semibold text-white"
                         title="Click to generate random color"
                     >
-                        <RotateCcw size={16} className="drop-shadow-md" />
+                        <RotateCcw size={16} />
                     </Button>
                 </div>
                 {errors.hex_color && <span className="text-sm text-red-500">{errors.hex_color}</span>}

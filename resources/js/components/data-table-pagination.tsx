@@ -77,7 +77,7 @@ export function DataTablePagination({
                         value={String(pagination.per_page)}
                         onValueChange={onPerPageChange}
                     >
-                        <SelectTrigger className="h-9 w-19 rounded shadow-none cursor-pointer">
+                        <SelectTrigger className="h-9 w-19 rounded cursor-pointer">
                             <SelectValue placeholder={pagination.per_page} />
                         </SelectTrigger>
                         <SelectContent side="top">

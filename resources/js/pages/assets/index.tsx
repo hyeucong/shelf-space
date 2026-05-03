@@ -398,7 +398,7 @@ export default function Assets({ assets, categories, columnPreferences, location
                                 type="button"
                                 variant="outline"
                                 size="icon"
-                                className={isColumnsPanelOpen ? 'h-9 w-9 shrink-0 rounded bg-muted text-foreground shadow-none' : 'h-9 w-9 shrink-0 rounded shadow-none'}
+                                className={isColumnsPanelOpen ? 'h-9 w-9 shrink-0 rounded bg-muted text-foreground' : 'h-9 w-9 shrink-0 rounded'}
                                 title="Show or hide columns"
                                 onClick={() => isColumnsPanelOpen ? handleCloseColumnsPanel() : handleOpenColumnsPanel()}
                                 aria-expanded={isColumnsPanelOpen}

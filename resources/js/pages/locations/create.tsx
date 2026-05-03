@@ -54,7 +54,6 @@ export default function Create() {
     const [isParentSelectOpen, setIsParentSelectOpen] = useState(false);
     const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
     const [pendingDialog, setPendingDialog] = useState<'location' | null>(null);
-    const [submitMode, setSubmitMode] = useState<'save' | 'add-another'>('save');
     const handledCreatedLocationId = useRef<string | null>(null);
     const initialValues = buildFormValues({
         name: location?.name ?? '',
@@ -105,14 +104,6 @@ export default function Create() {
 
         post('/locations', {
             preserveScroll: true,
-            onSuccess: () => {
-                if (submitMode !== 'add-another') {
-                    return;
-                }
-
-                reset();
-                setSubmitMode('save');
-            },
         });
     };
 
@@ -127,7 +118,7 @@ export default function Create() {
             </div>
 
             <form onSubmit={submit} className="px-6 space-y-6 max-w-4xl pb-10">
-                <Card className="rounded border shadow-none">
+                <Card className="rounded border">
                     <CardContent className="space-y-6">
                         <div className="flex justify-between border-b border-border/50 pb-6">
                             <CardHeader>
@@ -138,32 +129,20 @@ export default function Create() {
                             </CardHeader>
 
                             <div className="flex gap-2">
-                                <div className="flex -space-x-px">
+                                <div className="flex">
                                     <Button
                                         variant="outline"
-                                        className={isEditing ? 'rounded' : 'rounded-l rounded-r-none border-r-0'}
+                                        className="rounded"
                                         asChild
                                     >
                                         <Link href="/locations">Cancel</Link>
                                     </Button>
-
-                                    {!isEditing ? (
-                                        <Button
-                                            type="submit"
-                                            variant="outline"
-                                            className="rounded-l-none rounded-r"
-                                            onClick={() => setSubmitMode('add-another')}
-                                        >
-                                            Add another
-                                        </Button>
-                                    ) : null}
                                 </div>
 
                                 <Button
                                     type="submit"
                                     disabled={processing}
-                                    onClick={() => setSubmitMode('save')}
-                                    className="rounded border-none bg-[#f0642d] text-white hover:bg-[#d95627]"
+                                    className="rounded bg-white text-black hover:bg-zinc-200 border border-zinc-200"
                                 >
                                     {isEditing ? 'Update' : 'Save'}
                                 </Button>

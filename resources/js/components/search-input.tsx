@@ -56,7 +56,7 @@ export function SearchInput({
             <Input
                 type="search"
                 placeholder={placeholder}
-                className="pl-9 h-9 text-sm w-full lg:w-75 shadow-none"
+                className="pl-9 h-9 text-sm w-full lg:w-75"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
             />

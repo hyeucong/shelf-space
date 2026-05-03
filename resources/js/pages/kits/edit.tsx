@@ -109,7 +109,7 @@ export default function Edit({ kit }: { kit: Kit }) {
             </div>
 
             <form onSubmit={submit} className="px-6 space-y-6 max-w-4xl pb-10">
-                <Card className="rounded border shadow-none">
+                <Card className="rounded border">
                     <CardContent className="space-y-6">
                         <div className="flex justify-between border-b border-border/50 pb-6">
                             <CardHeader>
@@ -125,7 +125,7 @@ export default function Edit({ kit }: { kit: Kit }) {
                                 <Button
                                     type="submit"
                                     disabled={processing}
-                                    className="rounded border-none bg-[#f0642d] text-white hover:bg-[#d95627]"
+                                    className="rounded bg-white text-black hover:bg-zinc-200 border border-zinc-200"
                                 >
                                     Save Changes
                                 </Button>

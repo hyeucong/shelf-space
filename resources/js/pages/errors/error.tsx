@@ -33,7 +33,7 @@ export default function ErrorPage({ status }: Props) {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6">
       <Head title={`${safeStatus} - ${titleText}`} />
       
-      <Empty className="max-w-md w-full border-none shadow-none">
+      <Empty className="max-w-md w-full border-none">
         <EmptyHeader>
           <EmptyTitle className="text-4xl font-bold">{safeStatus} - {titleText}</EmptyTitle>
           <EmptyDescription dangerouslySetInnerHTML={{ __html: description }} />

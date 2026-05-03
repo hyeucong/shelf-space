@@ -163,7 +163,7 @@ export default function AssetLayout({ children, activeTab, headerAction }: Asset
                                 <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</span>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="sm" className="h-8 gap-2 p-2 font-normal hover:bg-muted/50 border shadow-none" disabled={processing}>
+                                        <Button variant="ghost" size="sm" className="h-8 gap-2 p-2 font-normal hover:bg-muted/50 border" disabled={processing}>
                                             <Badge variant="outline" className="capitalize border-none p-0 px-2 text-sm font-medium">
                                                 {asset.status || 'Available'}
                                             </Badge>

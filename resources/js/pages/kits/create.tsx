@@ -27,7 +27,6 @@ export default function Create() {
         location_id: '',
     });
 
-    const [submitMode, setSubmitMode] = useState<'save' | 'add-another'>('save');
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
     const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
     const [isCategorySelectOpen, setIsCategorySelectOpen] = useState(false);
@@ -45,14 +44,6 @@ export default function Create() {
 
         post('/kits', {
             preserveScroll: true,
-            onSuccess: () => {
-                if (submitMode !== 'add-another') {
-                    return;
-                }
-
-                reset();
-                setSubmitMode('save');
-            },
         });
     };
 
@@ -127,7 +118,7 @@ export default function Create() {
             </div>
 
             <form onSubmit={submit} className="px-6 space-y-6 max-w-4xl pb-10">
-                <Card className="rounded border shadow-none">
+                <Card className="rounded border">
                     <CardContent className="space-y-6">
                         <div className="flex justify-between border-b border-border/50 pb-6">
                             <CardHeader>
@@ -138,26 +129,16 @@ export default function Create() {
                             </CardHeader>
 
                             <div className="flex gap-2">
-                                <div className="flex -space-x-px">
+                                <div className="flex">
                                     <Button variant="outline" className="rounded" asChild>
                                         <Link href="/kits">Cancel</Link>
-                                    </Button>
-
-                                    <Button
-                                        type="submit"
-                                        variant="outline"
-                                        className="rounded-l-none rounded-r"
-                                        onClick={() => setSubmitMode('add-another')}
-                                    >
-                                        Add another
                                     </Button>
                                 </div>
 
                                 <Button
                                     type="submit"
                                     disabled={processing}
-                                    onClick={() => setSubmitMode('save')}
-                                    className="rounded border-none bg-[#f0642d] text-white hover:bg-[#d95627]"
+                                    className="rounded bg-white text-black hover:bg-zinc-200 border border-zinc-200"
                                 >
                                     Save
                                 </Button>

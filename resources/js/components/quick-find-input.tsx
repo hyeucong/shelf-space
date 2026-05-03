@@ -103,7 +103,7 @@ export function QuickFindInput({ className }: { className?: string }) {
             <Button
                 variant="outline"
                 className={cn(
-                    "relative h-9 w-full justify-start rounded bg-muted/30 px-4 text-sm font-normal text-muted-foreground shadow-none transition-all duration-200 hover:bg-muted/50 hover:text-foreground hover:border-muted-foreground/30 sm:pr-12 md:w-48 lg:w-64 border-muted-foreground/20",
+                    "relative h-9 w-full justify-start rounded bg-muted/30 px-4 text-sm font-normal text-muted-foreground transition-all duration-200 hover:bg-muted/50 hover:text-foreground hover:border-muted-foreground/30 sm:pr-12 md:w-48 lg:w-64 border-muted-foreground/20",
                 )}
                 onClick={() => setOpen(true)}
             >
@@ -112,7 +112,7 @@ export function QuickFindInput({ className }: { className?: string }) {
                 <div className="pointer-events-none absolute right-[0.3rem] top-[0.3rem] hidden h-[22px] items-center gap-1 sm:flex">
                     <Badge
                         variant="outline"
-                        className="h-full px-2 font-mono text-[10px] font-semibold bg-background/80 text-muted-foreground/80 border-muted-foreground/20 shadow-xs rounded"
+                        className="h-full px-2 font-mono text-[10px] font-semibold bg-background/80 text-muted-foreground/80 border-muted-foreground/20 rounded"
                     >
                         Ctrl K
                     </Badge>

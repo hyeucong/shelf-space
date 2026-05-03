@@ -57,7 +57,7 @@ function SortableColumnItem({ column, onToggle }: SortableColumnItemProps) {
         <div
             ref={setNodeRef}
             style={style}
-            className={isDragging ? 'rounded border bg-background opacity-80 shadow-lg' : undefined}
+            className={isDragging ? 'rounded border bg-background opacity-80' : undefined}
         >
             <div
                 className="flex cursor-grab items-center gap-3 rounded border px-3 py-2 text-sm active:cursor-grabbing"
@@ -115,7 +115,7 @@ export function ColumnVisibilityPanel({
     }
 
     return (
-        <div className="absolute left-0 top-full z-50 mt-3 flex w-72 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded border bg-background shadow-xl">
+        <div className="absolute left-0 top-full z-50 mt-3 flex w-72 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded border bg-background">
             <div className="flex items-start justify-between border-b px-4 py-3">
                 <div>
                     <h3 className="text-sm font-semibold text-foreground">Visible columns</h3>

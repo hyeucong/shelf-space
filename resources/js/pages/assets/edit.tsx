@@ -156,7 +156,7 @@ export default function Edit({ asset }: { asset: Asset }) {
             </div>
 
             <form onSubmit={submit} className="px-6 space-y-6 max-w-4xl pb-10">
-                <Card className="rounded border shadow-none">
+                <Card className="rounded border">
                     <CardContent className="space-y-6">
                         <div className="flex justify-between border-b border-border/50 pb-6">
                             <CardHeader>
@@ -165,21 +165,18 @@ export default function Edit({ asset }: { asset: Asset }) {
                             </CardHeader>
 
                             <div className="flex gap-2">
-                                <div className="flex -space-x-px">
+                                <div className="flex">
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        className="rounded-l rounded-r-none border-r-0"
+                                        className="rounded"
                                         onClick={() => window.history.back()}
                                     >
                                         Cancel
                                     </Button>
-                                    <Button type="button" variant="outline" className="rounded-l-none rounded-r">
-                                        Add another
-                                    </Button>
                                 </div>
 
-                                <Button type="submit" disabled={processing} className={`rounded bg-[#f0642d] hover:bg-[#d95627] text-white border-none`}>
+                                <Button type="submit" disabled={processing} className={`rounded bg-white text-black hover:bg-zinc-200 border border-zinc-200`}>
                                     Save
                                 </Button>
                             </div>

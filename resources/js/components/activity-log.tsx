@@ -142,7 +142,7 @@ export function ActivityLog({ activity, resourceId, storeUrl, destroyUrl, emptyM
                         <span className="text-sm">Leave a note</span>
                     </div>
                 ) : (
-                    <div className="border rounded bg-background overflow-hidden shadow-sm">
+                    <div className="border rounded bg-background overflow-hidden">
                         <div className="flex items-center justify-between border-b p-2 bg-muted/20">
                             <div className="flex items-center gap-0.5 flex-wrap">
                                 <ToolbarButton onClick={() => editor.chain().focus().undo().run()} icon={<Undo size={16} />} />
@@ -185,12 +185,12 @@ export function ActivityLog({ activity, resourceId, storeUrl, destroyUrl, emptyM
 
                 <div className="mt-4 space-y-4">
                     {activity.length === 0 ? (
-                        <div className="rounded border bg-background p-3 text-sm text-muted-foreground shadow-sm">
+                        <div className="rounded border bg-background p-3 text-sm text-muted-foreground">
                             {emptyMessage}
                         </div>
                     ) : (
                         activity.map((item) => (
-                            <div key={item.id} className="rounded border bg-background flex flex-col text-sm shadow-sm">
+                            <div key={item.id} className="rounded border bg-background flex flex-col text-sm">
                                 <div className="flex justify-between gap-3 p-3 items-center">
                                     <div className="flex min-w-0 items-center gap-2">
                                         <Badge variant="outline">

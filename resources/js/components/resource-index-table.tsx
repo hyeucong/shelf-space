@@ -192,12 +192,12 @@ export function ResourceIndexTable<T extends { id: string | number }>({
     return (
         <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden">
             {(showSearch || toolbarStart || toolbarEnd || sort) ? (
-                <div className="mx-4 mt-4 flex min-h-12 shrink-0 flex-col items-start justify-between gap-3 rounded border bg-background p-2 shadow-sm md:flex-row md:items-center">
+                <div className="mx-4 mt-4 flex min-h-12 shrink-0 flex-col items-start justify-between gap-3 rounded border bg-background p-2 md:flex-row md:items-center">
                     <div className="flex w-full flex-1 flex-row flex-wrap items-center gap-2 md:w-auto md:flex-nowrap">
                         {sort ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="h-9 shrink-0 gap-2 font-normal text-muted-foreground shadow-none">
+                                    <Button variant="outline" className="h-9 shrink-0 gap-2 font-normal text-muted-foreground">
                                         <ArrowUpDown size={16} /> Sort
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -238,7 +238,7 @@ export function ResourceIndexTable<T extends { id: string | number }>({
             ) : null}
 
             {hasItems ? (
-                <div className="mx-4 mt-4 mb-4 flex flex-1 min-h-0 flex-col overflow-hidden rounded border bg-background shadow-sm">
+                <div className="mx-4 mt-4 mb-4 flex flex-1 min-h-0 flex-col overflow-hidden rounded border bg-background">
                     <div className="flex-1 overflow-auto overscroll-x-contain **:data-[slot=table-container]:overflow-visible">
                         <Table className={tableClassName}>
                             <TableHeader>
@@ -328,7 +328,7 @@ export function ResourceIndexTable<T extends { id: string | number }>({
                     {hasItems ? <DataTablePagination pagination={pagination} onPerPageChange={handlePerPageChange} /> : null}
                 </div>
             ) : (
-                <div className="mx-4 mb-4 mt-4 flex flex-1 items-center justify-center rounded border border-dashed bg-background p-6 text-center shadow-sm">
+                <div className="mx-4 mb-4 mt-4 flex flex-1 items-center justify-center rounded border border-dashed bg-background p-6 text-center">
                     <div className="mx-auto max-w-lg space-y-1">
                         <h3 className="text-2xl font-bold tracking-tight">{emptyState.title}</h3>
                         {emptyState.description ? (

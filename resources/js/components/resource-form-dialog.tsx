@@ -143,7 +143,7 @@ export function ResourceFormDialog({
                         <Button
                             type="submit"
                             disabled={processing}
-                            className={cn('rounded border-none bg-[#f0642d] text-white hover:bg-[#d95627]', submitButtonClassName)}
+                            className={cn('rounded bg-white text-black hover:bg-zinc-200 border border-zinc-200', submitButtonClassName)}
                         >
                             {resolvedSubmitLabel}
                         </Button>
@@ -282,7 +282,7 @@ export function ResourceDuplicateDialog({
                         </Button>
                         <Button
                             type="submit"
-                            className="rounded border-none bg-[#f0642d] text-white hover:bg-[#d95627]"
+                            className="rounded bg-white text-black hover:bg-zinc-200 border border-zinc-200"
                             disabled={processing}
                         >
                             {processing ? 'Duplicating...' : 'Duplicate'}
@@ -377,7 +377,7 @@ export function ResourceSelectUpdateTagDialog({
                         </Button>
                         <Button
                             type="submit"
-                            className={cn('rounded border-none bg-[#f0642d] text-white hover:bg-[#d95627]')}
+                            className={cn('rounded bg-white text-black hover:bg-zinc-200 border border-zinc-200')}
                             disabled={processing}
                         >
                             {processing ? 'Updating...' : 'Update'}
@@ -438,7 +438,7 @@ export function ResourceSelectUpdateCategoryDialog({
                         </Button>
                         <Button
                             type="submit"
-                            className={cn('rounded border-none bg-[#f0642d] text-white hover:bg-[#d95627]')}
+                            className={cn('rounded bg-white text-black hover:bg-zinc-200 border border-zinc-200')}
                             disabled={processing}
                         >
                             {processing ? 'Updating...' : 'Update'}

@@ -41,19 +41,19 @@ export default function Dashboard({ assets, reminders, stats }: PageProps) {
             <div className="flex h-full flex-1 flex-col gap-4 p-4">
                 {/* Stats Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-                    <div className='p-4 border rounded bg-card shadow-sm'>
+                    <div className='p-4 border rounded bg-card'>
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Assets</div>
                         <div className="text-2xl font-bold mt-2">{stats.total_assets}</div>
                     </div>
-                    <div className='p-4 border rounded bg-card shadow-sm'>
+                    <div className='p-4 border rounded bg-card'>
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Categories</div>
                         <div className="text-2xl font-bold mt-2">{stats.total_categories}</div>
                     </div>
-                    <div className='p-4 border rounded bg-card shadow-sm'>
+                    <div className='p-4 border rounded bg-card'>
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Locations</div>
                         <div className="text-2xl font-bold mt-2">{stats.total_locations}</div>
                     </div>
-                    <div className='p-4 border rounded bg-card shadow-sm'>
+                    <div className='p-4 border rounded bg-card'>
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Asset Value</div>
                         <div className="text-2xl font-bold mt-2">{formatCurrency(stats.total_value)}</div>
                     </div>
@@ -61,7 +61,7 @@ export default function Dashboard({ assets, reminders, stats }: PageProps) {
 
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 w-full">
                     {/* Reminders Table */}
-                    <div className="rounded border bg-card text-card-foreground shadow overflow-hidden">
+                    <div className="rounded border bg-card text-card-foreground overflow-hidden">
                         <div className="flex items-center justify-between border-b p-4">
                             <div>
                                 <h2 className="text-xl font-semibold tracking-tight">Recent Reminders</h2>
@@ -124,7 +124,7 @@ export default function Dashboard({ assets, reminders, stats }: PageProps) {
                     </div>
 
                     {/* Assets Table */}
-                    <div className="rounded border bg-card text-card-foreground shadow overflow-hidden">
+                    <div className="rounded border bg-card text-card-foreground overflow-hidden">
                         <div className="flex items-center justify-between border-b p-4">
                             <div>
                                 <h2 className="text-xl font-semibold tracking-tight">Recent Assets</h2>
