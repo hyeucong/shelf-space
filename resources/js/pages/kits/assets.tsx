@@ -55,7 +55,7 @@ KitAssets.layout = (page: ReactNode) => {
         <KitLayout
             activeTab="assets"
             headerAction={
-                <Button asChild>
+                <Button className="rounded bg-white text-black hover:bg-zinc-200 border border-border" asChild>
                     <Link href={kit ? addAssets((kit.id)) : '/kits'}>
                         Add asset
                     </Link>

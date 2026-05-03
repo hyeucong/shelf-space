@@ -96,7 +96,7 @@ LocationKits.layout = (page: ReactNode) => {
         <LocationLayout
             activeTab="kits"
             headerAction={
-                <Button asChild>
+                <Button className="rounded bg-white text-black hover:bg-zinc-200 border border-border" asChild>
                     <Link href={location ? addKits(location.id).url : '/locations'}>
                         Add kit
                     </Link>

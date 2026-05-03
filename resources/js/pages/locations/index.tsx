@@ -316,7 +316,7 @@ Locations.layout = (page: React.ReactNode) => (
             { title: 'Locations', href: '/locations' }
         ]}
         headerAction={
-            <Button variant="outline" className="rounded" asChild>
+            <Button className="rounded bg-white text-black hover:bg-zinc-200 border border-border" asChild>
                 <Link href="/locations/create">New location</Link>
             </Button>
         }

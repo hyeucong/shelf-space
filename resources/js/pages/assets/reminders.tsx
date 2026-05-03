@@ -296,7 +296,7 @@ AssetReminders.layout = (page: ReactNode) => (
     <AssetLayout
         activeTab="reminders"
         headerAction={
-            <Button variant="outline" className="rounded" onClick={() => window.dispatchEvent(new Event('asset-reminders:create'))}>
+            <Button className="rounded bg-white text-black hover:bg-zinc-200 border border-border" onClick={() => window.dispatchEvent(new Event('asset-reminders:create'))}>
                 New reminder
             </Button>
         }
