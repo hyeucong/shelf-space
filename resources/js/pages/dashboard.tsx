@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { Camera, Bell } from 'lucide-react';
+import { Camera, Bell, Package, Layers, MapPin, Banknote } from 'lucide-react';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,19 +42,31 @@ export default function Dashboard({ assets, reminders, stats }: PageProps) {
                 {/* Stats Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
                     <div className='p-4 border rounded bg-card'>
-                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Assets</div>
+                        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <Package size={14} className="opacity-70" />
+                            <span>Total Assets</span>
+                        </div>
                         <div className="text-2xl font-bold mt-2">{stats.total_assets}</div>
                     </div>
                     <div className='p-4 border rounded bg-card'>
-                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Categories</div>
+                        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <Layers size={14} className="opacity-70" />
+                            <span>Categories</span>
+                        </div>
                         <div className="text-2xl font-bold mt-2">{stats.total_categories}</div>
                     </div>
                     <div className='p-4 border rounded bg-card'>
-                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Locations</div>
+                        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <MapPin size={14} className="opacity-70" />
+                            <span>Locations</span>
+                        </div>
                         <div className="text-2xl font-bold mt-2">{stats.total_locations}</div>
                     </div>
                     <div className='p-4 border rounded bg-card'>
-                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Asset Value</div>
+                        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <Banknote size={14} className="opacity-70" />
+                            <span>Asset Value</span>
+                        </div>
                         <div className="text-2xl font-bold mt-2">{formatCurrency(stats.total_value)}</div>
                     </div>
                 </div>

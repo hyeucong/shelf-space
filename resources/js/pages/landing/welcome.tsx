@@ -33,7 +33,7 @@ export default function Welcome() {
                         <div className="flex flex-col md:flex-row justify-between items-center gap-8 px-4 md:px-0">
                             <div className="space-y-4 text-center md:text-left">
                                 <p className="text-sm text-zinc-500">
-                                    The modern OS for your physical assets. Built for teams that move fast.
+                                    A simple way to track your physical assets. Built for teams that move fast.
                                 </p>
                             </div>
 

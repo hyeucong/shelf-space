@@ -1,4 +1,4 @@
-import { Bell, QrCode, ShieldCheck, History, Laptop, Calendar, LucideIcon } from 'lucide-react';
+import { QrCode, History, ShoppingBag, Layers, MapPin, Search, LucideIcon } from 'lucide-react';
 
 function AdvancedFeatureCard({ title, desc, icon: Icon }: { title: string; desc: string; icon: LucideIcon }) {
     return (
@@ -17,37 +17,37 @@ function AdvancedFeatureCard({ title, desc, icon: Icon }: { title: string; desc:
 export default function AdvancedFeatures() {
     const row1Features = [
         {
-            title: "Smart Alerts",
-            desc: "Set automated alerts for maintenance schedules, low stock, or checkout deadlines.",
-            icon: Bell
-        },
-        {
-            title: "Dynamic QR Tags",
-            desc: "Generate and print unique QR codes for every asset to bridge the physical and digital gap.",
+            title: "QR Integration",
+            desc: "Generate unique QR labels for every item to bridge the physical and digital gap.",
             icon: QrCode
         },
         {
-            title: "Granular Security",
-            desc: "Implement field-level permissions to ensure sensitive asset data is only seen by the right eyes.",
-            icon: ShieldCheck
+            title: "Audit Logs",
+            desc: "Track every checkout, change, and movement with a permanent, immutable activity log.",
+            icon: History
+        },
+        {
+            title: "Command Palette",
+            desc: "Instantly locate any asset or location globally with the built-in search.",
+            icon: Search
         }
     ];
 
     const row2Features = [
         {
-            title: "Full Audit History",
-            desc: "Track every change, checkout, and movement with a permanent, immutable audit trail.",
-            icon: History
+            title: "Kit Management",
+            desc: "Bundle assets into deployable kits to simplify onboarding and equipment tracking.",
+            icon: ShoppingBag
         },
         {
-            title: "Bulk Operations",
-            desc: "Manage thousands of assets at once with powerful bulk editing and import tools.",
-            icon: Laptop
+            title: "Bulk Actions",
+            desc: "Safely update or transfer multiple assets at once with strict database safeguards.",
+            icon: Layers
         },
         {
-            title: "Lifecycle Tracking",
-            desc: "Monitor assets from procurement to retirement with automated depreciation and health scoring.",
-            icon: Calendar
+            title: "Interactive Map View",
+            desc: "Visualize inventory across multiple sites to see exactly where your hardware is deployed.",
+            icon: MapPin
         }
     ];
 
@@ -61,7 +61,7 @@ export default function AdvancedFeatures() {
                         Manage your inventory exactly how you want
                     </h2>
                     <p className="text-lg text-zinc-400 leading-relaxed">
-                        Create custom inventory management workflows that mirror your business operations.
+                        Create custom inventory management workflows that mirror how your team works.
                     </p>
                 </div>
             </div>

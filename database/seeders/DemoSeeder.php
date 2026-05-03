@@ -71,17 +71,18 @@ class DemoSeeder extends Seeder
                 'hex_color' => $cat['hex_color'],
             ]);
         }
+
         return $models;
     }
 
     private function seedLocations(): array
     {
         $locations = [
-            ['name' => 'SF Headquarters', 'address' => '123 Mission St, San Francisco, CA 94105', 'description' => 'Main office in San Francisco, CA'],
-            ['name' => 'London Design Studio', 'address' => '25 Wardour St, London W1D 6QG, UK', 'description' => 'Design team hub in Soho, London'],
-            ['name' => 'Tokyo Innovation Hub', 'address' => '1-1-1 Shibuya, Tokyo 150-0002, Japan', 'description' => 'R&D center in Shibuya, Tokyo'],
-            ['name' => 'Berlin Lab', 'address' => 'Torstraße 1, 10119 Berlin, Germany', 'description' => 'Engineering lab in Mitte, Berlin'],
-            ['name' => 'Remote', 'address' => 'Global / Distributed', 'description' => 'Distributed workforce assets'],
+            ['name' => 'SF Headquarters', 'address' => '123 Mission St, San Francisco, CA 94105', 'description' => 'Main office in San Francisco, CA', 'lat' => 37.7919, 'lon' => -122.3947],
+            ['name' => 'London Design Studio', 'address' => '25 Wardour St, London W1D 6QG, UK', 'description' => 'Design team hub in Soho, London', 'lat' => 51.5126, 'lon' => -0.1332],
+            ['name' => 'Tokyo Innovation Hub', 'address' => '1-1-1 Shibuya, Tokyo 150-0002, Japan', 'description' => 'R&D center in Shibuya, Tokyo', 'lat' => 35.6617, 'lon' => 139.7040],
+            ['name' => 'Berlin Lab', 'address' => 'Torstraße 1, 10119 Berlin, Germany', 'description' => 'Engineering lab in Mitte, Berlin', 'lat' => 52.5298, 'lon' => 13.4005],
+            ['name' => 'Remote', 'address' => 'Global / Distributed', 'description' => 'Distributed workforce assets', 'lat' => null, 'lon' => null],
         ];
 
         $models = [];
@@ -91,8 +92,11 @@ class DemoSeeder extends Seeder
                 'name' => $loc['name'],
                 'address' => $loc['address'],
                 'description' => $loc['description'],
+                'latitude' => $loc['lat'],
+                'longitude' => $loc['lon'],
             ]);
         }
+
         return $models;
     }
 
@@ -117,6 +121,7 @@ class DemoSeeder extends Seeder
                 'hex_color' => $tag['hex_color'],
             ]);
         }
+
         return $models;
     }
 
@@ -181,18 +186,18 @@ class DemoSeeder extends Seeder
 
         foreach ($assetData as $categoryName => $items) {
             $category = $categories[$categoryName];
-            
+
             foreach ($items as $item) {
                 $location = collect($locations)->random();
-                
+
                 $asset = Asset::create([
                     'id' => (string) Str::ulid(),
                     'user_id' => $this->user->id,
                     'category_id' => $category->id,
                     'location_id' => $location->id,
                     'name' => $item['name'],
-                    'asset_id' => 'AST-' . strtoupper(Str::random(2)) . '-' . rand(1000, 9999),
-                    'description' => 'Professional ' . strtolower($categoryName) . ' equipment for high-performance teams.',
+                    'asset_id' => 'AST-'.strtoupper(Str::random(2)).'-'.rand(1000, 9999),
+                    'description' => 'Professional '.strtolower($categoryName).' equipment for high-performance teams.',
                     'status' => collect($statuses)->random(),
                     'value' => $item['val'],
                 ]);
@@ -207,20 +212,35 @@ class DemoSeeder extends Seeder
     {
         $statuses = ['available', 'in_use', 'maintenance', 'retired'];
 
+        $secondaryItems = [
+            'Laptops' => ['Replacement MacBook Air', 'Intern Workstation', 'Spare Dell Latitude'],
+            'Monitors' => ['Standard Office Monitor', 'Wall Display', 'Secondary 24" Screen'],
+            'Audio' => ['Basic Office Headset', 'Spare USB Microphone', 'Conference Speaker'],
+            'Cameras' => ['Webcam Pro 1080p', 'Compact Camera Kit', 'Tripod Stand'],
+            'Networking' => ['Patch Cable Bundle', 'Network Switch 8-Port', 'Wi-Fi Extender'],
+            'Mobile Devices' => ['Test Phone (Android)', 'Tablet Case', 'Charging Station'],
+            'Furniture' => ['Task Chair', 'Side Table', 'Pedestal Drawer'],
+            'Accessories' => ['USB-C Hub', 'Mouse Pad', 'HDMI Adapter', 'Magic Trackpad'],
+        ];
+
         for ($i = 0; $i < 60; $i++) {
             $category = collect($categories)->random();
             $location = collect($locations)->random();
-            
+
+            $categoryName = $category->name;
+            $itemNamePool = $secondaryItems[$categoryName] ?? [$categoryName.' Accessory'];
+            $itemName = collect($itemNamePool)->random().' '.($i % 5 + 1);
+
             $asset = Asset::create([
                 'id' => (string) Str::ulid(),
                 'user_id' => $this->user->id,
                 'category_id' => $category->id,
                 'location_id' => $location->id,
-                'name' => 'Generic ' . $category->name . ' Unit ' . ($i + 1),
-                'asset_id' => 'AST-' . strtoupper(Str::random(2)) . '-' . rand(1000, 9999),
-                'description' => 'Supplemental equipment unit for ' . $location->name . '.',
+                'name' => $itemName,
+                'asset_id' => 'AST-'.strtoupper(Str::random(2)).'-'.rand(1000, 9999),
+                'description' => 'Supplemental equipment unit for '.$location->name.'.',
                 'status' => collect($statuses)->random(),
-                'value' => rand(50, 2000),
+                'value' => rand(50, 800),
             ]);
 
             $randomTags = collect($tags)->random(rand(1, 2));

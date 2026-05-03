@@ -30,7 +30,7 @@ export default function CTA() {
                                     Stop losing track of your assets today.
                                 </h2>
                                 <p className="text-sm md:text-base text-zinc-400 leading-relaxed max-w-sm">
-                                    Join hundreds of teams using Shelf Space to organize, track, and optimize their physical resources.
+                                    Join hundreds of People using Shelf Space to organize, track, and optimize their physical resources.
                                 </p>
                             </div>
                             <div className="flex flex-col sm:flex-row items-start pt-2">

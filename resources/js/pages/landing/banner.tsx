@@ -2,13 +2,14 @@ import { Link } from '@inertiajs/react';
 import { login } from '@/routes';
 import { Button } from '@/components/ui/button';
 import { ArrowUpRight } from 'lucide-react';
+import bannerImg from '@/assets/banner.webp';
 
 export default function Banner() {
     return (
         <div className="relative w-full overflow-hidden bg-[#09090b] pb-16">
 
             {/* Subtle Dot Pattern Background */}
-            <div className="absolute inset-0 bg-[radial-gradient(#ffffff20_1px,transparent_1px)] bg-size-[16px_16px] mask-[radial-gradient(ellipse_at_center,#000_20%,transparent_70%)] pointer-events-none"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(#ffffff20_1px,transparent_1px)] bg-size-[14.4px_14.4px] mask-[radial-gradient(ellipse_at_center,#000_20%,transparent_70%)] pointer-events-none"></div>
 
             <style>
                 {`
@@ -20,7 +21,7 @@ export default function Banner() {
             </style>
 
             {/* Custom SVG Noise Glow */}
-            <div className="absolute -bottom-64 -right-64 w-[1080px] h-[1080px] pointer-events-none overflow-hidden origin-bottom-right animate-[pulse-scale_15s_ease-in-out_infinite]">
+            <div className="absolute -bottom-64 -right-64 w-[972px] h-[972px] pointer-events-none overflow-hidden origin-bottom-right animate-[pulse-scale_15s_ease-in-out_infinite]">
                 <svg viewBox="0 0 100 100" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <circle id="shape" cx="50" cy="50" r="50" />
@@ -47,7 +48,7 @@ export default function Banner() {
                     <use href="#shape" fill="white" mask="url(#gradient)" filter="url('#noise')" />
                 </svg>
             </div>
-            <div className="absolute bottom-0 left-0 w-full h-[400px] bg-linear-to-t from-white/5 to-transparent pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-full h-[360px] bg-linear-to-t from-white/5 to-transparent pointer-events-none"></div>
 
             <div className="relative z-10 max-w-5xl mx-auto pt-20">
 
@@ -177,7 +178,7 @@ export default function Banner() {
                 {/* Reference Image */}
                 <div className="w-full border border-white/20 rounded p-2">
                     <img
-                        src="https://framerusercontent.com/images/Sh880sHyNnkevnmfd0Pd1wSthI.png?scale-down-to=1024&width=7136&height=3840"
+                        src={bannerImg}
                         alt="Dashboard Preview"
                         className="w-full h-auto block rounded"
                     />
